@@ -1,0 +1,473 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========================================
+// USER & AUTHENTICATION MODELS
+// ========================================
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  emailVerified     DateTime?
+  name              String?
+  password          String?
+  image             String?
+  role              UserRole  @default(USER)
+  status            UserStatus @default(PENDING)
+
+  // Relations
+  sessions          Session[]
+  verificationTokens VerificationToken[]
+  passwordResetTokens PasswordResetToken[]
+  organizations     OrganizationMember[]
+  invitationsSent   Invitation[] @relation("InvitedBy")
+  socialAccounts    SocialAccount[]
+  drafts            Draft[]
+  contentTemplates  ContentTemplate[]
+
+  // Timestamps
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  lastLoginAt       DateTime?
+
+  @@index([email])
+  @@index([status])
+  @@map("users")
+}
+
+model Session {
+  id            String   @id @default(cuid())
+  sessionToken  String   @unique
+  refreshToken  String   @unique
+  userId        String
+  expires       DateTime
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([sessionToken])
+  @@index([refreshToken])
+  @@index([userId])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  id         String   @id @default(cuid())
+  identifier String   // email address
+  token      String   @unique
+  expires    DateTime
+  userId     String
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+
+  @@unique([identifier, token])
+  @@index([token])
+  @@map("verification_tokens")
+}
+
+model PasswordResetToken {
+  id         String   @id @default(cuid())
+  token      String   @unique
+  expires    DateTime
+  userId     String
+  used       Boolean  @default(false)
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+// ========================================
+// ORGANIZATION & TEAM MODELS
+// ========================================
+
+model Organization {
+  id              String    @id @default(cuid())
+  name            String
+  slug            String    @unique
+  description     String?
+  logo            String?
+  website         String?
+
+  // Relations
+  members         OrganizationMember[]
+  invitations     Invitation[]
+  socialAccounts  SocialAccount[]
+  drafts          Draft[]
+  contentTemplates ContentTemplate[]
+
+  // Settings
+  settings        Json      @default("{}")
+
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([slug])
+  @@map("organizations")
+}
+
+model OrganizationMember {
+  id              String    @id @default(cuid())
+  userId          String
+  organizationId  String
+  role            MemberRole @default(MEMBER)
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  joinedAt        DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([userId, organizationId])
+  @@index([userId])
+  @@index([organizationId])
+  @@map("organization_members")
+}
+
+model Invitation {
+  id              String    @id @default(cuid())
+  email           String
+  token           String    @unique
+  role            MemberRole @default(MEMBER)
+  organizationId  String
+  invitedById     String
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy       User      @relation("InvitedBy", fields: [invitedById], references: [id])
+
+  expiresAt       DateTime
+  acceptedAt      DateTime?
+
+  createdAt       DateTime  @default(now())
+
+  @@index([token])
+  @@index([email])
+  @@index([organizationId])
+  @@map("invitations")
+}
+
+// ========================================
+// SOCIAL MEDIA MODELS
+// ========================================
+
+model SocialAccount {
+  id              String    @id @default(cuid())
+  userId          String
+  organizationId  String?
+
+  // Platform details
+  platform        SocialPlatform
+  platformId      String    // ID on the social platform
+  username        String?
+  displayName     String?
+  profileUrl      String?
+  profileImage    String?
+
+  // OAuth tokens (encrypted in production)
+  accessToken     String    @db.Text
+  refreshToken    String?   @db.Text
+  tokenExpiry     DateTime?
+
+  // Platform-specific data
+  scope           String[]  // Permissions granted
+  platformData    Json?     // Store platform-specific metadata
+
+  // Statistics
+  followersCount  Int       @default(0)
+  followingCount  Int       @default(0)
+  postsCount      Int       @default(0)
+
+  // Status
+  status          AccountStatus @default(ACTIVE)
+  lastSyncAt      DateTime?
+
+  // Relations
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  posts           Post[]
+  scheduledPosts  ScheduledPost[]
+  analytics       Analytics[]
+
+  // Timestamps
+  connectedAt     DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([userId, platform, platformId])
+  @@index([userId])
+  @@index([organizationId])
+  @@index([platform])
+  @@index([status])
+  @@map("social_accounts")
+}
+
+model Post {
+  id              String    @id @default(cuid())
+  userId          String
+  organizationId  String?
+
+  // Content
+  content         String    @db.Text
+  media           Media[]
+  hashtags        String[]
+  mentions        String[]
+
+  // Publishing
+  socialAccountId String
+  platformPostId  String?   // ID of the post on the platform
+  publishedAt     DateTime?
+  status          PostStatus @default(DRAFT)
+
+  // Engagement metrics
+  likes           Int       @default(0)
+  comments        Int       @default(0)
+  shares          Int       @default(0)
+  views           Int       @default(0)
+
+  // Relations
+  socialAccount   SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+  scheduledPost   ScheduledPost?
+
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([socialAccountId])
+  @@index([status])
+  @@map("posts")
+}
+
+model ScheduledPost {
+  id              String    @id @default(cuid())
+  postId          String    @unique
+  socialAccountId String
+
+  scheduledFor    DateTime
+  timezone        String    @default("UTC")
+
+  // Relations
+  post            Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  socialAccount   SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([scheduledFor])
+  @@index([socialAccountId])
+  @@map("scheduled_posts")
+}
+
+model Media {
+  id              String    @id @default(cuid())
+  postId          String?
+
+  // File details
+  url             String
+  thumbnailUrl    String?
+  type            MediaType
+  mimeType        String
+  size            Int       // in bytes
+  width           Int?
+  height          Int?
+  duration        Int?      // for videos, in seconds
+
+  // Metadata
+  title           String?
+  description     String?
+  altText         String?
+
+  // Relations
+  post            Post?     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  uploadedAt      DateTime  @default(now())
+
+  @@index([postId])
+  @@map("media")
+}
+
+model Analytics {
+  id              String    @id @default(cuid())
+  socialAccountId String
+
+  // Metrics
+  date            DateTime
+  impressions     Int       @default(0)
+  reach           Int       @default(0)
+  engagement      Int       @default(0)
+  clicks          Int       @default(0)
+
+  // Growth metrics
+  followersGained Int       @default(0)
+  followersLost   Int       @default(0)
+
+  // Platform-specific metrics
+  platformMetrics Json?
+
+  // Relations
+  socialAccount   SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  createdAt       DateTime  @default(now())
+
+  @@unique([socialAccountId, date])
+  @@index([socialAccountId])
+  @@index([date])
+  @@map("analytics")
+}
+
+// ========================================
+// ENUMS
+// ========================================
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  USER
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  EDITOR
+  MEMBER
+  VIEWER
+}
+
+enum SocialPlatform {
+  FACEBOOK
+  INSTAGRAM
+  TWITTER
+  LINKEDIN
+  TIKTOK
+  YOUTUBE
+  PINTEREST
+  SNAPCHAT
+  REDDIT
+  THREADS
+}
+
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+  REVOKED
+  ERROR
+}
+
+enum PostStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  FAILED
+  DELETED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  GIF
+  AUDIO
+  DOCUMENT
+}
+
+// ========================================
+// CONTENT MANAGEMENT MODELS
+// ========================================
+
+model Draft {
+  id              String    @id @default(cuid())
+  userId          String
+  organizationId  String?
+
+  // Content
+  title           String?
+  content         String    @db.Text
+  platforms       SocialPlatform[]
+  mediaUrls       String[]
+  hashtags        String[]
+
+  // AI Generation
+  aiGenerated     Boolean   @default(false)
+  aiPrompt        String?   @db.Text
+  aiModel         String?
+
+  // Scheduling
+  scheduledFor    DateTime?
+
+  // Relations
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([organizationId])
+  @@map("drafts")
+}
+
+model ContentTemplate {
+  id              String    @id @default(cuid())
+  userId          String?
+  organizationId  String?
+
+  // Template info
+  name            String
+  description     String?
+  category        String?
+
+  // Content
+  template        String    @db.Text
+  variables       String[]  // Variable placeholders in template
+  platforms       SocialPlatform[]
+
+  // Usage
+  isPublic        Boolean   @default(false)
+  usageCount      Int       @default(0)
+
+  // Relations
+  user            User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([isPublic])
+  @@index([category])
+  @@map("content_templates")
+}
