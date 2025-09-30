@@ -38,10 +38,10 @@ export const rateLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req: Request) => {
+  skip: (_req: Request) => {
     return disableRateLimiting && isDevelopment;
   },
-  handler: (req: Request, res: Response) => {
+  handler: (_req: Request, res: Response) => {
     res.status(429).json({
       error: 'Rate limit exceeded',
       message: 'Too many requests, please try again later.',
@@ -69,10 +69,10 @@ export const strictRateLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req: Request) => {
+  skip: (_req: Request) => {
     return disableRateLimiting && isDevelopment;
   },
-  handler: (req: Request, res: Response) => {
+  handler: (_req: Request, res: Response) => {
     const windowMinutes = isDevelopment ? 5 : 15;
     res.status(429).json({
       error: 'Rate limit exceeded',
@@ -112,10 +112,10 @@ export const aiRateLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req: Request) => {
+  skip: (_req: Request) => {
     return disableRateLimiting && isDevelopment;
   },
-  handler: (req: Request, res: Response) => {
+  handler: (_req: Request, res: Response) => {
     res.status(429).json({
       error: 'AI rate limit exceeded',
       message: 'AI request limit exceeded. Please wait before making more AI requests.',
@@ -143,10 +143,10 @@ export const uploadRateLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req: Request) => {
+  skip: (_req: Request) => {
     return disableRateLimiting && isDevelopment;
   },
-  handler: (req: Request, res: Response) => {
+  handler: (_req: Request, res: Response) => {
     res.status(429).json({
       error: 'Upload rate limit exceeded',
       message: 'Upload limit exceeded. Please wait before uploading more files.',

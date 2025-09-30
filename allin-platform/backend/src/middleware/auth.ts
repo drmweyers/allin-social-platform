@@ -4,9 +4,11 @@ import { AppError } from '../utils/errors';
 
 export interface AuthRequest extends Request {
   user?: {
-    userId: string;
+    id: string;
     email: string;
-    role: string;
+    name: string;
+    organizationId?: string;
+    role?: string;
   };
 }
 
@@ -23,7 +25,12 @@ export const authenticate = async (
     }
 
     const payload = authService.verifyAccessToken(token);
-    req.user = payload;
+    req.user = {
+      id: payload.userId,
+      email: payload.email,
+      name: '', // Not available from JWT payload
+      role: payload.role
+    };
 
     next();
   } catch (error) {
@@ -37,7 +44,8 @@ export const authorize = (...allowedRoles: string[]) => {
       return next(new AppError('Authentication required', 401));
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
+    const userRole = req.user.role || '';
+    if (!allowedRoles.includes(userRole)) {
       return next(
         new AppError('You do not have permission to access this resource', 403)
       );
@@ -57,7 +65,12 @@ export const optionalAuth = async (
 
     if (token) {
       const payload = authService.verifyAccessToken(token);
-      req.user = payload;
+      req.user = {
+        id: payload.userId,
+        email: payload.email,
+        name: '', // Not available from JWT payload
+        role: payload.role
+      };
     }
 
     next();
@@ -89,3 +102,6 @@ function extractToken(req: Request): string | null {
 
 // Export authenticate as authenticateToken for consistency
 export const authenticateToken = authenticate;
+
+// Export authenticate as authMiddleware for consistency with route imports
+export const authMiddleware = authenticate;

@@ -1,0 +1,41 @@
+[
+  {
+    "id": "post-123",
+    "content": "This is a test post about social media marketing",
+    "hashtags": ["#marketing", "#socialmedia", "#business"],
+    "mentions": ["@testuser"],
+    "userId": "user-id-123",
+    "organizationId": "org-id-123",
+    "socialAccountId": "social-account-123",
+    "status": "SCHEDULED",
+    "publishedAt": null,
+    "createdAt": "2024-01-15T10:00:00.000Z",
+    "updatedAt": "2024-01-15T10:00:00.000Z"
+  },
+  {
+    "id": "post-456",
+    "content": "Another test post with different content",
+    "hashtags": ["#test", "#content"],
+    "mentions": [],
+    "userId": "user-id-123",
+    "organizationId": "org-id-123",
+    "socialAccountId": "social-account-456",
+    "status": "PUBLISHED",
+    "publishedAt": "2024-01-15T12:00:00.000Z",
+    "createdAt": "2024-01-15T09:00:00.000Z",
+    "updatedAt": "2024-01-15T12:00:00.000Z"
+  },
+  {
+    "id": "post-draft",
+    "content": "This is a draft post",
+    "hashtags": ["#draft"],
+    "mentions": [],
+    "userId": "user-id-123",
+    "organizationId": "org-id-123",
+    "socialAccountId": "social-account-123",
+    "status": "DRAFT",
+    "publishedAt": null,
+    "createdAt": "2024-01-16T08:00:00.000Z",
+    "updatedAt": "2024-01-16T08:00:00.000Z"
+  }
+]

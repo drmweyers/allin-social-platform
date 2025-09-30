@@ -1,0 +1,29 @@
+[
+  {
+    "id": "user-id-123",
+    "email": "test@example.com",
+    "name": "Test User",
+    "organizationId": "org-id-123",
+    "role": "user",
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "admin-user-id",
+    "email": "admin@example.com",
+    "name": "Admin User",
+    "organizationId": "org-id-123",
+    "role": "admin",
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "user-id-456",
+    "email": "user2@example.com",
+    "name": "Test User 2",
+    "organizationId": "org-id-456",
+    "role": "user",
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
+  }
+]

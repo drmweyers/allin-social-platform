@@ -3,9 +3,9 @@
 
 ## Version 2.1 - Implementation In Progress
 **Date**: January 2025
-**Status**: Development Phase - Sprint 3 (Content Creation & AI)
+**Status**: Development Phase - Sprint 3 (Content Creation & AI) - AI Support System COMPLETED
 **Product Owner**: CTO Project Manager Agent
-**Progress**: 45% Complete (2.75/6 Sprints)
+**Progress**: 55% Complete (3.25/6 Sprints)
 
 ---
 
@@ -85,7 +85,7 @@ To democratize professional social media management by making enterprise-grade t
 - Instagram (Feed, Stories, Reels)
 - Twitter/X
 - LinkedIn (Personal & Company)
-- TikTok
+- TikTok (Feed, Stories, LIVE)
 
 #### Supported Platforms (Phase 2)
 - YouTube
@@ -205,10 +205,10 @@ To democratize professional social media management by making enterprise-grade t
   - Share of voice
 
 - **Platform-Specific Insights**:
-  - Instagram: Stories, Reels metrics
-  - Twitter: Tweet performance, mentions
-  - LinkedIn: Professional engagement
-  - TikTok: Video views, completion rates
+  - Instagram: Stories, Reels metrics, IGTV performance
+  - Twitter: Tweet performance, mentions, thread analytics
+  - LinkedIn: Professional engagement, article views
+  - TikTok: Video views, completion rates, trending sounds, hashtag performance
 
 #### Custom Reporting
 - Drag-and-drop report builder
@@ -271,13 +271,323 @@ To democratize professional social media management by making enterprise-grade t
 - Notification grouping
 - Mark as read/unread
 
-### 4.7 Integrations & Extensions
+### 4.7 n8n Automation Integration
+
+#### Overview
+Enable seamless integration with n8n workflow automation platform to extend AllIN's capabilities with custom automated workflows. This integration allows consultants and advanced users to create, deploy, and monitor complex automation sequences while maintaining the simplicity of the core social media management platform.
+
+#### Core n8n Integration Features
+- **Webhook Touchpoints**: Expose key platform events as n8n triggers
+- **API Bridge**: Bidirectional communication between AllIN and n8n workflows
+- **Workflow Monitoring Dashboard**: Real-time visibility of running automations
+- **Event Bus**: Publish platform events for n8n consumption
+- **Action Library**: Pre-built n8n nodes for common AllIN operations
+
+#### n8n Workflow Triggers
+- **Content Events**:
+  - Post published successfully
+  - Post scheduled for future
+  - Content approval requested
+  - Media upload completed
+  - Hashtag trending detected
+
+- **Engagement Events**:
+  - Comment received
+  - Mention detected
+  - DM received
+  - Follower milestone reached
+  - Engagement threshold met
+
+- **Analytics Events**:
+  - Report generated
+  - Performance goal achieved
+  - Anomaly detected
+  - Competitor activity identified
+
+- **System Events**:
+  - User login/logout
+  - Team member added
+  - Account connected/disconnected
+  - Error occurred
+
+#### n8n Actions Available
+- Create and schedule posts
+- Update content in queue
+- Generate AI content
+- Retrieve analytics data
+- Manage team notifications
+- Update user settings
+- Export data and reports
+- Trigger manual workflows
+
+#### Monitoring Dashboard
+- **Workflow Status Panel**:
+  - Active workflow count
+  - Recent executions log
+  - Success/failure rates
+  - Performance metrics
+  - Resource utilization
+
+- **Workflow Management**:
+  - Enable/disable workflows
+  - View execution history
+  - Debug failed executions
+  - Set up alerts
+  - Configure rate limits
+
+- **Integration Health**:
+  - API endpoint status
+  - Webhook delivery rates
+  - Error tracking
+  - Latency monitoring
+  - Queue depth metrics
+
+#### n8n Connection Requirements
+- **API Key Configuration**:
+  - Customer provides their n8n API key
+  - Supports both self-hosted and n8n cloud instances
+  - API key stored securely (encrypted at rest)
+  - Per-workspace n8n instance configuration
+  - Connection URL customization for self-hosted setups
+
+#### Implementation Architecture
+- **Connection Layer**:
+  - n8n API key authentication (required)
+  - Secure API key vault storage
+  - OAuth 2.0 for enhanced security (optional)
+  - Webhook signature validation
+  - Rate limiting per workflow
+  - Retry mechanism for failures
+  - SSL/TLS encryption for all communications
+
+- **Event System**:
+  - Event queue (Redis-based)
+  - Event filtering and routing
+  - Payload transformation
+  - Batch processing support
+  - Real-time event streaming
+
+- **Monitoring Infrastructure**:
+  - Workflow execution tracking
+  - Audit logging
+  - Performance metrics collection
+  - Alert notification system
+  - Dashboard WebSocket updates
+
+#### n8n Automation Use Cases
+
+##### Phase 1: Simple Integration Touchpoints
+Initial implementation focuses on basic tracking and monitoring:
+
+1. **Social Account Tracking**:
+   - Monitor which accounts are used in n8n workflows
+   - Track post success rates from automated campaigns
+   - Log engagement metrics for automated content
+   - Simple webhook notifications for workflow events
+
+2. **Basic Event Triggers**:
+   - Post published successfully → Trigger n8n workflow
+   - Engagement threshold reached → Notify automation
+   - New follower milestone → Initiate welcome sequence
+   - Comment received → Queue for response workflow
+
+3. **Content Queue Integration**:
+   - Add content from n8n to AllIN queue
+   - Pull scheduled posts into n8n for enhancement
+   - Sync content calendars bidirectionally
+   - Basic approval workflows for automated content
+
+##### Phase 2: Advanced Marketing Automation Use Cases
+
+###### Use Case 1: Competitor Monitoring & Engagement
+**Purpose**: Capture users discussing competitor products/services
+**Integration Points**:
+- **Monitoring Dashboard**: View competitor mentions across platforms
+- **Lead Scoring**: Automatic priority assignment based on engagement
+- **Response Queue**: Draft responses appear in AllIN for approval
+- **CRM Sync**: Lead data flows to connected CRM systems
+
+**n8n Workflow Components**:
+- Multi-platform monitoring (Reddit, Twitter/X, LinkedIn)
+- Sentiment analysis and categorization
+- Automated response generation
+- Lead nurturing campaign triggers
+
+###### Use Case 2: Influencer Discovery & Outreach
+**Purpose**: Identify and engage with relevant influencers
+**Integration Points**:
+- **Profile Analytics**: View discovered influencer profiles in AllIN
+- **Engagement Tracking**: Monitor outreach campaign performance
+- **Content Library**: Access influencer content for resharing
+- **Relationship Management**: Track interaction history
+
+**n8n Workflow Components**:
+- Hashtag harvesting and profile analysis
+- Engagement rate calculation
+- Personalized message generation
+- Follow-up sequence automation
+
+###### Use Case 3: Community Engagement Automation
+**Purpose**: Build authentic community presence at scale
+**Integration Points**:
+- **Content Suggestions**: AI-generated responses for review
+- **Karma/Reputation Tracking**: Monitor community standing
+- **Engagement Calendar**: Schedule community interactions
+- **Value Content Library**: Quick access to helpful resources
+
+**n8n Workflow Components**:
+- Question detection in forums/groups
+- Intelligent response generation
+- Reputation building activities
+- Community metric tracking
+
+###### Use Case 4: B2B LinkedIn Campaigns
+**Purpose**: Professional outreach and relationship building
+**Integration Points**:
+- **Profile Discovery Feed**: Review qualified leads
+- **Connection Tracking**: Monitor acceptance rates
+- **Content Engagement Log**: Track interactions
+- **Pipeline Management**: Move leads through stages
+
+**n8n Workflow Components**:
+- Profile discovery and filtering
+- Connection request campaigns
+- Content engagement automation
+- Relationship nurturing sequences
+
+###### Use Case 5: Customer Acquisition from Competitors
+**Purpose**: Target users of competing products
+**Integration Points**:
+- **Competitor User Database**: Track identified prospects
+- **Migration Offers**: Manage special promotions
+- **Success Story Collection**: Gather testimonials
+- **Conversion Tracking**: Monitor switch rates
+
+**n8n Workflow Components**:
+- Testimonial and mention scraping
+- Delayed outreach campaigns
+- Migration assistance workflows
+- Incentive management
+
+###### Use Case 6: Viral Content Amplification
+**Purpose**: Leverage trending content for visibility
+**Integration Points**:
+- **Trend Dashboard**: Real-time trending topics
+- **Content Idea Queue**: AI-generated concepts
+- **Engagement Metrics**: Track viral performance
+- **Response Templates**: Quick reaction content
+
+**n8n Workflow Components**:
+- Trend monitoring across platforms
+- Content idea generation
+- Automated engagement
+- Performance analytics
+
+##### Phase 3: Enterprise Automation Features
+
+###### Use Case 7: Multi-Channel Content Distribution
+**Purpose**: Maximize content reach and engagement
+**Integration Points**:
+- **Content Hub**: Central repository for all content
+- **Distribution Matrix**: Platform-specific adaptations
+- **Performance Analytics**: Cross-channel metrics
+- **Lead Capture Forms**: Integrated lead magnets
+
+**n8n Workflow Components**:
+- AI content generation pipeline
+- Multi-channel distribution
+- Lead magnet delivery
+- Nurture sequence triggers
+
+###### Use Case 8: Conversational AI Integration
+**Purpose**: Scale personalized interactions
+**Integration Points**:
+- **Chat Dashboard**: Monitor all conversations
+- **Response Library**: Pre-approved messages
+- **Handoff Rules**: Human escalation triggers
+- **Conversation Analytics**: Engagement insights
+
+**n8n Workflow Components**:
+- DM automation across platforms
+- FAQ response system
+- Lead qualification
+- Appointment scheduling
+
+###### Use Case 9: Campaign Performance Optimization
+**Purpose**: Continuously improve marketing effectiveness
+**Integration Points**:
+- **A/B Testing Dashboard**: Compare variations
+- **Performance Metrics**: Real-time KPIs
+- **Optimization Suggestions**: AI recommendations
+- **Budget Allocation**: Resource management
+
+**n8n Workflow Components**:
+- Message variation testing
+- Timing optimization
+- Channel performance analysis
+- Budget reallocation
+
+###### Use Case 10: Partner & Referral Management
+**Purpose**: Scale through network effects
+**Integration Points**:
+- **Partner Portal**: Dedicated dashboard
+- **Referral Tracking**: Attribution system
+- **Reward Management**: Incentive distribution
+- **Performance Leaderboard**: Gamification
+
+**n8n Workflow Components**:
+- Partner recruitment workflows
+- Referral link generation
+- Commission calculation
+- Success story collection
+
+#### Implementation Strategy for Use Cases
+
+##### Progressive Enhancement Approach
+1. **Start Simple** (Months 1-2):
+   - Basic webhook integration
+   - Social account tracking
+   - Simple event triggers
+   - Manual approval for all automated actions
+
+2. **Add Intelligence** (Months 3-4):
+   - AI-powered content suggestions
+   - Automated lead scoring
+   - Smart scheduling based on patterns
+   - Semi-automated responses with approval
+
+3. **Scale Automation** (Months 5-6):
+   - Full workflow automation
+   - Multi-channel orchestration
+   - Advanced AI decision making
+   - Minimal human intervention needed
+
+##### Success Metrics for Automation
+- **Efficiency Metrics**:
+  - Time saved per workflow
+  - Automation success rate
+  - Error/failure rates
+  - Human intervention frequency
+
+- **Business Metrics**:
+  - Lead generation increase
+  - Engagement rate improvement
+  - Conversion rate optimization
+  - Customer acquisition cost reduction
+
+- **Quality Metrics**:
+  - Content relevance score
+  - Response accuracy rate
+  - Customer satisfaction
+  - Brand sentiment tracking
+
+### 4.8 Integrations & Extensions
 
 #### Essential Integrations (Phase 1)
 - **Cloud Storage**: Google Drive, Dropbox, OneDrive
 - **Design Tools**: Canva API integration
 - **Link Management**: Bitly, custom shorteners
-- **Automation**: Zapier, webhooks
+- **Automation**: n8n (primary), Zapier, Make, webhooks
 - **Email Service**: Mailgun for transactional emails
 
 #### Advanced Integrations (Phase 2)
@@ -293,7 +603,7 @@ To democratize professional social media management by making enterprise-grade t
 - SDK for major languages
 - API documentation portal
 
-### 4.8 MCP (Model Context Protocol) Integration
+### 4.9 MCP (Model Context Protocol) Integration
 
 #### Overview
 Enable full platform control through Claude AI and other LLMs using Anthropic's Model Context Protocol, allowing users to manage their entire social media presence through natural language commands.
@@ -330,10 +640,132 @@ Enable full platform control through Claude AI and other LLMs using Anthropic's 
 - Third-party MCP clients
 - Custom LLM integrations
 
-### 4.9 Agentic AI Advisor System
+### 4.10 AI Configuration & API Key Management
 
 #### Overview
-Implement autonomous AI agents that proactively guide users through complex workflows, automate repetitive tasks, and provide intelligent recommendations based on user behavior and goals.
+Enable customers to bring their own AI LLM API keys (BYOK - Bring Your Own Key) for complete control over AI costs, model selection, and data privacy. This allows businesses to use their existing OpenAI, Anthropic, or other AI provider accounts while maintaining full ownership of their AI interactions.
+
+#### Supported AI Providers
+- **OpenAI**: GPT-4, GPT-3.5, DALL-E 3, Whisper
+- **Anthropic**: Claude 3 Opus, Claude 3 Sonnet, Claude 3 Haiku
+- **Google**: Gemini Pro, PaLM 2
+- **Cohere**: Command, Generate, Embed
+- **Azure OpenAI**: Enterprise-grade OpenAI models
+- **Hugging Face**: Open-source models via API
+- **Local Models**: Ollama, LM Studio (self-hosted)
+
+#### API Key Management Features
+- **Secure Storage**:
+  - End-to-end encryption for all API keys
+  - Keys stored in encrypted vault (AES-256)
+  - Never exposed in frontend or logs
+  - Automatic key rotation support
+  - Multi-environment key management (dev/staging/prod)
+
+- **Configuration Options**:
+  - Per-workspace API keys
+  - Per-user API keys (for agencies)
+  - Fallback keys for high availability
+  - Usage-based key switching
+  - Model-specific key assignment
+
+- **Usage Controls**:
+  - Set monthly/daily spending limits
+  - Rate limiting per key
+  - Usage tracking and reporting
+  - Alert on approaching limits
+  - Automatic fallback to platform keys (optional)
+
+#### Customer Benefits
+- **Cost Control**: Direct billing from AI providers
+- **Model Choice**: Select preferred models for different tasks
+- **Data Privacy**: API calls go directly to chosen provider
+- **Compliance**: Meet regulatory requirements for data residency
+- **Performance**: Use enterprise tier API access
+- **Flexibility**: Switch providers without platform lock-in
+
+#### Implementation Details
+- **Key Validation**:
+  - Test connection on key entry
+  - Verify model availability
+  - Check rate limits and quotas
+  - Monitor key health status
+
+- **Fallback Mechanisms**:
+  - Platform-provided keys as backup
+  - Graceful degradation on key failure
+  - Queue requests during outages
+  - Alternative model suggestions
+
+- **Usage Analytics**:
+  - Token consumption tracking
+  - Cost estimation per feature
+  - Model performance comparison
+  - ROI reporting on AI usage
+
+- **BYOK (Bring Your Own Key) System** 🔴 NOT IMPLEMENTED:
+  - **Customer API Key Management**: Allow customers to use their own OpenAI/Anthropic API keys
+  - **Secure Key Storage**: Encrypt customer API keys using AES-256 encryption
+  - **Settings Interface**: User-friendly UI for adding/managing API keys in account settings
+  - **Key Validation**: Test API keys before saving to ensure they're valid
+  - **Tiered Access**: Free tier uses platform keys (with limits), paid tiers can use own keys
+  - **Usage Tracking**: Monitor API usage per customer key for billing/analytics
+  - **Fallback Logic**: Gracefully handle expired/invalid keys with platform fallback
+  - **Multi-Provider Support**: Support for OpenAI, Anthropic, Cohere, and other LLM providers
+  - **Documentation**: Clear instructions for customers on obtaining and using API keys
+
+### 4.11 Internal AI Support System ✅ COMPLETED
+
+#### Overview
+Comprehensive AI-powered support system for internal staff and administrators using local RAG (Retrieval-Augmented Generation) capabilities. This system provides intelligent documentation search, contextual answers, and automated support assistance while maintaining complete data privacy and security.
+
+#### Implementation Status: COMPLETED ✅
+- **Knowledge Base**: 9 comprehensive markdown files covering all platform aspects
+- **Vector Database**: PostgreSQL with pgvector extension for semantic search
+- **RAG Pipeline**: Local embeddings and retrieval with OpenAI text-embedding-3-small
+- **API Endpoints**: Complete backend services for retrieval and answer generation
+- **UI Components**: Support dashboard and embeddable assistant widget
+- **Evaluation Framework**: Automated testing for retrieval quality and answer accuracy
+- **CI/CD Integration**: GitHub Actions workflow for continuous quality assurance
+
+#### Core Features Delivered
+- **Intelligent Retrieval**: Hybrid search combining vector similarity and keyword matching
+- **Contextual Responses**: GPT-4 powered answers with source citations and confidence scoring
+- **Support Dashboard**: Full-featured interface at `/dashboard/support` for comprehensive support tasks
+- **Internal Assistant Widget**: Embeddable floating chat widget for quick staff assistance
+- **Knowledge Search**: Dedicated search interface with expandable results and category filtering
+- **Role-Based Access**: Security controls ensuring only authorized staff can access
+- **Performance Analytics**: Query tracking, confidence analysis, and escalation monitoring
+
+#### Technical Implementation
+- **Database**: PostgreSQL with pgvector extension for 1536-dimensional embeddings
+- **Embeddings**: OpenAI text-embedding-3-small for semantic search capabilities
+- **Chunking Strategy**: 800 tokens with 120 token overlap for optimal retrieval
+- **API Architecture**: RESTful endpoints with comprehensive validation and error handling
+- **Security**: End-to-end encryption, role-based filtering, and audit logging
+- **Evaluation**: Automated testing framework with retrieval and answer quality metrics
+
+#### Knowledge Base Coverage
+1. **System Architecture** - Technical infrastructure and design patterns
+2. **Domain Glossary** - Business terms, entities, and constraints
+3. **User Journeys** - Workflows, edge cases, and user interactions
+4. **Features & APIs** - Complete endpoint documentation and usage examples
+5. **Configuration** - Settings, feature flags, and system configuration
+6. **Troubleshooting** - Common issues, solutions, and debugging guides
+7. **FAQ** - Frequently asked questions and quick answers
+8. **Security & Privacy** - Data protection, compliance, and best practices
+9. **Future Roadmap** - Planned features, limitations, and development priorities
+
+#### Quality Assurance
+- **Retrieval Testing**: 13 test cases covering precision, recall, and relevance
+- **Answer Quality**: Rubric-based evaluation for accuracy, completeness, and clarity
+- **Performance Monitoring**: Response time tracking and confidence calibration
+- **Continuous Integration**: Automated quality checks on every knowledge base update
+
+### 4.12 Agentic AI Advisor System
+
+#### Overview
+Implement autonomous AI agents that proactively guide users through complex workflows, automate repetitive tasks, and provide intelligent recommendations based on user behavior and goals. These agents can be powered by customer-provided API keys or platform defaults.
 
 #### Agent Types
 
@@ -473,6 +905,7 @@ Implement autonomous AI agents that proactively guide users through complex work
 - **CI/CD**: GitHub Actions
 - **Monitoring**: Winston logging + Prometheus
 - **Email Testing**: MailHog (development)
+- **Workflow Automation**: n8n (self-hosted or cloud)
 
 #### AI/ML Services
 - **LLM**: OpenAI GPT-4 API
@@ -511,6 +944,7 @@ Implement autonomous AI agents that proactively guide users through complex work
 
 ### 5.3 Security Requirements
 
+#### Data Protection
 - End-to-end encryption for sensitive data
 - OAuth token encryption at rest
 - API rate limiting per user/tier
@@ -518,6 +952,25 @@ Implement autonomous AI agents that proactively guide users through complex work
 - Regular security audits
 - GDPR/CCPA compliance
 - SOC 2 Type II certification (future)
+
+#### API Key Security
+- **Storage Security**:
+  - All API keys (AI providers, n8n) encrypted using AES-256
+  - Keys stored in secure vault (HashiCorp Vault or AWS Secrets Manager)
+  - Zero-knowledge architecture - platform cannot decrypt customer keys
+  - Automatic key rotation capabilities
+
+- **Access Controls**:
+  - Role-based access to API key management
+  - Audit logs for all key operations
+  - MFA required for key modifications
+  - IP allowlisting for key usage
+
+- **Compliance**:
+  - PCI DSS compliant key handling
+  - HIPAA compliant for healthcare customers
+  - Zero data retention after key deletion
+  - Regular security penetration testing
 
 ---
 
@@ -577,17 +1030,39 @@ Implement autonomous AI agents that proactively guide users through complex work
 - White-label solutions
 - Enterprise features
 
-### Phase 7: MCP & Agentic AI (Sprint 11-12) - 4 weeks
-**Goal**: LLM control and autonomous agents
+### Phase 7: Automation & AI Integration (Sprint 11-12) - 4 weeks
+**Goal**: n8n automation, MCP control, and autonomous agents
 
+#### Week 1-2: Basic n8n Integration
+- n8n API connection setup
+- Basic webhook touchpoints
+- Social account tracking
+- Simple event triggers
+- Workflow monitoring dashboard (basic)
+
+#### Week 3-4: Advanced Automation & AI
+- Competitor monitoring workflows
+- Influencer discovery automation
+- Community engagement bots
+- Lead scoring implementation
 - MCP server implementation
 - Claude Desktop integration
-- Strategy Advisor Agent
-- Content Creation Agent
-- Engagement Manager Agent
-- Performance Optimizer Agent
-- Workflow Automation Agent
-- Agent orchestration system
+
+### Phase 8: Advanced Use Cases (Sprint 13-14) - 4 weeks
+**Goal**: Implement complex automation use cases
+
+#### Week 1-2: Marketing Automation
+- B2B LinkedIn campaigns
+- Customer acquisition workflows
+- Viral content amplification
+- Multi-channel distribution
+
+#### Week 3-4: Enterprise Features
+- Conversational AI integration
+- Campaign optimization automation
+- Partner & referral management
+- Advanced analytics and reporting
+- AI Agent orchestration system
 
 ---
 
@@ -600,24 +1075,29 @@ Implement autonomous AI agents that proactively guide users through complex work
 - 5 social accounts
 - 30 posts/month
 - Basic analytics
-- AI content (100 credits)
+- AI content (100 credits OR bring your own API key)
+- n8n integration (requires your n8n API key)
 
 #### Professional - $49/month
 - 3 users
 - 15 social accounts
 - Unlimited posts
 - Advanced analytics
-- AI content (500 credits)
+- AI content (500 credits OR bring your own API key)
 - Approval workflows
+- n8n integration (requires your n8n API key)
+- Multiple AI provider support
 
 #### Team - $99/month
 - 10 users
 - 50 social accounts
 - Unlimited posts
 - Custom reports
-- AI content (2000 credits)
+- AI content (2000 credits OR bring your own API key)
 - API access
 - Priority support
+- n8n integration (requires your n8n API key)
+- Advanced automation workflows
 
 #### Enterprise - Custom pricing
 - Unlimited users
@@ -627,6 +1107,10 @@ Implement autonomous AI agents that proactively guide users through complex work
 - SLA guarantees
 - Custom integrations
 - On-premise option
+- Bring your own AI infrastructure
+- Custom n8n workflow development
+- Dedicated API key vault
+- Advanced security features
 
 ---
 
@@ -661,7 +1145,72 @@ Implement autonomous AI agents that proactively guide users through complex work
 
 ---
 
-## 9. Risk Assessment & Mitigation
+## 9. Testing Strategy for n8n Use Cases
+
+### Integration Testing Requirements
+To ensure seamless n8n automation integration, the following testing protocols must be implemented:
+
+#### Phase 1 Testing (Basic Integration)
+- **Account Tracking Validation**:
+  - Verify n8n workflows can access social account data
+  - Test webhook delivery reliability
+  - Confirm event trigger accuracy
+  - Validate data synchronization between platforms
+
+- **Performance Testing**:
+  - Measure webhook response times
+  - Test concurrent workflow handling
+  - Verify queue processing speeds
+  - Monitor API rate limit compliance
+
+#### Phase 2 Testing (Advanced Use Cases)
+- **Workflow Validation**:
+  - Test each use case with sample data
+  - Verify AI response quality
+  - Confirm lead scoring accuracy
+  - Validate content distribution paths
+
+- **Error Handling**:
+  - Test workflow failure recovery
+  - Verify notification systems
+  - Confirm data integrity on failures
+  - Validate rollback mechanisms
+
+#### Phase 3 Testing (Enterprise Scale)
+- **Load Testing**:
+  - Simulate high-volume automation
+  - Test multi-tenant isolation
+  - Verify resource allocation
+  - Monitor system stability
+
+- **Security Testing**:
+  - Validate API key encryption
+  - Test access control enforcement
+  - Verify audit logging
+  - Confirm data privacy compliance
+
+### Use Case Validation Checklist
+Each automation use case must pass the following criteria:
+
+1. **Functional Requirements**:
+   - ✓ Core workflow executes successfully
+   - ✓ Data flows correctly between systems
+   - ✓ Expected outputs are generated
+   - ✓ User controls function properly
+
+2. **Integration Points**:
+   - ✓ AllIN dashboard displays n8n data
+   - ✓ Bidirectional sync works correctly
+   - ✓ Approval workflows trigger properly
+   - ✓ Analytics capture automation metrics
+
+3. **User Experience**:
+   - ✓ Clear visibility of automation status
+   - ✓ Intuitive workflow management
+   - ✓ Helpful error messages
+   - ✓ Smooth manual intervention when needed
+
+## 10. Risk Assessment & Mitigation
 
 ### Technical Risks
 | Risk | Impact | Probability | Mitigation |
@@ -681,7 +1230,7 @@ Implement autonomous AI agents that proactively guide users through complex work
 
 ---
 
-## 10. Launch Strategy
+## 11. Launch Strategy
 
 ### Beta Launch (Month 1-2)
 - 100 beta users recruitment
@@ -709,7 +1258,7 @@ Implement autonomous AI agents that proactively guide users through complex work
 
 ---
 
-## 11. BMAD Agent Responsibilities
+## 12. BMAD Agent Responsibilities
 
 ### Analyst Agent
 - Market research and competitor analysis
@@ -749,7 +1298,7 @@ Implement autonomous AI agents that proactively guide users through complex work
 
 ---
 
-## 12. Appendices
+## 13. Appendices
 
 ### A. Competitor Feature Matrix
 [See separate AllIN_Feature_Comparison_Matrix.md]
@@ -771,6 +1320,11 @@ Implement autonomous AI agents that proactively guide users through complex work
 ## Document History
 - v1.0 - Initial PRD based on original requirements
 - v2.0 - Enhanced with Sprout Social and Buffer competitive analysis
+- v2.1 - Added TikTok platform support and n8n automation integration
+- v2.2 - Added BYOK (Bring Your Own Key) for AI providers and n8n API key requirements
+- v2.3 - Added comprehensive n8n automation use cases and testing strategy
+- v2.4 - **COMPLETED**: Internal AI Support System with RAG capabilities, knowledge base, evaluation framework
+- v2.5 - **BYOK System Specifications Updated**: Added detailed requirements for customer API key management (Section 4.10)
 - Next: v3.0 - Post-architecture review updates
 
 ---

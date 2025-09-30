@@ -1,0 +1,50 @@
+exceptions:
+  - path: "src/types/express.d.ts"
+    reason: "TypeScript declaration files are not executable code"
+    owner: "backend"
+    expires: "permanent"
+    compensating_controls:
+      - "Type definitions validated through TypeScript compilation"
+      - "Integration tests verify actual usage"
+
+  - path: "src/services/oauth/facebook.oauth.ts"
+    reason: "Third-party OAuth flow branches depend on external Facebook API responses"
+    owner: "backend"
+    expires: "2025-06-30"
+    compensating_controls:
+      - "Mock-based tests for all reachable branches"
+      - "Contract tests with Facebook API sandbox"
+      - "E2E tests with test Facebook app"
+
+  - path: "frontend/src/app/layout.tsx"
+    reason: "Next.js layout component - mostly framework boilerplate"
+    owner: "frontend"
+    expires: "2025-03-31"
+    compensating_controls:
+      - "E2E tests verify layout renders correctly"
+      - "Visual regression tests capture layout changes"
+
+  - path: "src/utils/logger.ts"
+    reason: "Winston logger initialization - some error paths unreachable in test environment"
+    owner: "backend"
+    expires: "2025-04-30"
+    compensating_controls:
+      - "Mock-based tests for all log levels"
+      - "Integration tests verify logging in actual usage"
+      - "Error monitoring in production"
+
+# Time-boxed exceptions that need attention
+pending_reduction:
+  - path: "src/services/email.service.ts"
+    current_coverage: 75
+    target_coverage: 100
+    deadline: "2025-02-15"
+    owner: "backend"
+    plan: "Add tests for SMTP error scenarios and rate limiting"
+
+  - path: "frontend/src/components/ui/*"
+    current_coverage: 60
+    target_coverage: 90
+    deadline: "2025-02-28"
+    owner: "frontend"
+    plan: "Add property-based tests for UI components with various props"

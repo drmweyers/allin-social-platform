@@ -1,4 +1,4 @@
-import { prisma } from '../lib/prisma';
+import { prisma } from './database';
 import { SocialPlatform, Prisma } from '@prisma/client';
 
 interface CreateDraftInput {

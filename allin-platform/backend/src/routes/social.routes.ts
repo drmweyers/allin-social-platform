@@ -6,14 +6,7 @@ import { body, param } from 'express-validator';
 import { OAuthService } from '../services/oauth.service';
 import { FacebookOAuthService } from '../services/oauth/facebook.oauth';
 import { AppError } from '../utils/errors';
-
-interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    email: string;
-    role: string;
-  };
-}
+import { AuthRequest } from '../types/auth';
 
 const router = Router();
 
@@ -31,7 +24,7 @@ const oauthStates: Map<string, { userId: string; platform: SocialPlatform; organ
  * @desc    Get all connected social accounts for the authenticated user
  * @access  Private
  */
-router.get('/accounts', authenticateToken, async (req: AuthRequest, res: Response, next: NextFunction) => {
+router.get('/accounts', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.id;
     const organizationId = req.query.organizationId as string | undefined;
@@ -43,7 +36,11 @@ router.get('/accounts', authenticateToken, async (req: AuthRequest, res: Respons
       data: accounts,
     });
   } catch (error) {
-    next(error);
+    console.error('Error fetching social accounts:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to fetch social accounts',
+    });
   }
 });
 
@@ -59,7 +56,7 @@ router.post(
     param('platform').isIn(Object.values(SocialPlatform)),
     body('organizationId').optional().isString(),
   ]),
-  async (req: AuthRequest, res: Response, next: NextFunction) => {
+  async (req: AuthRequest, res: Response) => {
     try {
       const platform = req.params.platform as SocialPlatform;
       const userId = req.user!.id;
@@ -93,7 +90,11 @@ router.post(
         authUrl,
       });
     } catch (error) {
-      next(error);
+      console.error('Error connecting social account:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to connect social account',
+      });
     }
   }
 );
@@ -164,7 +165,7 @@ router.delete(
   validateRequest([
     param('accountId').isString(),
   ]),
-  async (req: AuthRequest, res: Response, next: NextFunction) => {
+  async (req: AuthRequest, res: Response) => {
     try {
       const { accountId } = req.params;
       const userId = req.user!.id;
@@ -191,7 +192,11 @@ router.delete(
         message: `Successfully disconnected from ${account.platform}`,
       });
     } catch (error) {
-      next(error);
+      console.error('Error connecting social account:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to connect social account',
+      });
     }
   }
 );
@@ -207,7 +212,7 @@ router.post(
   validateRequest([
     param('accountId').isString(),
   ]),
-  async (req: AuthRequest, res: Response, next: NextFunction) => {
+  async (req: AuthRequest, res: Response) => {
     try {
       const { accountId } = req.params;
       const userId = req.user!.id;
@@ -234,7 +239,11 @@ router.post(
         message: 'Tokens refreshed successfully',
       });
     } catch (error) {
-      next(error);
+      console.error('Error connecting social account:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to connect social account',
+      });
     }
   }
 );
@@ -250,11 +259,12 @@ router.get(
   validateRequest([
     param('accountId').isString(),
   ]),
-  async (req: AuthRequest, res: Response, next: NextFunction) => {
+  async (req: AuthRequest, res: Response) => {
     try {
       const { accountId } = req.params;
-      // const { since, until } = req.query; // Unused for now
       const userId = req.user!.id;
+      // Future: Add query params for date range filtering
+      // const { since, until } = req.query;
 
       // Get the account
       const accounts = await OAuthService.getUserAccounts(userId);
@@ -280,7 +290,11 @@ router.get(
         data: insights,
       });
     } catch (error) {
-      next(error);
+      console.error('Error connecting social account:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to connect social account',
+      });
     }
   }
 );

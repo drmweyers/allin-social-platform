@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import AIChatSidebar from '@/components/ai/AIChatSidebar';
 import {
   Home,
   PlusCircle,
@@ -21,6 +22,7 @@ import {
   Bell,
   Search,
   User,
+  Bot,
 } from 'lucide-react';
 
 const navigation = [
@@ -43,6 +45,25 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [aiChatOpen, setAiChatOpen] = useState(false);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + K to toggle AI chat
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setAiChatOpen(!aiChatOpen);
+      }
+      // Esc to close AI chat
+      if (e.key === 'Escape' && aiChatOpen) {
+        setAiChatOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [aiChatOpen]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -167,6 +188,15 @@ export default function DashboardLayout({
               <Button variant="ghost" size="sm">
                 <Bell className="h-5 w-5" />
               </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setAiChatOpen(!aiChatOpen)}
+                className="relative"
+              >
+                <Bot className="h-5 w-5" />
+                <span className="sr-only">AI Assistant (Ctrl+K)</span>
+              </Button>
               <Button size="sm" className="hidden sm:flex">
                 <PlusCircle className="h-4 w-4 mr-2" />
                 New Post
@@ -180,6 +210,12 @@ export default function DashboardLayout({
           {children}
         </main>
       </div>
+
+      {/* AI Chat Sidebar */}
+      <AIChatSidebar
+        isOpen={aiChatOpen}
+        onToggle={() => setAiChatOpen(!aiChatOpen)}
+      />
     </div>
   );
 }

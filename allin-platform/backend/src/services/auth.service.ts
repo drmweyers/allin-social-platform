@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { prisma } from './database';
-import { AppError } from '../middleware/error';
+import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
 import { emailService } from './email.service';
 
@@ -392,6 +392,32 @@ class AuthService {
       if (error instanceof jwt.JsonWebTokenError) {
         throw new AppError('Invalid access token', 401);
       }
+      throw error;
+    }
+  }
+
+  async validateSession(sessionToken: string) {
+    try {
+      // Find session
+      const session = await prisma.session.findUnique({
+        where: { sessionToken },
+        include: { user: true },
+      });
+
+      if (!session) {
+        throw new AppError('Invalid session', 401);
+      }
+
+      // Check if session expired
+      if (session.expires < new Date()) {
+        await prisma.session.delete({ where: { id: session.id } });
+        throw new AppError('Session expired', 401);
+      }
+
+      // Return user without password
+      const { password, ...userWithoutPassword } = session.user;
+      return userWithoutPassword;
+    } catch (error) {
       throw error;
     }
   }

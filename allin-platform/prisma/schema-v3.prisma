@@ -1,0 +1,361 @@
+// This is the enhanced Prisma schema file for AllIN Platform v3.0
+// Including n8n integration, API key management, and TikTok support
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== USER & AUTH ====================
+
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  passwordHash      String    @map("password_hash")
+  firstName         String?   @map("first_name")
+  lastName          String?   @map("last_name")
+  emailVerified     Boolean   @default(false) @map("email_verified")
+  mfaSecret         String?   @map("mfa_secret")
+  mfaEnabled        Boolean   @default(false) @map("mfa_enabled")
+  isActive          Boolean   @default(true) @map("is_active")
+  lastLoginAt       DateTime? @map("last_login_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  sessions          Session[]
+  organizationMembers OrganizationMember[]
+  verificationTokens VerificationToken[]
+  passwordResetTokens PasswordResetToken[]
+
+  @@map("users")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  refreshToken String   @unique @map("refresh_token")
+  expiresAt    DateTime @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// ==================== ORGANIZATION ====================
+
+model Organization {
+  id            String   @id @default(uuid())
+  name          String
+  slug          String   @unique
+  plan          Plan     @default(STARTER)
+  logoUrl       String?  @map("logo_url")
+  website       String?
+  timezone      String   @default("UTC")
+  n8nApiKeyId   String?  @unique @map("n8n_api_key_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  members          OrganizationMember[]
+  socialAccounts   SocialAccount[]
+  posts            Post[]
+  drafts           Draft[]
+  templates        ContentTemplate[]
+  apiKeys          ApiKey[]
+  n8nWorkflows     N8nWorkflow[]
+  automationEvents AutomationEvent[]
+
+  @@map("organizations")
+}
+
+enum Plan {
+  STARTER
+  PROFESSIONAL
+  TEAM
+  ENTERPRISE
+}
+
+model OrganizationMember {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  userId         String   @map("user_id")
+  role           Role
+  joinedAt       DateTime @default(now()) @map("joined_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@map("organization_members")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MANAGER
+  PUBLISHER
+  VIEWER
+}
+
+// ==================== API KEY MANAGEMENT ====================
+
+model ApiKey {
+  id                 String    @id @default(uuid())
+  organizationId     String    @map("organization_id")
+  provider           String    // openai, anthropic, google, n8n, etc
+  keyName            String    @map("key_name")
+  encryptedKey       String    @map("encrypted_key")
+  keyHint            String?   @map("key_hint") // Last 4 chars
+  isActive           Boolean   @default(true) @map("is_active")
+  usageLimitMonthly  Decimal?  @map("usage_limit_monthly") @db.Decimal(10, 2)
+  usageCurrent       Decimal   @default(0) @map("usage_current") @db.Decimal(10, 2)
+  lastUsedAt         DateTime? @map("last_used_at")
+  expiresAt          DateTime? @map("expires_at")
+  models             Json?     // Array of available models
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  usageLogs    ApiKeyUsage[]
+
+  @@index([organizationId])
+  @@map("api_keys")
+}
+
+model ApiKeyUsage {
+  id            String   @id @default(uuid())
+  apiKeyId      String   @map("api_key_id")
+  date          DateTime @db.Date
+  requestsCount Int      @default(0) @map("requests_count")
+  tokensUsed    Int      @default(0) @map("tokens_used")
+  cost          Decimal  @default(0) @db.Decimal(10, 4)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  apiKey ApiKey @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+
+  @@unique([apiKeyId, date])
+  @@index([apiKeyId, date])
+  @@map("api_key_usage")
+}
+
+// ==================== N8N INTEGRATION ====================
+
+model N8nWorkflow {
+  id                  String    @id @default(uuid())
+  organizationId      String    @map("organization_id")
+  workflowId          String    @map("workflow_id") // n8n workflow ID
+  workflowName        String    @map("workflow_name")
+  description         String?
+  isActive            Boolean   @default(true) @map("is_active")
+  triggerEvents       Json      @map("trigger_events") // Array of events
+  lastExecutionId     String?   @map("last_execution_id")
+  lastExecutionStatus String?   @map("last_execution_status")
+  lastExecutedAt      DateTime? @map("last_executed_at")
+  executionCount      Int       @default(0) @map("execution_count")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  executions   N8nExecution[]
+  metrics      WorkflowMetric[]
+
+  @@index([organizationId])
+  @@map("n8n_workflows")
+}
+
+model N8nExecution {
+  id           String    @id @default(uuid())
+  workflowId   String    @map("workflow_id")
+  executionId  String    @map("execution_id") // n8n execution ID
+  status       String    // running, success, error, waiting
+  startedAt    DateTime  @map("started_at")
+  finishedAt   DateTime? @map("finished_at")
+  errorMessage String?   @map("error_message")
+  data         Json?     // Execution data/results
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  workflow N8nWorkflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@index([workflowId, createdAt])
+  @@map("n8n_executions")
+}
+
+model AutomationEvent {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  eventType      String   @map("event_type") // post_published, engagement_threshold, etc
+  eventData      Json     @map("event_data")
+  processed      Boolean  @default(false)
+  workflowIds    Json?    @map("workflow_ids") // Array of triggered workflow IDs
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@map("automation_events")
+}
+
+model WorkflowMetric {
+  id                String   @id @default(uuid())
+  workflowId        String   @map("workflow_id")
+  date              DateTime @db.Date
+  executionsTotal   Int      @default(0) @map("executions_total")
+  executionsSuccess Int      @default(0) @map("executions_success")
+  executionsError   Int      @default(0) @map("executions_error")
+  averageDurationMs Int?     @map("average_duration_ms")
+  totalCost         Decimal? @map("total_cost") @db.Decimal(10, 4)
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  workflow N8nWorkflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@unique([workflowId, date])
+  @@index([workflowId, date])
+  @@map("workflow_metrics")
+}
+
+// ==================== SOCIAL MEDIA ====================
+
+model SocialAccount {
+  id                    String    @id @default(uuid())
+  organizationId        String    @map("organization_id")
+  platform              Platform
+  accountId             String    @map("account_id")
+  accountName           String?   @map("account_name")
+  accountAvatar         String?   @map("account_avatar")
+  accountHandle         String?   @map("account_handle")
+  accessTokenEncrypted  String?   @map("access_token_encrypted")
+  refreshTokenEncrypted String?   @map("refresh_token_encrypted")
+  tokenExpiresAt        DateTime? @map("token_expires_at")
+  platformSpecificData  Json?     @map("platform_specific_data") // For TikTok: open_id, union_id, etc
+  isActive              Boolean   @default(true) @map("is_active")
+  lastSyncedAt          DateTime? @map("last_synced_at")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  posts        Post[]
+
+  @@index([organizationId, platform])
+  @@map("social_accounts")
+}
+
+enum Platform {
+  FACEBOOK
+  INSTAGRAM
+  TWITTER
+  LINKEDIN
+  TIKTOK
+  YOUTUBE
+  PINTEREST
+  THREADS
+}
+
+// ==================== CONTENT ====================
+
+model Post {
+  id              String    @id @default(uuid())
+  organizationId  String    @map("organization_id")
+  socialAccountId String?   @map("social_account_id")
+  content         String
+  mediaUrls       String[]  @map("media_urls")
+  hashtags        String[]
+  platformPostId  String?   @map("platform_post_id")
+  status          PostStatus
+  scheduledFor    DateTime? @map("scheduled_for")
+  publishedAt     DateTime? @map("published_at")
+  metrics         Json?     // Engagement metrics
+  aiGenerated     Boolean   @default(false) @map("ai_generated")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  socialAccount SocialAccount? @relation(fields: [socialAccountId], references: [id])
+
+  @@index([organizationId, status])
+  @@index([scheduledFor])
+  @@map("posts")
+}
+
+enum PostStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHING
+  PUBLISHED
+  FAILED
+}
+
+model Draft {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  title          String?
+  content        String
+  mediaUrls      String[] @map("media_urls")
+  hashtags       String[]
+  platforms      Platform[]
+  aiGenerated    Boolean  @default(false) @map("ai_generated")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("drafts")
+}
+
+model ContentTemplate {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  name           String
+  description    String?
+  content        String
+  variables      Json?    // Template variables
+  platforms      Platform[]
+  category       String?
+  usageCount     Int      @default(0) @map("usage_count")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("content_templates")
+}
+
+// ==================== VERIFICATION & TOKENS ====================
+
+model VerificationToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  type      TokenType
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("verification_tokens")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
+enum TokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}

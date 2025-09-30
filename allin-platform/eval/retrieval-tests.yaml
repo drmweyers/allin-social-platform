@@ -1,0 +1,245 @@
+# Retrieval Quality Evaluation Tests
+# Tests the quality of document retrieval from the knowledge base
+
+description: "Tests for evaluating RAG retrieval quality and relevance"
+version: "1.0"
+test_config:
+  vector_similarity_threshold: 0.7
+  max_results_to_evaluate: 5
+  timeout_seconds: 30
+
+tests:
+  - id: "troubleshooting_login"
+    query: "How do I help a user who can't log in?"
+    expected_docs:
+      - "60-troubleshooting.md"
+    expected_sections:
+      - "Login Problems"
+      - "Authentication Issues"
+    expected_keywords:
+      - "password reset"
+      - "account verification"
+      - "2FA"
+    min_score: 0.8
+    category: "troubleshooting"
+    description: "Should retrieve troubleshooting docs for login issues"
+
+  - id: "billing_questions"
+    query: "What are the different subscription plans and pricing?"
+    expected_docs:
+      - "70-faq.md"
+      - "40-features-and-APIs.md"
+    expected_sections:
+      - "Billing and Subscriptions"
+      - "Pricing Plans"
+    expected_keywords:
+      - "plan"
+      - "subscription"
+      - "billing"
+      - "pricing"
+    min_score: 0.75
+    category: "faq"
+    description: "Should retrieve billing and subscription information"
+
+  - id: "api_rate_limits"
+    query: "What are the API rate limits and how do I handle rate limiting?"
+    expected_docs:
+      - "40-features-and-APIs.md"
+      - "60-troubleshooting.md"
+    expected_sections:
+      - "Rate Limiting"
+      - "API Limits"
+    expected_keywords:
+      - "rate limit"
+      - "429"
+      - "requests per minute"
+      - "quota"
+    min_score: 0.8
+    category: "features-apis"
+    description: "Should find API rate limiting documentation"
+
+  - id: "social_media_posting"
+    query: "How do I schedule a post to multiple social media platforms?"
+    expected_docs:
+      - "30-user-journeys.md"
+      - "40-features-and-APIs.md"
+    expected_sections:
+      - "Multi-Platform Posting"
+      - "Content Scheduling"
+    expected_keywords:
+      - "schedule"
+      - "post"
+      - "platform"
+      - "social media"
+    min_score: 0.75
+    category: "user-journeys"
+    description: "Should retrieve content scheduling workflows"
+
+  - id: "database_connection_error"
+    query: "Database connection failed - how do I troubleshoot this?"
+    expected_docs:
+      - "60-troubleshooting.md"
+      - "10-architecture.md"
+    expected_sections:
+      - "Database Issues"
+      - "Connection Problems"
+    expected_keywords:
+      - "database"
+      - "connection"
+      - "PostgreSQL"
+      - "timeout"
+    min_score: 0.8
+    category: "troubleshooting"
+    description: "Should find database troubleshooting information"
+
+  - id: "user_roles_permissions"
+    query: "What are the different user roles and their permissions?"
+    expected_docs:
+      - "20-domain-glossary.md"
+      - "80-security-and-privacy.md"
+    expected_sections:
+      - "User Roles"
+      - "Permissions"
+      - "Access Control"
+    expected_keywords:
+      - "role"
+      - "permission"
+      - "admin"
+      - "editor"
+      - "viewer"
+    min_score: 0.8
+    category: "security-privacy"
+    description: "Should retrieve user role and permission information"
+
+  - id: "webhook_configuration"
+    query: "How do I set up webhooks for social media notifications?"
+    expected_docs:
+      - "50-config-and-flags.md"
+      - "40-features-and-APIs.md"
+    expected_sections:
+      - "Webhook Configuration"
+      - "Notifications"
+    expected_keywords:
+      - "webhook"
+      - "notification"
+      - "callback"
+      - "endpoint"
+    min_score: 0.75
+    category: "configuration"
+    description: "Should find webhook setup documentation"
+
+  - id: "analytics_dashboard"
+    query: "How do I access and interpret the analytics dashboard?"
+    expected_docs:
+      - "30-user-journeys.md"
+      - "40-features-and-APIs.md"
+    expected_sections:
+      - "Analytics and Reporting"
+      - "Dashboard Usage"
+    expected_keywords:
+      - "analytics"
+      - "dashboard"
+      - "metrics"
+      - "report"
+    min_score: 0.75
+    category: "user-journeys"
+    description: "Should retrieve analytics usage information"
+
+  - id: "security_best_practices"
+    query: "What security measures should I implement for my account?"
+    expected_docs:
+      - "80-security-and-privacy.md"
+      - "60-troubleshooting.md"
+    expected_sections:
+      - "Security Best Practices"
+      - "Account Security"
+    expected_keywords:
+      - "security"
+      - "2FA"
+      - "password"
+      - "encryption"
+    min_score: 0.8
+    category: "security-privacy"
+    description: "Should find security best practices"
+
+  - id: "feature_roadmap"
+    query: "What new features are planned for the next release?"
+    expected_docs:
+      - "90-future-roadmap.md"
+    expected_sections:
+      - "Upcoming Features"
+      - "Roadmap"
+    expected_keywords:
+      - "roadmap"
+      - "future"
+      - "planned"
+      - "release"
+    min_score: 0.8
+    category: "roadmap"
+    description: "Should retrieve roadmap information"
+
+# Edge cases and challenging queries
+  - id: "ambiguous_query"
+    query: "It's not working"
+    expected_docs:
+      - "60-troubleshooting.md"
+    min_score: 0.4
+    category: "troubleshooting"
+    description: "Should handle vague queries gracefully"
+    expect_low_confidence: true
+
+  - id: "specific_error_code"
+    query: "Error 500 when posting to Instagram"
+    expected_docs:
+      - "60-troubleshooting.md"
+      - "40-features-and-APIs.md"
+    expected_keywords:
+      - "500"
+      - "error"
+      - "Instagram"
+      - "API"
+    min_score: 0.75
+    category: "troubleshooting"
+    description: "Should find specific error troubleshooting"
+
+  - id: "multi_concept_query"
+    query: "How do I configure GDPR compliance for user data in analytics reports?"
+    expected_docs:
+      - "80-security-and-privacy.md"
+      - "50-config-and-flags.md"
+    expected_keywords:
+      - "GDPR"
+      - "compliance"
+      - "user data"
+      - "analytics"
+      - "privacy"
+    min_score: 0.7
+    category: "security-privacy"
+    description: "Should handle complex multi-concept queries"
+
+evaluation_criteria:
+  retrieval_precision:
+    description: "Percentage of retrieved docs that are relevant"
+    target: ">= 80%"
+
+  retrieval_recall:
+    description: "Percentage of relevant docs that are retrieved"
+    target: ">= 75%"
+
+  score_accuracy:
+    description: "Correlation between similarity scores and human relevance ratings"
+    target: ">= 0.7"
+
+  category_precision:
+    description: "Accuracy of category filtering"
+    target: ">= 90%"
+
+  response_time:
+    description: "Average retrieval response time"
+    target: "< 2 seconds"
+
+reporting:
+  formats: ["json", "markdown", "html"]
+  include_failed_queries: true
+  include_score_distribution: true
+  include_category_breakdown: true

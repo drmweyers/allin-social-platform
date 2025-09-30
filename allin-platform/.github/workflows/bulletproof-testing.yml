@@ -1,0 +1,550 @@
+name: 🛡️ Bulletproof Testing Pipeline
+# Zero tolerance quality gates - ALL must pass for merge
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      full_suite:
+        description: 'Run full test suite including mutation testing'
+        required: false
+        default: 'true'
+
+env:
+  NODE_VERSION: '20'
+  COVERAGE_THRESHOLD: 100
+  MUTATION_THRESHOLD: 90
+  PERFORMANCE_BUDGET_LCP: 2500
+  PERFORMANCE_BUDGET_FCP: 1800
+  PERFORMANCE_BUDGET_CLS: 0.1
+
+# Cancel previous runs on same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================================================
+  # STAGE 1: Pre-flight Checks
+  # ============================================================================
+  preflight:
+    name: 🔍 Pre-flight Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      should_run_mutation: ${{ steps.check.outputs.should_run_mutation }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for better analysis
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: |
+          npm ci --audit=false
+          npm audit --production --audit-level=high
+
+      - name: 🔍 Security scan
+        run: |
+          npx lockfile-lint --type npm --path package-lock.json --validate-https --allowed-hosts npm
+
+      - name: 🎨 Code formatting check
+        run: npm run format:check
+
+      - name: 📝 Lint check
+        run: npm run lint
+
+      - name: 🔤 Type checking
+        run: npm run type-check
+
+      - name: 🔍 Check for secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+
+      - name: 📊 Determine test strategy
+        id: check
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]] || [[ "${{ github.event.inputs.full_suite }}" == "true" ]]; then
+            echo "should_run_mutation=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_run_mutation=false" >> $GITHUB_OUTPUT
+          fi
+
+  # ============================================================================
+  # STAGE 2: Unit & Integration Tests with 100% Coverage
+  # ============================================================================
+  unit-tests:
+    name: 🧪 Unit Tests (100% Coverage Required)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: preflight
+    strategy:
+      matrix:
+        package: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci --workspace=${{ matrix.package }}
+
+      - name: 🧪 Run unit tests with coverage
+        run: |
+          cd ${{ matrix.package }}
+          npm run test:coverage -- --ci --silent --bail
+        env:
+          NODE_ENV: test
+          CI: true
+
+      - name: 📊 Validate coverage thresholds
+        run: |
+          cd ${{ matrix.package }}
+          coverage_json="coverage/coverage-summary.json"
+          if [ ! -f "$coverage_json" ]; then
+            echo "❌ Coverage report not found!"
+            exit 1
+          fi
+
+          lines=$(jq '.total.lines.pct' $coverage_json)
+          branches=$(jq '.total.branches.pct' $coverage_json)
+          functions=$(jq '.total.functions.pct' $coverage_json)
+          statements=$(jq '.total.statements.pct' $coverage_json)
+
+          echo "📊 Coverage Report for ${{ matrix.package }}:"
+          echo "  Lines: ${lines}%"
+          echo "  Branches: ${branches}%"
+          echo "  Functions: ${functions}%"
+          echo "  Statements: ${statements}%"
+
+          if (( $(echo "$lines < $COVERAGE_THRESHOLD" | bc -l) )) || \
+             (( $(echo "$branches < $COVERAGE_THRESHOLD" | bc -l) )) || \
+             (( $(echo "$functions < $COVERAGE_THRESHOLD" | bc -l) )) || \
+             (( $(echo "$statements < $COVERAGE_THRESHOLD" | bc -l) )); then
+            echo "❌ Coverage below required ${COVERAGE_THRESHOLD}% threshold!"
+            exit 1
+          fi
+
+          echo "✅ Coverage meets requirements!"
+
+      - name: 📤 Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.package }}
+          path: ${{ matrix.package }}/coverage/
+          retention-days: 7
+
+      - name: 📝 Coverage comment on PR
+        if: github.event_name == 'pull_request'
+        uses: romeovs/lcov-reporter-action@v0.3.1
+        with:
+          lcov-file: ${{ matrix.package }}/coverage/lcov.info
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          title: Coverage Report - ${{ matrix.package }}
+
+  # ============================================================================
+  # STAGE 3: Mutation Testing (≥90% Score Required)
+  # ============================================================================
+  mutation-tests:
+    name: 🧬 Mutation Testing (≥90% Score Required)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: unit-tests
+    if: needs.preflight.outputs.should_run_mutation == 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: |
+          npm ci
+          npm install -g @stryker-mutator/cli
+
+      - name: 🧬 Run mutation tests
+        run: npm run test:mutation
+        env:
+          STRYKER_DASHBOARD_API_KEY: ${{ secrets.STRYKER_DASHBOARD_API_KEY }}
+          CI: true
+
+      - name: 📊 Validate mutation score
+        run: |
+          mutation_report="reports/mutation/mutation-report.json"
+          if [ ! -f "$mutation_report" ]; then
+            echo "❌ Mutation report not found!"
+            exit 1
+          fi
+
+          score=$(jq '.mutationScore' $mutation_report)
+          echo "🧬 Mutation Score: ${score}%"
+
+          if (( $(echo "$score < $MUTATION_THRESHOLD" | bc -l) )); then
+            echo "❌ Mutation score ${score}% is below required ${MUTATION_THRESHOLD}% threshold!"
+            exit 1
+          fi
+
+          echo "✅ Mutation score meets requirements!"
+
+      - name: 📤 Upload mutation reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report
+          path: reports/mutation/
+          retention-days: 7
+
+  # ============================================================================
+  # STAGE 4: E2E Tests with Zero Flaky Tolerance
+  # ============================================================================
+  e2e-tests:
+    name: 🎭 E2E Tests (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: unit-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🎭 Install Playwright browsers
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+
+      - name: 🐳 Start test environment
+        run: |
+          docker-compose -f docker-compose.test.yml up -d
+          npm run wait-for-services
+
+      - name: 🎭 Run E2E tests
+        run: |
+          npx playwright test --project=${{ matrix.browser }} --retries=0
+        env:
+          CI: true
+          E2E_BASE_URL: http://localhost:3001
+
+      - name: 🔍 Check for flaky tests
+        if: failure()
+        run: |
+          echo "❌ Test failed with zero retries - potential flaky test detected!"
+          echo "All tests must pass consistently without retries."
+
+      - name: 📤 Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.browser }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+  # ============================================================================
+  # STAGE 5: Security Tests
+  # ============================================================================
+  security-tests:
+    name: 🔒 Security Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: unit-tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🎭 Install Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: 🐳 Start test environment
+        run: |
+          docker-compose -f docker-compose.test.yml up -d
+          npm run wait-for-services
+
+      - name: 🔒 Run security tests
+        run: npm run test:security
+        env:
+          CI: true
+
+      - name: 🔍 OWASP ZAP Security Scan
+        uses: zaproxy/action-full-scan@v0.8.0
+        with:
+          target: 'http://localhost:3001'
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a -j -l WARN'
+
+      - name: 📤 Upload security reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: |
+            reports/security/
+            zap-report.html
+          retention-days: 30
+
+  # ============================================================================
+  # STAGE 6: Accessibility Tests
+  # ============================================================================
+  accessibility-tests:
+    name: ♿ Accessibility Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: unit-tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🎭 Install Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: 🐳 Start test environment
+        run: |
+          docker-compose -f docker-compose.test.yml up -d
+          npm run wait-for-services
+
+      - name: ♿ Run accessibility tests
+        run: npm run test:accessibility
+        env:
+          CI: true
+
+      - name: 📊 Validate WCAG compliance
+        run: |
+          if [ -f "reports/accessibility/violations.json" ]; then
+            violations=$(jq '.violations | length' reports/accessibility/violations.json)
+            if [ "$violations" -gt 0 ]; then
+              echo "❌ Found $violations accessibility violations!"
+              jq '.violations[] | {rule: .id, impact: .impact, help: .help}' reports/accessibility/violations.json
+              exit 1
+            fi
+          fi
+          echo "✅ No accessibility violations found!"
+
+      - name: 📤 Upload accessibility reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessibility-reports
+          path: reports/accessibility/
+          retention-days: 7
+
+  # ============================================================================
+  # STAGE 7: Performance Tests
+  # ============================================================================
+  performance-tests:
+    name: ⚡ Performance Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: unit-tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🎭 Install Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: 🐳 Start production build
+        run: |
+          npm run build
+          docker-compose -f docker-compose.prod.yml up -d
+          npm run wait-for-services
+
+      - name: ⚡ Run performance tests
+        run: npm run test:performance
+        env:
+          CI: true
+          PERFORMANCE_BUDGET_LCP: ${{ env.PERFORMANCE_BUDGET_LCP }}
+          PERFORMANCE_BUDGET_FCP: ${{ env.PERFORMANCE_BUDGET_FCP }}
+          PERFORMANCE_BUDGET_CLS: ${{ env.PERFORMANCE_BUDGET_CLS }}
+
+      - name: 📊 Validate performance budgets
+        run: |
+          if [ -f "reports/performance/metrics.json" ]; then
+            lcp=$(jq '.lcp' reports/performance/metrics.json)
+            fcp=$(jq '.fcp' reports/performance/metrics.json)
+            cls=$(jq '.cls' reports/performance/metrics.json)
+
+            echo "⚡ Performance Metrics:"
+            echo "  LCP: ${lcp}ms (budget: ${PERFORMANCE_BUDGET_LCP}ms)"
+            echo "  FCP: ${fcp}ms (budget: ${PERFORMANCE_BUDGET_FCP}ms)"
+            echo "  CLS: ${cls} (budget: ${PERFORMANCE_BUDGET_CLS})"
+
+            if (( $(echo "$lcp > $PERFORMANCE_BUDGET_LCP" | bc -l) )); then
+              echo "❌ LCP exceeds budget!"
+              exit 1
+            fi
+            if (( $(echo "$fcp > $PERFORMANCE_BUDGET_FCP" | bc -l) )); then
+              echo "❌ FCP exceeds budget!"
+              exit 1
+            fi
+            if (( $(echo "$cls > $PERFORMANCE_BUDGET_CLS" | bc -l) )); then
+              echo "❌ CLS exceeds budget!"
+              exit 1
+            fi
+          fi
+          echo "✅ All performance budgets met!"
+
+      - name: 📤 Upload performance reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-reports
+          path: reports/performance/
+          retention-days: 7
+
+  # ============================================================================
+  # STAGE 8: Quality Gate - All Tests Must Pass
+  # ============================================================================
+  quality-gate:
+    name: ✅ Quality Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs:
+      - preflight
+      - unit-tests
+      - mutation-tests
+      - e2e-tests
+      - security-tests
+      - accessibility-tests
+      - performance-tests
+    if: always()
+    steps:
+      - name: 📊 Check all job results
+        run: |
+          echo "🔍 Checking quality gates..."
+
+          # Check if any required job failed
+          if [[ "${{ needs.preflight.result }}" != "success" ]]; then
+            echo "❌ Pre-flight checks failed!"
+            exit 1
+          fi
+
+          if [[ "${{ needs.unit-tests.result }}" != "success" ]]; then
+            echo "❌ Unit tests failed or coverage below 100%!"
+            exit 1
+          fi
+
+          if [[ "${{ needs.mutation-tests.result }}" == "failure" ]]; then
+            echo "❌ Mutation score below 90%!"
+            exit 1
+          fi
+
+          if [[ "${{ needs.e2e-tests.result }}" != "success" ]]; then
+            echo "❌ E2E tests failed or flaky tests detected!"
+            exit 1
+          fi
+
+          if [[ "${{ needs.security-tests.result }}" != "success" ]]; then
+            echo "❌ Security vulnerabilities detected!"
+            exit 1
+          fi
+
+          if [[ "${{ needs.accessibility-tests.result }}" != "success" ]]; then
+            echo "❌ Accessibility violations found!"
+            exit 1
+          fi
+
+          if [[ "${{ needs.performance-tests.result }}" != "success" ]]; then
+            echo "❌ Performance budgets exceeded!"
+            exit 1
+          fi
+
+          echo "✅ All quality gates passed!"
+          echo "🎉 Code is bulletproof and ready for merge!"
+
+      - name: 📝 Generate quality report
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const comment = `## ✅ Bulletproof Quality Report
+
+            All quality gates have passed successfully!
+
+            | Check | Status | Requirement |
+            |-------|--------|-------------|
+            | 📝 Code Quality | ✅ Passed | Lint, Format, Types |
+            | 🧪 Unit Tests | ✅ Passed | 100% Coverage |
+            | 🧬 Mutation Tests | ✅ Passed | ≥90% Score |
+            | 🎭 E2E Tests | ✅ Passed | Zero Flaky Tests |
+            | 🔒 Security | ✅ Passed | No Vulnerabilities |
+            | ♿ Accessibility | ✅ Passed | WCAG 2.1 AA |
+            | ⚡ Performance | ✅ Passed | All Budgets Met |
+
+            **This code is bulletproof and ready for production!** 🚀`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  # ============================================================================
+  # STAGE 9: Deploy (only if all gates pass)
+  # ============================================================================
+  deploy:
+    name: 🚀 Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: quality-gate
+    if: success() && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🚀 Deploy to production
+        run: |
+          echo "🚀 Deploying bulletproof code to production..."
+          # Add your deployment steps here
+          echo "✅ Deployment successful!"
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}

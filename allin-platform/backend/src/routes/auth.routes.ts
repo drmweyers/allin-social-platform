@@ -3,7 +3,8 @@ import { body, validationResult } from 'express-validator';
 import { authService } from '../services/auth.service';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { strictRateLimiter } from '../middleware/rateLimiter';
-import { AppError } from '../middleware/error';
+import { AppError } from '../utils/errors';
+import { ResponseHandler } from '../utils/response';
 
 const router = Router();
 
@@ -34,7 +35,7 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await authService.register(req.body);
-      res.status(201).json(result);
+      ResponseHandler.created(res, result, 'Registration successful. Please check your email to verify your account.');
     } catch (error) {
       next(error);
     }
@@ -63,7 +64,7 @@ router.post(
         maxAge: req.body.rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000,
       });
 
-      res.json(result);
+      ResponseHandler.success(res, result, 'Login successful');
     } catch (error) {
       next(error);
     }
@@ -80,7 +81,7 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await authService.verifyEmail(req.body.token);
-      res.json(result);
+      ResponseHandler.success(res, result);
     } catch (error) {
       next(error);
     }
@@ -97,7 +98,7 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await authService.refreshTokens(req.body.refreshToken);
-      res.json(result);
+      ResponseHandler.success(res, result, 'Tokens refreshed successfully');
     } catch (error) {
       next(error);
     }
@@ -115,7 +116,7 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await authService.forgotPassword(req.body.email);
-      res.json(result);
+      ResponseHandler.success(res, result);
     } catch (error) {
       next(error);
     }
@@ -137,7 +138,7 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await authService.resetPassword(req.body.token, req.body.password);
-      res.json(result);
+      ResponseHandler.success(res, result);
     } catch (error) {
       next(error);
     }
@@ -159,8 +160,39 @@ router.post(
       res.clearCookie('sessionToken');
       res.clearCookie('accessToken');
       res.clearCookie('refreshToken');
-      
-      res.json({ message: 'Logged out successfully' });
+
+      ResponseHandler.success(res, null, 'Logged out successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// Get current session
+router.get(
+  '/session',
+  async (req: Request, res: Response, _next: NextFunction) => {
+    try {
+      const sessionToken = req.cookies?.sessionToken;
+      if (!sessionToken) {
+        return ResponseHandler.success(res, { user: null });
+      }
+
+      const user = await authService.validateSession(sessionToken);
+      return ResponseHandler.success(res, { user });
+    } catch (error) {
+      return ResponseHandler.success(res, { user: null });
+    }
+  }
+);
+
+// Log endpoint (for debugging/analytics)
+router.post(
+  '/_log',
+  async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      // This is a no-op endpoint for client-side logging
+      ResponseHandler.success(res, { logged: true });
     } catch (error) {
       next(error);
     }
@@ -176,8 +208,8 @@ router.get(
       if (!req.user) {
         throw new AppError('User not found', 404);
       }
-      const user = await authService.getMe(req.user.userId);
-      res.json(user);
+      const user = await authService.getMe(req.user.id);
+      ResponseHandler.success(res, user);
     } catch (error) {
       next(error);
     }

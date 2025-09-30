@@ -18,13 +18,45 @@
     "start:frontend": "npm run start --workspace=frontend",
     "start:backend": "npm run start --workspace=backend",
     "test": "npm run test --workspaces",
+    "test:unit": "npm run test:unit --workspaces",
+    "test:integration": "npm run test:integration --workspaces",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "test:coverage": "npm run test:coverage --workspaces",
+    "test:coverage:open": "npm run test:coverage --workspaces && open-cli coverage/lcov-report/index.html",
+    "test:mutation": "stryker run",
+    "test:mutation:incremental": "stryker run --incremental",
+    "test:security": "playwright test --project=security",
+    "test:accessibility": "playwright test --project=accessibility",
+    "test:performance": "playwright test --project=performance",
+    "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e && npm run test:mutation",
+    "test:ci": "npm run test:coverage && npm run test:e2e && npm run test:mutation",
     "lint": "npm run lint --workspaces",
+    "lint:fix": "npm run lint:fix --workspaces",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
-    "prepare": "husky install"
+    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "type-check": "npm run type-check --workspaces",
+    "prepare": "husky install",
+    "pre-commit": "npm run lint && npm run type-check && npm run test:unit",
+    "coverage:merge": "nyc merge coverage/backend coverage/frontend coverage/merged",
+    "coverage:report": "nyc report --reporter=html --reporter=text --temp-dir=coverage/merged",
+    "reports:generate": "npm run test:coverage && npm run test:mutation && npm run test:e2e",
+    "reports:open": "concurrently \"open-cli coverage/lcov-report/index.html\" \"open-cli reports/mutation/mutation-report.html\" \"open-cli playwright-report/index.html\""
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
+    "@playwright/test": "^1.55.0",
+    "@stryker-mutator/core": "^9.1.1",
+    "@stryker-mutator/html-reporter": "^3.1.0",
+    "@stryker-mutator/jest-runner": "^9.1.1",
+    "@stryker-mutator/typescript-checker": "^9.1.1",
     "concurrently": "^8.2.2",
     "husky": "^9.0.11",
+    "jest-html-reporters": "^3.1.7",
+    "jest-junit": "^16.0.0",
+    "nyc": "^17.1.0",
+    "open-cli": "^8.0.0",
     "prettier": "^3.2.5"
   },
   "engines": {
@@ -43,5 +75,25 @@
     "saas"
   ],
   "author": "AllIN Team",
-  "license": "PROPRIETARY"
+  "license": "PROPRIETARY",
+  "bulletproof-testing": {
+    "coverage": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100,
+      "statements": 100
+    },
+    "mutation": {
+      "threshold": 90,
+      "high": 90,
+      "low": 85,
+      "break": 80
+    },
+    "flake-tolerance": 0,
+    "performance-budgets": {
+      "lcp": 2500,
+      "fcp": 1800,
+      "cls": 0.1
+    }
+  }
 }

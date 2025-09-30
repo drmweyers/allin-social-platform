@@ -1,5 +1,4 @@
 import OpenAI from 'openai';
-import { prisma } from '../lib/prisma';
 
 interface ContentGenerationOptions {
   platform: 'facebook' | 'instagram' | 'twitter' | 'linkedin' | 'tiktok';
@@ -57,7 +56,7 @@ export class AIService {
   }
 
   private getPlatformBestPractices(platform: string): string {
-    const practices = {
+    const practices: Record<string, string> = {
       facebook: `
         - Use engaging questions to encourage comments
         - Include relevant images or videos
@@ -94,7 +93,7 @@ export class AIService {
         - Use emojis to add personality
       `,
     };
-    return practices[platform] || '';
+    return (practices as any)[platform] || '';
   }
 
   async generateContent(options: ContentGenerationOptions): Promise<GeneratedContent> {
@@ -166,7 +165,7 @@ export class AIService {
     return prompt;
   }
 
-  private parseAIResponse(response: string, platform: string): GeneratedContent {
+  private parseAIResponse(response: string, _platform: string): GeneratedContent {
     const contentMatch = response.match(/CONTENT:\s*([^\n]+(?:\n(?!HASHTAGS:|SUGGESTIONS:)[^\n]+)*)/i);
     const hashtagsMatch = response.match(/HASHTAGS:\s*([^\n]+(?:\n(?!SUGGESTIONS:)[^\n]+)*)/i);
     const suggestionsMatch = response.match(/SUGGESTIONS:\s*([\s\S]*)/i);
@@ -197,37 +196,47 @@ export class AIService {
   }
 
   private getMockContent(options: ContentGenerationOptions): GeneratedContent {
-    const mockTemplates = {
+    const mockTemplates: Record<string, Record<string, string>> = {
       facebook: {
         professional: `Excited to share insights on ${options.topic}! This represents a significant step forward in our industry. What are your thoughts on this development? 🚀`,
         casual: `Just discovered something amazing about ${options.topic}! Can't wait to share more details with you all. Who else is interested in this? 😊`,
         friendly: `Hey friends! Let's talk about ${options.topic} today. I've been learning so much and would love to hear your experiences too! 💡`,
+        humorous: `So ${options.topic} walks into a bar... Just kidding! But seriously, this is pretty cool stuff. 😄`,
+        informative: `Here's what you need to know about ${options.topic}: Key facts and insights that matter. 📚`,
       },
       instagram: {
         professional: `Diving deep into ${options.topic} 📊\n\nKey insights that matter to your business:\n✨ Innovation drives growth\n✨ Consistency is key\n✨ Community matters\n\nWhat's your take on this?`,
         casual: `${options.topic} vibes only! ✨\n\nSwipe for the full story →\n\nDrop a 💙 if you're with me!`,
         friendly: `Let's chat about ${options.topic}! 🌟\n\nI've been exploring this lately and wow, mind = blown 🤯\n\nTell me your thoughts below! 👇`,
+        humorous: `${options.topic} but make it fun! 😂\n\nWho else relates? Double tap if you get it! 💯`,
+        informative: `Everything about ${options.topic} explained 📖\n\n1️⃣ What it is\n2️⃣ Why it matters\n3️⃣ How to use it\n\nSave this post! 📌`,
       },
       twitter: {
         professional: `Key insight on ${options.topic}:\n\nThe future belongs to those who adapt quickly and embrace change.\n\nThread below 🧵`,
         casual: `ok but why is nobody talking about ${options.topic}?? this is actually huge 👀`,
         friendly: `Friendly reminder about ${options.topic} 💫\n\nSmall steps lead to big changes. You've got this!`,
+        humorous: `${options.topic} is trending and I'm here for it 😎\n\nRT if you agree!`,
+        informative: `Quick facts about ${options.topic} 📊\n\n• Point 1\n• Point 2\n• Point 3\n\nMore in thread 👇`,
       },
       linkedin: {
         professional: `Reflecting on ${options.topic}:\n\nIn today's rapidly evolving landscape, understanding this topic is crucial for strategic decision-making.\n\nThree key takeaways:\n1. Innovation drives competitive advantage\n2. Data-informed decisions yield better outcomes\n3. Continuous learning is non-negotiable\n\nWhat strategies are you implementing?`,
         casual: `Thoughts on ${options.topic}?\n\nBeen diving into this lately and it's fascinating how much the landscape has changed.\n\nWould love to hear different perspectives from my network!`,
         friendly: `Happy to share some insights on ${options.topic}!\n\nAfter working in this space for years, I've learned that collaboration and knowledge-sharing accelerate everyone's growth.\n\nWhat has your journey taught you?`,
+        humorous: `${options.topic} explained with coffee analogies ☕\n\nBecause everything makes more sense with caffeine!\n\nWho else agrees? 😄`,
+        informative: `Comprehensive overview of ${options.topic}:\n\n📈 Current trends\n🔍 Key challenges\n💡 Solutions\n🎯 Action items\n\nFull analysis in the comments.`,
       },
       tiktok: {
         professional: `POV: You just learned about ${options.topic} 🤯 Save this for later! #education #learning`,
         casual: `${options.topic} explained in 30 seconds ⏰ You're welcome 😎 #fyp #trending`,
         friendly: `Hey bestie! Let's talk ${options.topic} 💕 Comment your thoughts! #community #letstalk`,
+        humorous: `Me trying to explain ${options.topic} to my friends 🤪 #relatable #funny`,
+        informative: `${options.topic} facts you didn't know! Part 1 📚 Follow for more! #educational #facts`,
       },
     };
 
     const platformTemplates = mockTemplates[options.platform] || mockTemplates.facebook;
     const tone = options.tone || 'professional';
-    const content = platformTemplates[tone] || platformTemplates.professional;
+    const content = (platformTemplates as any)[tone] || platformTemplates.professional;
 
     const hashtagSets = {
       facebook: ['#Innovation', '#Business', '#Growth', '#Community'],
@@ -238,7 +247,7 @@ export class AIService {
     };
 
     const hashtags = options.includeHashtags
-      ? hashtagSets[options.platform].slice(0, 3)
+      ? (hashtagSets as any)[options.platform].slice(0, 3)
       : [];
 
     const suggestions = [
@@ -286,7 +295,7 @@ export class AIService {
   }
 
   private getMockHashtags(platform: string, count: number): string[] {
-    const hashtags = {
+    const hashtags: Record<string, string[]> = {
       facebook: ['#FacebookMarketing', '#SocialMedia', '#DigitalStrategy', '#ContentCreation', '#Engagement', '#Community', '#BrandAwareness'],
       instagram: ['#InstaMarketing', '#ContentCreator', '#SocialMediaTips', '#InstagramGrowth', '#DigitalMarketing', '#BrandStrategy', '#CreativeContent'],
       twitter: ['#TwitterMarketing', '#SocialStrategy', '#DigitalTrends', '#ContentMarketing', '#BrandVoice', '#Engagement', '#TwitterTips'],
@@ -294,7 +303,7 @@ export class AIService {
       tiktok: ['#TikTokMarketing', '#ContentStrategy', '#ViralContent', '#TikTokGrowth', '#CreatorEconomy', '#SocialMediaTrends', '#TikTokTips'],
     };
 
-    return (hashtags[platform] || hashtags.facebook).slice(0, count);
+    return ((hashtags as any)[platform] || hashtags.facebook).slice(0, count);
   }
 
   async improveContent(content: string, platform: string, goal: string): Promise<string> {
@@ -324,7 +333,7 @@ export class AIService {
   }
 
   // Template Management
-  async getTemplates(userId: string, platform?: string): Promise<ContentTemplate[]> {
+  async getTemplates(_userId: string, platform?: string): Promise<ContentTemplate[]> {
     // In a real implementation, these would be stored in the database
     const templates: ContentTemplate[] = [
       {
@@ -332,7 +341,7 @@ export class AIService {
         name: 'Product Launch',
         description: 'Announce a new product or feature',
         platforms: ['facebook', 'instagram', 'linkedin'],
-        template: '🚀 Exciting news! We're thrilled to introduce {product_name}!\n\n{key_features}\n\nLearn more: {link}',
+        template: 'Exciting news! We\'re thrilled to introduce {product_name}!\n\n{key_features}\n\nLearn more: {link}',
         variables: ['product_name', 'key_features', 'link'],
       },
       {
@@ -348,7 +357,7 @@ export class AIService {
         name: 'Educational Post',
         description: 'Share tips or educational content',
         platforms: ['linkedin', 'facebook', 'instagram'],
-        template: '💡 {hook_question}\n\nHere are {number} tips:\n\n{tips_list}\n\nWhich one will you try first?',
+        template: '{hook_question}\n\nHere are {number} tips:\n\n{tips_list}\n\nWhich one will you try first?',
         variables: ['hook_question', 'number', 'tips_list'],
       },
       {
@@ -356,7 +365,7 @@ export class AIService {
         name: 'Event Promotion',
         description: 'Promote upcoming events or webinars',
         platforms: ['facebook', 'linkedin', 'twitter'],
-        template: '📅 Mark your calendars!\n\n{event_name}\n📍 {location}\n🗓️ {date}\n⏰ {time}\n\n{description}\n\nRegister now: {registration_link}',
+        template: 'Mark your calendars!\n\n{event_name}\nLocation: {location}\nDate: {date}\nTime: {time}\n\n{description}\n\nRegister now: {registration_link}',
         variables: ['event_name', 'location', 'date', 'time', 'description', 'registration_link'],
       },
       {
@@ -364,7 +373,7 @@ export class AIService {
         name: 'Behind the Scenes',
         description: 'Share behind-the-scenes content',
         platforms: ['instagram', 'tiktok', 'facebook'],
-        template: 'Behind the scenes at {company_name}! 👀\n\n{description}\n\n{fun_fact}\n\nFollow for more insider content!',
+        template: 'Behind the scenes at {company_name}!\n\n{description}\n\n{fun_fact}\n\nFollow for more insider content!',
         variables: ['company_name', 'description', 'fun_fact'],
       },
     ];
@@ -410,14 +419,14 @@ export class AIService {
     };
   }
 
-  async getDrafts(userId: string) {
+  async getDrafts(_userId: string) {
     // Fetch drafts from database
     // This would be implemented with Prisma
     return [];
   }
 
   // Analytics and Optimization
-  async analyzeContent(content: string, platform: string): Promise<{
+  async analyzeContent(_content: string, _platform: string): Promise<{
     readabilityScore: number;
     sentimentScore: number;
     engagementPrediction: string;
@@ -435,6 +444,136 @@ export class AIService {
         'Consider adding a call-to-action',
       ],
     };
+  }
+
+  // Marketing Advice for Chat
+  async generateMarketingAdvice(prompt: string): Promise<string> {
+    if (!this.isInitialized || !this.openai) {
+      return this.getMockMarketingAdvice(prompt);
+    }
+
+    try {
+      const completion = await this.openai.chat.completions.create({
+        model: 'gpt-4-turbo-preview',
+        messages: [
+          {
+            role: 'system',
+            content: `You are an expert social media marketing consultant with deep knowledge of:
+            - Content strategy and creation
+            - Platform-specific best practices (Facebook, Instagram, Twitter, LinkedIn, TikTok)
+            - Audience engagement and growth strategies
+            - Analytics and performance optimization
+            - Social media trends and algorithms
+            - Brand building and community management
+
+            Provide actionable, specific advice that users can implement immediately. Always include concrete examples and practical tips.`,
+          },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.7,
+        max_tokens: 1000,
+      });
+
+      return completion.choices[0]?.message?.content || this.getMockMarketingAdvice(prompt);
+    } catch (error) {
+      console.error('Error generating marketing advice:', error);
+      return this.getMockMarketingAdvice(prompt);
+    }
+  }
+
+  private getMockMarketingAdvice(prompt: string): string {
+    const defaultAdvice = `Based on current social media best practices, here are some key recommendations:
+
+**Content Strategy:**
+- Create value-driven content that educates, entertains, or inspires your audience
+- Use the 80/20 rule: 80% valuable content, 20% promotional content
+- Maintain consistent posting schedule and brand voice
+
+**Engagement Tips:**
+- Respond to comments within 2-4 hours when possible
+- Ask questions to encourage audience interaction
+- Use relevant hashtags (3-5 for most platforms)
+- Share behind-the-scenes content to build authenticity
+
+**Platform-Specific Advice:**
+- **Instagram**: Focus on high-quality visuals and Stories
+- **LinkedIn**: Share industry insights and professional achievements
+- **Twitter**: Engage in conversations and share timely updates
+- **Facebook**: Use native video and community-building content
+- **TikTok**: Create entertaining, trend-based content
+
+**Analytics Focus:**
+- Track engagement rate over follower count
+- Monitor reach and impressions for content performance
+- A/B test posting times and content formats
+
+Would you like me to elaborate on any of these strategies?`;
+
+    // Simple keyword matching for more relevant responses
+    if (prompt.toLowerCase().includes('instagram')) {
+      return `**Instagram Marketing Strategy:**
+
+**Content Tips:**
+- Post high-quality, visually appealing images and videos
+- Use Instagram Stories daily for behind-the-scenes content
+- Create Reels to increase reach (Instagram prioritizes video content)
+- Write engaging captions with clear calls-to-action
+
+**Hashtag Strategy:**
+- Use 3-5 highly relevant hashtags rather than the maximum 30
+- Mix popular and niche hashtags for better discoverability
+- Create a branded hashtag for your community
+
+**Optimal Posting:**
+- Best times: 11 AM - 1 PM and 7 PM - 9 PM
+- Post consistently (1-2 times per day)
+- Use Instagram Insights to find your audience's active hours
+
+**Engagement Tactics:**
+- Respond to comments and DMs promptly
+- Use interactive stickers in Stories (polls, questions, sliders)
+- Collaborate with other accounts in your niche
+- Share user-generated content to build community
+
+Would you like specific advice for any particular aspect of Instagram marketing?`;
+    }
+
+    if (prompt.toLowerCase().includes('content')) {
+      return `**Content Creation Strategy:**
+
+**Content Planning:**
+- Develop a content calendar with themes for each day
+- Create evergreen content that remains relevant over time
+- Plan seasonal and trending content in advance
+
+**Content Types That Perform Well:**
+- Educational posts (how-to guides, tips, tutorials)
+- Behind-the-scenes content (process, team, workspace)
+- User-generated content and testimonials
+- Interactive content (polls, Q&As, challenges)
+
+**Content Creation Tips:**
+- Use templates for consistent visual branding
+- Repurpose content across multiple platforms
+- Create series or themes to keep audience engaged
+- Always include a clear call-to-action
+
+**Visual Guidelines:**
+- Maintain consistent color scheme and fonts
+- Use high-quality images and videos
+- Add your logo or watermark for brand recognition
+- Optimize image sizes for each platform
+
+**Content Optimization:**
+- Write compelling headlines and captions
+- Include relevant keywords naturally
+- Use storytelling to create emotional connections
+- Add value in every piece of content
+
+Need help with any specific type of content creation?`;
+    }
+
+    return defaultAdvice;
   }
 }
 

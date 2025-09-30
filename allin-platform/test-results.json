@@ -1,0 +1,686 @@
+{
+  "config": {
+    "configFile": "C:\\Users\\drmwe\\claude-workspace\\social Media App\\allin-platform\\playwright.config.ts",
+    "rootDir": "C:/Users/drmwe/claude-workspace/social Media App/allin-platform/tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "html",
+        {
+          "outputFolder": "playwright-report"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "C:/Users/drmwe/claude-workspace/social Media App/allin-platform/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/drmwe/claude-workspace/social Media App/allin-platform/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.55.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "e2e\\security.spec.ts",
+      "file": "e2e/security.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "🔒 Security Test Suite - Critical Paths",
+          "file": "e2e/security.spec.ts",
+          "line": 66,
+          "column": 6,
+          "specs": [],
+          "suites": [
+            {
+              "title": "Authentication Security",
+              "file": "e2e/security.spec.ts",
+              "line": 89,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "should prevent brute force attacks with rate limiting",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-5ce85e4ecd9c1d35b533",
+                  "file": "e2e/security.spec.ts",
+                  "line": 90,
+                  "column": 9
+                },
+                {
+                  "title": "should prevent timing attacks on login",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-4ea07c3df6b072e38a14",
+                  "file": "e2e/security.spec.ts",
+                  "line": 117,
+                  "column": 9
+                },
+                {
+                  "title": "should enforce strong password requirements",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-31aae3cb6c0011ccfc66",
+                  "file": "e2e/security.spec.ts",
+                  "line": 151,
+                  "column": 9
+                },
+                {
+                  "title": "should prevent session hijacking",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-698506de4f59fdf80f68",
+                  "file": "e2e/security.spec.ts",
+                  "line": 171,
+                  "column": 9
+                },
+                {
+                  "title": "should invalidate sessions on logout",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-bea0cf51f68b99a28be0",
+                  "file": "e2e/security.spec.ts",
+                  "line": 189,
+                  "column": 9
+                }
+              ]
+            },
+            {
+              "title": "Input Validation & Sanitization",
+              "file": "e2e/security.spec.ts",
+              "line": 207,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "should prevent XSS attacks in all input fields",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-eeba87aa7f65252b89b9",
+                  "file": "e2e/security.spec.ts",
+                  "line": 208,
+                  "column": 9
+                },
+                {
+                  "title": "should prevent SQL injection in search and filters",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-3099cf3809d80c80f06b",
+                  "file": "e2e/security.spec.ts",
+                  "line": 245,
+                  "column": 9
+                },
+                {
+                  "title": "should prevent path traversal in file uploads",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-4ef49f40b62662d25a74",
+                  "file": "e2e/security.spec.ts",
+                  "line": 268,
+                  "column": 9
+                },
+                {
+                  "title": "should validate and sanitize JSON payloads",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-1d8eede2f3a7ea4a64e9",
+                  "file": "e2e/security.spec.ts",
+                  "line": 301,
+                  "column": 9
+                }
+              ]
+            },
+            {
+              "title": "Authorization & Access Control",
+              "file": "e2e/security.spec.ts",
+              "line": 330,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "should prevent privilege escalation",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-9eb09fe8b28174b5fcc4",
+                  "file": "e2e/security.spec.ts",
+                  "line": 331,
+                  "column": 9
+                },
+                {
+                  "title": "should prevent IDOR (Insecure Direct Object Reference)",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-897a2fb77d433c632890",
+                  "file": "e2e/security.spec.ts",
+                  "line": 355,
+                  "column": 9
+                },
+                {
+                  "title": "should validate API authorization",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-a5dc313e625b42e21f62",
+                  "file": "e2e/security.spec.ts",
+                  "line": 373,
+                  "column": 9
+                }
+              ]
+            },
+            {
+              "title": "CSRF Protection",
+              "file": "e2e/security.spec.ts",
+              "line": 408,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "should include CSRF tokens in forms",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-ed2b7a88340ce9b04b02",
+                  "file": "e2e/security.spec.ts",
+                  "line": 409,
+                  "column": 9
+                },
+                {
+                  "title": "should reject requests without valid CSRF token",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-7fa474a685ea4d325832",
+                  "file": "e2e/security.spec.ts",
+                  "line": 427,
+                  "column": 9
+                }
+              ]
+            },
+            {
+              "title": "Security Headers",
+              "file": "e2e/security.spec.ts",
+              "line": 449,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "should have all required security headers",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-877b49db23d286db9384",
+                  "file": "e2e/security.spec.ts",
+                  "line": 450,
+                  "column": 9
+                },
+                {
+                  "title": "should implement proper CSP directives",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-30abadc2f111b8e29181",
+                  "file": "e2e/security.spec.ts",
+                  "line": 470,
+                  "column": 9
+                }
+              ]
+            },
+            {
+              "title": "File Upload Security",
+              "file": "e2e/security.spec.ts",
+              "line": 483,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "should validate file types",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-683bdea6a346138c1f92",
+                  "file": "e2e/security.spec.ts",
+                  "line": 484,
+                  "column": 9
+                },
+                {
+                  "title": "should enforce file size limits",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-afda075653ffbcbf6d67",
+                  "file": "e2e/security.spec.ts",
+                  "line": 516,
+                  "column": 9
+                }
+              ]
+            },
+            {
+              "title": "API Security",
+              "file": "e2e/security.spec.ts",
+              "line": 540,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "should implement rate limiting on API endpoints",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-76f6f55144ef654fb1b5",
+                  "file": "e2e/security.spec.ts",
+                  "line": 541,
+                  "column": 9
+                },
+                {
+                  "title": "should validate API input schemas",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-b17c5983fcb78e6d5b72",
+                  "file": "e2e/security.spec.ts",
+                  "line": 563,
+                  "column": 9
+                }
+              ]
+            },
+            {
+              "title": "Cryptography & Secrets",
+              "file": "e2e/security.spec.ts",
+              "line": 599,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "should not expose sensitive data in responses",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-24027043a96a86c20098",
+                  "file": "e2e/security.spec.ts",
+                  "line": 600,
+                  "column": 9
+                },
+                {
+                  "title": "should encrypt sensitive data at rest",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-40aa5460c5aef66990ed",
+                  "file": "e2e/security.spec.ts",
+                  "line": 621,
+                  "column": 9
+                }
+              ]
+            },
+            {
+              "title": "Accessibility Security",
+              "file": "e2e/security.spec.ts",
+              "line": 658,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "should pass accessibility checks",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-a17dd2e47a7e40d59c02",
+                  "file": "e2e/security.spec.ts",
+                  "line": 659,
+                  "column": 9
+                },
+                {
+                  "title": "should not expose sensitive info to screen readers",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-b06107535f4cf7b9bbcf",
+                  "file": "e2e/security.spec.ts",
+                  "line": 669,
+                  "column": 9
+                }
+              ]
+            },
+            {
+              "title": "Performance & DoS Protection",
+              "file": "e2e/security.spec.ts",
+              "line": 695,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "should handle large payloads gracefully",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-c27199b820af3b9ea010",
+                  "file": "e2e/security.spec.ts",
+                  "line": 696,
+                  "column": 9
+                },
+                {
+                  "title": "should prevent ReDoS attacks",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "64ec01e85f4cff6b24c1-4322995ea11b54624e6e",
+                  "file": "e2e/security.spec.ts",
+                  "line": 719,
+                  "column": 9
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-09-24T21:08:41.632Z",
+    "duration": 112.20900000000006,
+    "expected": 0,
+    "skipped": 26,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

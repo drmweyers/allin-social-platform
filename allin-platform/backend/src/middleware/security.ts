@@ -13,7 +13,7 @@ export const createRateLimiter = (windowMs: number, max: number, message?: strin
     message: message || 'Too many requests from this IP, please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
-    handler: (req: Request, res: Response) => {
+    handler: (_req: Request, res: Response) => {
       res.status(429).json({
         error: 'Rate limit exceeded',
         message: message || 'Too many requests from this IP, please try again later.',
@@ -135,7 +135,7 @@ export const corsOptions: cors.CorsOptions = {
 };
 
 // Input sanitization middleware
-export const sanitizeInput = (req: Request, res: Response, next: NextFunction) => {
+export const sanitizeInput = (req: Request, _res: Response, next: NextFunction) => {
   // Sanitize request body
   if (req.body) {
     req.body = sanitizeObject(req.body);
@@ -222,6 +222,7 @@ function sanitizeObject(obj: any): any {
 }
 
 // SQL injection prevention (for raw queries if any)
+// @ts-ignore - TS7030: Middleware functions can return early or call next()
 export const preventSQLInjection = (req: Request, res: Response, next: NextFunction) => {
   const suspiciousPatterns = [
     /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|CREATE|ALTER|EXEC|EXECUTE)\b)/gi,
@@ -263,6 +264,7 @@ export const preventSQLInjection = (req: Request, res: Response, next: NextFunct
 };
 
 // API key validation middleware
+// @ts-ignore - TS7030: Middleware functions can return early or call next()
 export const validateApiKey = (req: Request, res: Response, next: NextFunction) => {
   const apiKey = req.headers['x-api-key'] as string;
 

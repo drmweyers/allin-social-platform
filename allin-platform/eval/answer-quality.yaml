@@ -1,0 +1,336 @@
+# Answer Quality Evaluation Tests
+# Tests the quality of AI-generated answers using retrieved context
+
+description: "Tests for evaluating AI answer quality, accuracy, and helpfulness"
+version: "1.0"
+test_config:
+  model: "gpt-4"
+  max_tokens: 2000
+  temperature: 0.1
+  timeout_seconds: 45
+  evaluation_model: "gpt-4"
+
+tests:
+  - id: "login_troubleshooting_answer"
+    query: "A user says they can't log in to their account. What should I help them check?"
+    expected_answer_elements:
+      - "Check if the email address is correct"
+      - "Verify the password or suggest password reset"
+      - "Check if account is verified/activated"
+      - "Look for any account lockout or suspension"
+      - "Verify 2FA if enabled"
+      - "Check browser/cache issues"
+    evaluation_criteria:
+      - accuracy
+      - completeness
+      - actionability
+      - clarity
+    min_confidence: 0.8
+    category: "troubleshooting"
+    context_should_include:
+      - "authentication"
+      - "login"
+      - "password"
+    gold_standard: |
+      To help a user who can't log in, follow these steps:
+
+      1. **Verify Account Details**
+         - Confirm they're using the correct email address
+         - Check for typos in the email field
+
+      2. **Password Issues**
+         - Try password reset if they're unsure
+         - Check if Caps Lock is on
+         - Clear browser cache and cookies
+
+      3. **Account Status**
+         - Verify the account is activated (check for verification email)
+         - Check if account is suspended or locked
+         - Look for any security holds
+
+      4. **Two-Factor Authentication**
+         - If 2FA is enabled, ensure they have access to their device
+         - Check if backup codes are needed
+
+      5. **Browser/Technical Issues**
+         - Try different browser or incognito mode
+         - Disable browser extensions temporarily
+         - Check internet connection
+
+      If none of these resolve the issue, escalate to technical support with account details.
+
+  - id: "billing_plan_comparison"
+    query: "What's the difference between the Pro and Enterprise plans?"
+    expected_answer_elements:
+      - "Feature comparison between plans"
+      - "Pricing differences"
+      - "User/team limits"
+      - "Support level differences"
+      - "API access differences"
+    evaluation_criteria:
+      - accuracy
+      - completeness
+      - clarity
+      - objectivity
+    min_confidence: 0.85
+    category: "billing"
+    gold_standard: |
+      Here are the key differences between Pro and Enterprise plans:
+
+      **Pro Plan:**
+      - Up to 10 team members
+      - 50 social media accounts
+      - Standard analytics
+      - Email support
+      - Basic API access (100 requests/hour)
+      - $29/month per user
+
+      **Enterprise Plan:**
+      - Unlimited team members
+      - Unlimited social media accounts
+      - Advanced analytics with custom reports
+      - Priority phone and email support
+      - Full API access (1000 requests/hour)
+      - Custom integrations
+      - SSO and advanced security features
+      - Contact sales for pricing
+
+      The Enterprise plan is designed for larger organizations needing advanced features, higher limits, and priority support.
+
+  - id: "api_rate_limit_guidance"
+    query: "I'm getting 429 errors from the API. How do I handle rate limiting?"
+    expected_answer_elements:
+      - "Explanation of 429 error"
+      - "Current rate limits"
+      - "Retry strategy with exponential backoff"
+      - "Request optimization suggestions"
+      - "How to request higher limits"
+    evaluation_criteria:
+      - technical_accuracy
+      - actionability
+      - completeness
+    min_confidence: 0.8
+    category: "api"
+    gold_standard: |
+      A 429 error means you've exceeded the API rate limits. Here's how to handle it:
+
+      **Current Rate Limits:**
+      - Standard: 100 requests/hour
+      - Pro: 500 requests/hour
+      - Enterprise: 1000 requests/hour
+
+      **Immediate Solutions:**
+      1. **Implement Retry Logic**
+         - Wait for the time specified in `Retry-After` header
+         - Use exponential backoff (wait 1s, then 2s, then 4s, etc.)
+         - Maximum 3-5 retry attempts
+
+      2. **Optimize Requests**
+         - Batch multiple operations in single requests
+         - Cache responses to avoid duplicate calls
+         - Use webhooks instead of polling for real-time data
+
+      3. **Monitor Usage**
+         - Check rate limit headers in responses
+         - Implement request rate limiting in your application
+
+      **Long-term Solutions:**
+      - Upgrade to higher plan for increased limits
+      - Contact support for custom rate limits
+      - Implement proper caching strategy
+
+  - id: "security_setup_guidance"
+    query: "How do I set up two-factor authentication for my team?"
+    expected_answer_elements:
+      - "Step-by-step 2FA setup process"
+      - "Supported authentication methods"
+      - "Backup code information"
+      - "Team-wide enforcement options"
+      - "Recovery procedures"
+    evaluation_criteria:
+      - clarity
+      - step_by_step_guidance
+      - completeness
+      - security_awareness
+    min_confidence: 0.85
+    category: "security"
+    gold_standard: |
+      Here's how to set up two-factor authentication (2FA) for your team:
+
+      **For Individual Users:**
+      1. Go to Account Settings > Security
+      2. Click "Enable Two-Factor Authentication"
+      3. Choose your method:
+         - **Authenticator App** (recommended): Google Authenticator, Authy
+         - **SMS**: Text messages to phone
+         - **Email**: Backup codes via email
+      4. Scan QR code with authenticator app
+      5. Enter verification code to confirm
+      6. **Save backup codes** in secure location
+
+      **For Team Administrators:**
+      1. Go to Team Settings > Security Policy
+      2. Enable "Require 2FA for all team members"
+      3. Set grace period (7-30 days recommended)
+      4. Users will be prompted to set up 2FA on next login
+
+      **Important Security Notes:**
+      - Store backup codes securely (password manager recommended)
+      - Don't rely solely on SMS (SIM swapping risk)
+      - Regularly review and update recovery methods
+      - Have a plan for device loss/replacement
+
+      **Recovery Process:**
+      If 2FA device is lost, contact support with account verification details.
+
+  - id: "social_media_posting_workflow"
+    query: "What's the best way to schedule posts across multiple platforms simultaneously?"
+    expected_answer_elements:
+      - "Multi-platform posting process"
+      - "Platform-specific considerations"
+      - "Scheduling options"
+      - "Content optimization tips"
+      - "Best practices for timing"
+    evaluation_criteria:
+      - practicality
+      - completeness
+      - platform_awareness
+    min_confidence: 0.8
+    category: "workflow"
+    gold_standard: |
+      Here's the optimal workflow for scheduling multi-platform posts:
+
+      **Setup Process:**
+      1. **Connect Platforms**
+         - Go to Dashboard > Connected Accounts
+         - Authorize each social media platform
+         - Verify posting permissions
+
+      2. **Create Content**
+         - Use the Composer tool
+         - Write platform-optimized versions:
+           - Twitter: 280 characters, hashtags
+           - LinkedIn: Professional tone, longer form
+           - Instagram: Visual focus, story-style
+           - Facebook: Conversational, community-focused
+
+      3. **Schedule Posts**
+         - Select all target platforms
+         - Choose optimal times (use Analytics for best times)
+         - Set different posting times per platform if needed
+         - Preview how content appears on each platform
+
+      **Best Practices:**
+      - **Timing**: Post when your audience is most active
+      - **Content**: Tailor message length and tone per platform
+      - **Visuals**: Ensure images meet each platform's specs
+      - **Hashtags**: Platform-appropriate hashtag strategies
+      - **Engagement**: Monitor and respond promptly after posting
+
+      **Recommended Schedule:**
+      - Plan content in batches (weekly/monthly)
+      - Use queue feature for consistent posting
+      - Leave room for real-time/trending content
+
+# Challenging scenarios and edge cases
+  - id: "complex_technical_issue"
+    query: "The API is returning inconsistent data when I filter by date ranges. Sometimes I get different results for the same query."
+    expected_answer_elements:
+      - "Acknowledge the caching/consistency issue"
+      - "Explain potential causes"
+      - "Provide debugging steps"
+      - "Suggest workarounds"
+      - "Escalation path"
+    evaluation_criteria:
+      - technical_depth
+      - problem_solving_approach
+      - actionability
+    min_confidence: 0.7
+    category: "troubleshooting"
+
+  - id: "ambiguous_request"
+    query: "It's not working properly"
+    expected_answer_elements:
+      - "Ask clarifying questions"
+      - "Provide general troubleshooting steps"
+      - "Offer specific areas to check"
+    evaluation_criteria:
+      - clarification_seeking
+      - helpfulness_despite_ambiguity
+    min_confidence: 0.5
+    category: "general"
+    expect_clarification_request: true
+
+  - id: "policy_question"
+    query: "Can I use this platform to promote cryptocurrency trading services?"
+    expected_answer_elements:
+      - "Reference terms of service"
+      - "Mention compliance requirements"
+      - "Suggest contacting legal/compliance team"
+    evaluation_criteria:
+      - policy_awareness
+      - appropriate_escalation
+    min_confidence: 0.7
+    category: "compliance"
+
+evaluation_rubric:
+  accuracy:
+    description: "Factual correctness of the information provided"
+    scale: 1-5
+    5: "Completely accurate"
+    4: "Mostly accurate with minor inaccuracies"
+    3: "Generally accurate but missing some details"
+    2: "Some inaccuracies but core information correct"
+    1: "Significant inaccuracies"
+
+  completeness:
+    description: "How thoroughly the answer addresses the question"
+    scale: 1-5
+    5: "Addresses all aspects of the question comprehensively"
+    4: "Addresses most aspects with good detail"
+    3: "Covers main points but lacks some detail"
+    2: "Partial answer, missing important aspects"
+    1: "Incomplete answer, major gaps"
+
+  clarity:
+    description: "How clear and understandable the answer is"
+    scale: 1-5
+    5: "Extremely clear and easy to follow"
+    4: "Clear with good structure"
+    3: "Generally clear but could be better organized"
+    2: "Somewhat confusing or poorly structured"
+    1: "Unclear and difficult to understand"
+
+  actionability:
+    description: "How actionable and practical the guidance is"
+    scale: 1-5
+    5: "Provides clear, specific action steps"
+    4: "Good actionable guidance with minor gaps"
+    3: "Some actionable elements but could be more specific"
+    2: "Limited actionable guidance"
+    1: "No clear actionable steps"
+
+  appropriateness:
+    description: "Whether the response tone and content are appropriate"
+    scale: 1-5
+    5: "Perfect tone and completely appropriate"
+    4: "Appropriate with minor tone issues"
+    3: "Generally appropriate"
+    2: "Some appropriateness concerns"
+    1: "Inappropriate tone or content"
+
+confidence_calibration:
+  description: "How well the confidence score matches actual answer quality"
+  target_correlation: "> 0.7"
+
+response_time_targets:
+  simple_queries: "< 3 seconds"
+  complex_queries: "< 8 seconds"
+  multi_step_queries: "< 12 seconds"
+
+reporting:
+  include_confidence_analysis: true
+  include_rubric_scores: true
+  include_improvement_suggestions: true
+  generate_examples: true
+  export_formats: ["json", "markdown", "csv"]

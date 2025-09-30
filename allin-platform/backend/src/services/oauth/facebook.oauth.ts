@@ -81,6 +81,7 @@ export class FacebookOAuthService extends OAuthService {
       );
 
       const { access_token } = response.data;
+      // Note: Using long-lived token instead of short-lived one
 
       // Exchange short-lived token for long-lived token
       const longLivedResponse = await axios.get<FacebookTokenResponse>(
@@ -107,7 +108,7 @@ export class FacebookOAuthService extends OAuthService {
   async refreshAccessToken(_refreshToken: string): Promise<{ accessToken: string; refreshToken?: string; expiresIn?: number }> {
     // Facebook doesn't use refresh tokens in the traditional sense
     // Long-lived tokens last 60 days and need to be refreshed before expiry
-    // This would typically be done through a re-authentication flow
+    // For now, we'll throw an error requiring re-authentication
     throw new AppError('Facebook token refresh requires re-authentication', 401);
   }
 

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI Social Media Management Platform – Interactive Mindmap</title>
+<style>
+  :root { --bg:#0b1020; --fg:#e8edf9; --muted:#aab4d6; --accent:#7aa2ff; --edge:#5f6fa3; }
+  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial, sans-serif; }
+  header { padding: 12px 16px; border-bottom: 1px solid #1a2142; display: flex; gap: 12px; align-items: center; }
+  header h1 { font-size: 18px; margin: 0; font-weight: 600; letter-spacing: 0.2px; }
+  header .hint { color: var(--muted); font-size: 13px; }
+  #wrap { height: calc(100% - 54px); display: grid; grid-template-columns: 260px 1fr; }
+  #sidebar { border-right: 1px solid #1a2142; padding: 12px; overflow: auto; }
+  #sidebar h2 { font-size: 14px; margin: 4px 0 8px; color: var(--muted); font-weight: 600; }
+  #legend { display: grid; gap: 6px; font-size: 13px; }
+  #legend .pill { padding: 6px 8px; border: 1px solid #263058; border-radius: 10px; background: #0e1530; }
+  #canvas { position: relative; overflow: hidden; }
+  svg { width: 100%; height: 100%; display: block; background: radial-gradient(1200px 800px at 20% -10%, #141a33 0, #0b1020 60%); }
+  .edge { stroke: var(--edge); stroke-width: 1.2; fill: none; }
+  .node { cursor: pointer; }
+  .node circle { fill: #11204b; stroke: var(--accent); stroke-width: 1.2; }
+  .node.root circle { fill: #1a2d66; }
+  .label { font-size: 12.5px; fill: var(--fg); pointer-events: none; user-select: none; }
+  .badge { fill: var(--muted); font-size: 11px; }
+  .controls { position:absolute; right: 12px; top: 12px; display:flex; gap:8px; }
+  .btn { background:#12204a; color:var(--fg); border:1px solid #22346a; border-radius:8px; padding:6px 10px; font-size:12px; cursor:pointer; }
+  .btn:hover { filter: brightness(1.15); }
+  .ghost { opacity: 0.35; }
+  .credit { position:absolute; left:12px; bottom:10px; color:var(--muted); font-size:12px; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Interactive Mindmap</h1>
+    <div class="hint">Click nodes to expand/collapse • Drag to pan • Scroll to zoom • “Fit” recenters</div>
+  </header>
+  <div id="wrap">
+    <aside id="sidebar">
+      <h2>Legend</h2>
+      <div id="legend">
+        <div class="pill"><strong>Root</strong>: The platform itself</div>
+        <div class="pill"><strong>Branches</strong>: Feature areas (AI, Scheduling, etc.)</div>
+        <div class="pill"><strong>Leaves</strong>: Specific capabilities</div>
+      </div>
+      <h2 style="margin-top:14px;">Quick Tips</h2>
+      <div class="pill">Double‑click a node to collapse/expand all descendants.</div>
+      <div class="pill">Shift+click toggles siblings.</div>
+      <div class="pill">Use “Radial / Tree” to switch layout styles.</div>
+    </aside>
+    <main id="canvas">
+      <div class="controls">
+        <button class="btn" id="fit">Fit</button>
+        <button class="btn" id="toggleLayout">Radial</button>
+        <button class="btn" id="expandAll">Expand all</button>
+        <button class="btn" id="collapseAll">Collapse all</button>
+      </div>
+      <svg id="svg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet">
+        <g id="viewport" transform="translate(600,400) scale(1)">
+          <g id="edges"></g>
+          <g id="nodes"></g>
+        </g>
+      </svg>
+      <div class="credit">Mindmap generated locally – no external libraries.</div>
+    </main>
+  </div>
+
+<script>
+// ---- Data ----
+const data = {
+  "name": "AI Social Media Management Platform",
+  "children": [
+    {"name": "AI Content Assist","children": [
+      {"name": "Captions"},
+      {"name": "Image Generation"},
+      {"name": "Rewrites/Optimizations"}
+    ]},
+    {"name": "Scheduling","children": [
+      {"name": "Drag & Drop Calendar"},
+      {"name": "Post Recycling"},
+      {"name": "Best Time Suggestions"}
+    ]},
+    {"name": "Publishing","children": [
+      {"name": "Multi-platform"},
+      {"name": "One-click adaptation"},
+      {"name": "Cross-channel consistency"}
+    ]},
+    {"name": "Engagement","children": [
+      {"name": "Unified Inbox"},
+      {"name": "Reply Management"}
+    ]},
+    {"name": "Analytics","children": [
+      {"name": "Performance Dashboards"},
+      {"name": "Predictions"},
+      {"name": "Optimal Timing Insights"}
+    ]},
+    {"name": "Integrations","children": [
+      {"name": "OAuth Security"},
+      {"name": "Third-party APIs"},
+      {"name": "Extensible Architecture"}
+    ]},
+    {"name": "Architecture","children": [
+      {"name": "Frontend (Flutter/React)"},
+      {"name": "Backend (Flask Microservices)"},
+      {"name": "Databases: Postgres/MongoDB/Redis"}
+    ]},
+    {"name": "DevOps","children": [
+      {"name": "CI/CD"},
+      {"name": "Kubernetes"},
+      {"name": "Monitoring & Logs"},
+      {"name": "Crash Reporting"}
+    ]}
+  ]
+};
+
+// ---- Helpers: tree structure ----
+function buildTree(obj, depth=0, parent=null) {
+  const node = { name: obj.name, children: [], _children: null, depth, parent, x:0, y:0, id: Math.random().toString(36).slice(2) };
+  if (obj.children && obj.children.length) {
+    node.children = obj.children.map(ch => buildTree(ch, depth+1, node));
+  }
+  return node;
+}
+const root = buildTree(data);
+root.collapsed = false;
+
+// Collapse utility
+function setCollapsed(node, collapsed) {
+  if (collapsed && node.children && node.children.length) {
+    node._children = node.children;
+    node.children = null;
+  } else if (!collapsed && node._children) {
+    node.children = node._children;
+    node._children = null;
+  }
+}
+function collapseAll(node) {
+  if (node.children) node.children.forEach(collapseAll);
+  if (node !== root) setCollapsed(node, true);
+}
+function expandAll(node) {
+  if (node._children) setCollapsed(node, false);
+  if (node.children) node.children.forEach(expandAll);
+}
+
+// ---- Layouts ----
+let radial = false;
+
+function layoutTree(node, x=0, y=0, levelGap=160, siblingGap=32) {
+  // Top-down tidy-ish layout
+  const leafCount = (n)=> (n.children? n.children.reduce((a,c)=>a+leafCount(c),0) : 1);
+  function assign(n, depth, offset) {
+    const w = leafCount(n);
+    let cur = offset;
+    if (n.children) {
+      n.children.forEach(ch => {
+        const cw = leafCount(ch);
+        assign(ch, depth+1, cur);
+        cur += cw;
+      });
+      // position at middle of children
+      const first = n.children[0];
+      const last = n.children[n.children.length-1];
+      n.x = (first.x + last.x)/2;
+    } else {
+      n.x = offset + 0.5;
+    }
+    n.y = depth;
+  }
+  assign(node, 0, 0);
+
+  // scale to pixels
+  const leaves = leafCount(node);
+  const width = Math.max(800, leaves * (siblingGap+10));
+  const nodes = [];
+  (function collect(n){ nodes.push(n); if(n.children) n.children.forEach(collect); })(node);
+  nodes.forEach(n => {
+    const px = (n.x / leaves) * width - width/2;
+    const py = n.y * levelGap;
+    if (radial) {
+      const r = 60 + n.y * (levelGap*0.7);
+      const a = ((n.x / leaves) * Math.PI * 2) - Math.PI/2;
+      n.px = r * Math.cos(a);
+      n.py = r * Math.sin(a);
+    } else {
+      n.px = px;
+      n.py = py;
+    }
+  });
+}
+
+function pathBetween(a,b) {
+  // Smooth cubic curve
+  if (!a || !b) return "";
+  const x1=a.px, y1=a.py, x2=b.px, y2=b.py;
+  const mx=(x1+x2)/2;
+  return `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
+}
+
+// ---- Render ----
+const svg = document.getElementById('svg');
+const viewport = document.getElementById('viewport');
+const gEdges = document.getElementById('edges');
+const gNodes = document.getElementById('nodes');
+
+// Pan/zoom
+let scale = 1, tx = 0, ty = 0;
+let dragging = false, lastX=0, lastY=0;
+svg.addEventListener('mousedown', e => { dragging = true; lastX = e.clientX; lastY = e.clientY; });
+window.addEventListener('mouseup', ()=> dragging=false);
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  tx += (e.clientX - lastX) / scale;
+  ty += (e.clientY - lastY) / scale;
+  lastX = e.clientX; lastY = e.clientY;
+  applyTransform();
+});
+svg.addEventListener('wheel', e => {
+  e.preventDefault();
+  const factor = Math.exp(-e.deltaY * 0.001);
+  scale *= factor;
+  applyTransform();
+},{passive:false});
+function applyTransform() { viewport.setAttribute('transform', `translate(${600+tx},${400+ty}) scale(${scale})`); }
+function fitView() { scale = 1; tx = 0; ty = 0; applyTransform(); }
+document.getElementById('fit').addEventListener('click', fitView);
+
+function render() {
+  layoutTree(root);
+  // edges
+  gEdges.innerHTML = "";
+  // nodes
+  gNodes.innerHTML = "";
+  const nodes = [];
+  (function collect(n){ nodes.push(n); if(n.children) n.children.forEach(collect); if(n._children) n._children.forEach(collect); })(root);
+  const visible = nodes.filter(n => {
+    // visible if all ancestors are expanded
+    let p = n.parent;
+    while (p) {
+      if (p._children && (!p.children || !p.children.includes(n))) return false;
+      p = p.parent;
+    }
+    return true;
+  });
+
+  // draw edges for visible parent-child where child is expanded or not collapsed away
+  visible.forEach(n => {
+    const kids = (n.children || []);
+    kids.forEach(ch => {
+      const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+      path.setAttribute("d", pathBetween(n, ch));
+      path.setAttribute("class","edge");
+      gEdges.appendChild(path);
+    });
+  });
+
+  // draw nodes
+  visible.forEach(n => {
+    const g = document.createElementNS("http://www.w3.org/2000/svg","g");
+    g.setAttribute("class","node" + (n===root? " root": ""));
+    g.setAttribute("transform", `translate(${n.px},${n.py})`);
+
+    const circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    const isBranch = (n.children && n.children.length) || (n._children && n._children.length);
+    circle.setAttribute("r", n===root? 18 : isBranch? 14 : 10);
+    g.appendChild(circle);
+
+    const label = document.createElementNS("http://www.w3.org/2000/svg","text");
+    label.setAttribute("class","label");
+    label.setAttribute("x",  (radial? 0 : 18) + (n===root? 8: 10) );
+    label.setAttribute("y", 4);
+    label.textContent = n.name;
+    g.appendChild(label);
+
+    if (isBranch) {
+      const badge = document.createElementNS("http://www.w3.org/2000/svg","text");
+      badge.setAttribute("class","badge");
+      badge.setAttribute("x", -4);
+      badge.setAttribute("y", 4);
+      badge.setAttribute("text-anchor","end");
+      badge.textContent = n._children ? "+" : "–";
+      g.appendChild(badge);
+    }
+
+    g.addEventListener("click", (e) => {
+      if (e.shiftKey && n.parent) {
+        // toggle siblings
+        (n.parent.children || []).forEach(sib => {
+          if (sib===n) return;
+          if (sib.children) setCollapsed(sib, true);
+          else if (sib._children) setCollapsed(sib, false);
+        });
+      } else {
+        const collapsed = !!n._children;
+        setCollapsed(n, !collapsed);
+      }
+      render();
+    });
+
+    g.addEventListener("dblclick", () => {
+      // collapse/expand entire subtree
+      const shouldCollapse = !!(n.children && n.children.length);
+      (function toggleSubtree(x){
+        setCollapsed(x, shouldCollapse);
+        (x.children||[]).forEach(toggleSubtree);
+        (x._children||[]).forEach(toggleSubtree);
+      })(n);
+      render();
+    });
+
+    if (n._children && !n.children) g.classList.add("ghost");
+
+    gNodes.appendChild(g);
+  });
+}
+render();
+
+// Controls
+document.getElementById('toggleLayout').addEventListener('click', (e)=>{
+  radial = !radial;
+  e.target.textContent = radial ? "Tree" : "Radial";
+  render();
+});
+document.getElementById('expandAll').addEventListener('click', ()=>{ expandAll(root); render(); });
+document.getElementById('collapseAll').addEventListener('click', ()=>{ collapseAll(root); render(); });
+
+// initial fit
+fitView();
+</script>
+</body>
+</html>
