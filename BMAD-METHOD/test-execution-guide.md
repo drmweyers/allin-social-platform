@@ -1,20 +1,31 @@
 # BMAD Test Execution Guide
 ## AllIN Platform - Complete Testing Playbook
 
+**Last Updated**: September 30, 2025  
+**GitHub Repository**: [allin-social-platform](https://github.com/drmweyers/allin-social-platform)  
+**Release**: v1.0.0 - Production Ready  
+**Status**: ✅ Enterprise-Grade Testing Framework Deployed
+
 ---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 ```bash
+# Clone from GitHub
+git clone https://github.com/drmweyers/allin-social-platform.git
+cd allin-social-platform
+
 # Ensure Node.js is installed
-node --version  # Should be v18+
+node --version  # Should be v20+
 
 # Install dependencies
-cd allin-platform
-npm install
+npm ci
 
-# Install Playwright browsers
+# Start development environment
+docker-compose --profile dev up -d
+
+# Install Playwright browsers for E2E testing
 npx playwright install
 ```
 
