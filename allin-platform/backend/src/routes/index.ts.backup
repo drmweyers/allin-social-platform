@@ -2,10 +2,20 @@ import { Router } from 'express';
 import authRoutes from './auth.routes';
 import healthRoutes from './health.routes';
 import aiRoutes from './ai.routes';
+// Re-enabling routes with proper fixes
 import inboxRoutes from './inbox.routes';
 import socialRoutes from './social.routes';
 import analyticsRoutes from './analytics.routes';
-import mediaRoutes from './media-simple.routes';
+// Re-enable these routes one by one after testing
+// import aiSupportRoutes from './ai-support.routes';
+// import aiChatRoutes from './ai-chat.routes';
+// import mediaRoutes from './media.routes';
+// import teamRoutes from './team.routes';
+// import settingsRoutes from './settings.routes';
+// import workflowRoutes from './workflow.routes';
+// import collaborationRoutes from './collaboration.routes';
+// import draftRoutes from './draft.routes'; // Keep this disabled for now
+// import { mcpRoutes } from './mcp.routes'; // Keep this disabled for now
 
 const router = Router();
 
@@ -18,10 +28,13 @@ router.get('/', (_req, res) => {
       health: '/health',
       auth: '/api/auth',
       inbox: '/api/inbox',
-      social: '/api/social',
-      analytics: '/api/analytics',
       media: '/api/media',
-      ai: '/api/ai',
+      team: '/api/team',
+      settings: '/api/settings',
+      'ai-support': '/api/ai',
+      users: '/api/users',
+      posts: '/api/posts',
+      analytics: '/api/analytics',
     },
   });
 });
@@ -33,15 +46,14 @@ router.use('/ai', aiRoutes);
 router.use('/inbox', inboxRoutes);
 router.use('/social', socialRoutes);
 router.use('/analytics', analyticsRoutes);
-router.use('/media', mediaRoutes);
 
-// TODO: Additional routes to be enabled after core API stabilization:
+// TODO: Re-enable routes after fixing TypeScript issues:
+// - Social routes (OAuth integration)
+// - Schedule routes (post scheduling)
+// - Analytics routes (reporting)
 // - AI Support routes (RAG system)
-// - AI Chat routes (conversation management)
 // - Media routes (file management)
 // - Team routes (collaboration)
 // - Settings routes (configuration)
-// - Workflow routes (automation)
-// - Collaboration routes (team features)
 
 export default router;

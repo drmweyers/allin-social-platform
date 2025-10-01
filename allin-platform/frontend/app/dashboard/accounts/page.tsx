@@ -36,7 +36,7 @@ interface SocialPlatform {
 
 const socialPlatforms: SocialPlatform[] = [
   {
-    id: 'facebook',
+    id: 'FACEBOOK',
     name: 'Facebook',
     icon: Facebook,
     color: 'text-blue-600',
@@ -44,7 +44,7 @@ const socialPlatforms: SocialPlatform[] = [
     connected: false,
   },
   {
-    id: 'instagram',
+    id: 'INSTAGRAM',
     name: 'Instagram',
     icon: Instagram,
     color: 'text-pink-600',
@@ -52,7 +52,7 @@ const socialPlatforms: SocialPlatform[] = [
     connected: false,
   },
   {
-    id: 'twitter',
+    id: 'TWITTER',
     name: 'Twitter / X',
     icon: Twitter,
     color: 'text-sky-500',
@@ -60,7 +60,7 @@ const socialPlatforms: SocialPlatform[] = [
     connected: false,
   },
   {
-    id: 'linkedin',
+    id: 'LINKEDIN',
     name: 'LinkedIn',
     icon: Linkedin,
     color: 'text-blue-700',
@@ -68,7 +68,7 @@ const socialPlatforms: SocialPlatform[] = [
     connected: false,
   },
   {
-    id: 'tiktok',
+    id: 'TIKTOK',
     name: 'TikTok',
     icon: Music2,
     color: 'text-gray-900',

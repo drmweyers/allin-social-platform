@@ -4,9 +4,11 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Loader2, Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { useAuth } from '@/src/contexts/AuthContext';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login, isLoading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -20,28 +22,13 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password, rememberMe }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        // Store authentication tokens
-        localStorage.setItem('accessToken', data.data.accessToken);
-        localStorage.setItem('refreshToken', data.data.refreshToken);
-        localStorage.setItem('sessionToken', data.data.sessionToken);
-        localStorage.setItem('user', JSON.stringify(data.data.user));
-
+      const result = await login(email, password, rememberMe);
+      
+      if (result.success) {
         // Redirect to dashboard
         router.push('/dashboard');
       } else {
-        // Handle error from API
-        setError(data.error || data.message || 'Invalid email or password. Please try again.');
+        setError(result.error || 'Invalid email or password. Please try again.');
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -109,7 +96,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="AdminPass123"
+                  placeholder="Admin123!@#"
                   required
                 />
                 <button
@@ -151,10 +138,10 @@ export default function LoginPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || authLoading}
               className="w-full flex justify-center items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? (
+              {(isLoading || authLoading) ? (
                 <>
                   <Loader2 className="animate-spin h-5 w-5 mr-2" />
                   Signing in...
@@ -219,13 +206,22 @@ export default function LoginPage() {
             <p className="text-xs font-semibold text-purple-900 mb-2">Demo Accounts:</p>
             <div className="space-y-1">
               <p className="text-xs text-purple-700">
-                <span className="font-medium">Admin:</span> admin@allin.demo / AdminPass123
+                <span className="font-medium">Admin:</span> admin@allin.demo / Admin123!@#
               </p>
               <p className="text-xs text-purple-700">
-                <span className="font-medium">Manager:</span> manager@allin.demo / ManagerPass123
+                <span className="font-medium">Agency:</span> agency@allin.demo / Agency123!@#
               </p>
               <p className="text-xs text-purple-700">
-                <span className="font-medium">Creator:</span> creator@allin.demo / CreatorPass123
+                <span className="font-medium">Manager:</span> manager@allin.demo / Manager123!@#
+              </p>
+              <p className="text-xs text-purple-700">
+                <span className="font-medium">Creator:</span> creator@allin.demo / Creator123!@#
+              </p>
+              <p className="text-xs text-purple-700">
+                <span className="font-medium">Client:</span> client@allin.demo / Client123!@#
+              </p>
+              <p className="text-xs text-purple-700">
+                <span className="font-medium">Team:</span> team@allin.demo / Team123!@#
               </p>
             </div>
           </div>

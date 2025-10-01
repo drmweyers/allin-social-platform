@@ -3,42 +3,42 @@ const bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
 
-// Master test credentials from CLAUDE.md (Production-safe)
+// Master test credentials from MASTER_TEST_CREDENTIALS.md (Production-safe)
 // Note: Using available UserRole enum values (SUPER_ADMIN, ADMIN, USER)
 const MASTER_ACCOUNTS = [
   {
     email: 'admin@allin.demo',
-    password: 'AdminPass123',
+    password: 'Admin123!@#',
     name: 'Admin User',
     role: 'ADMIN'
   },
   {
     email: 'agency@allin.demo', 
-    password: 'AgencyPass123',
+    password: 'Agency123!@#',
     name: 'Agency Owner',
     role: 'ADMIN'  // Map to ADMIN role
   },
   {
     email: 'manager@allin.demo',
-    password: 'ManagerPass123', 
+    password: 'Manager123!@#', 
     name: 'Content Manager',
     role: 'USER'   // Map to USER role
   },
   {
     email: 'creator@allin.demo',
-    password: 'CreatorPass123',
+    password: 'Creator123!@#',
     name: 'Content Creator', 
     role: 'USER'   // Map to USER role
   },
   {
     email: 'client@allin.demo',
-    password: 'ClientPass123',
+    password: 'Client123!@#',
     name: 'Client User',
     role: 'USER'   // Map to USER role
   },
   {
     email: 'team@allin.demo',
-    password: 'TeamPass123',
+    password: 'Team123!@#',
     name: 'Team Member',
     role: 'USER'   // Map to USER role
   }

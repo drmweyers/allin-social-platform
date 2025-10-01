@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/src/contexts/AuthContext';
+import ProtectedRoute from '@/src/components/ProtectedRoute';
 import {
   Home,
   PlusCircle,
@@ -41,11 +43,17 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const handleLogout = async () => {
+    await logout();
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-background">
       {/* Mobile menu overlay */}
       {mobileMenuOpen && (
         <div
@@ -121,13 +129,19 @@ export default function DashboardLayout({
             </div>
             {sidebarOpen && (
               <div className="flex-1">
-                <p className="text-sm font-medium">User Name</p>
-                <p className="text-xs text-muted-foreground">user@example.com</p>
+                <p className="text-sm font-medium">{user?.name || 'User'}</p>
+                <p className="text-xs text-muted-foreground">{user?.email}</p>
+                <p className="text-xs text-purple-600 font-medium">{user?.role}</p>
               </div>
             )}
           </div>
           {sidebarOpen && (
-            <Button variant="ghost" className="w-full mt-3 justify-start" size="sm">
+            <Button 
+              variant="ghost" 
+              className="w-full mt-3 justify-start" 
+              size="sm"
+              onClick={handleLogout}
+            >
               <LogOut className="h-4 w-4 mr-2" />
               Logout
             </Button>
@@ -180,6 +194,6 @@ export default function DashboardLayout({
           {children}
         </main>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }

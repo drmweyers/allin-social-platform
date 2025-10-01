@@ -1,215 +1,275 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect, useMemo } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-  Search,
-  Filter,
-  MessageCircle,
-  Heart,
-  Repeat2,
-  Share,
-  Clock,
-  Star,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Archive,
-  Trash2,
-  ExternalLink,
-  Facebook,
-  Instagram,
-  Twitter,
-  Linkedin,
-  Reply,
-  Check,
-  CheckCheck,
-  AlertCircle
+  CheckSquare,
+  MessageCircle,
+  AlertTriangle,
+  RefreshCw,
+  Loader2,
 } from 'lucide-react';
 
-interface Message {
-  id: string;
-  platform: 'facebook' | 'instagram' | 'twitter' | 'linkedin';
-  type: 'message' | 'comment' | 'mention' | 'review';
-  from: {
-    name: string;
-    username: string;
-    avatar: string;
-  };
-  content: string;
-  timestamp: string;
-  isRead: boolean;
-  isStarred: boolean;
-  engagement?: {
-    likes: number;
-    replies: number;
-    shares: number;
-  };
-  postContext?: string;
-  priority: 'low' | 'medium' | 'high';
-  status: 'unread' | 'read' | 'replied' | 'archived';
-}
-
-const mockMessages: Message[] = [
-  {
-    id: '1',
-    platform: 'instagram',
-    type: 'comment',
-    from: {
-      name: 'Sarah Johnson',
-      username: '@sarahjohnson',
-      avatar: '/api/placeholder/32/32'
-    },
-    content: 'Love this post! When will you be releasing the new features?',
-    timestamp: '2024-01-20T10:30:00Z',
-    isRead: false,
-    isStarred: true,
-    engagement: { likes: 5, replies: 2, shares: 0 },
-    postContext: 'Introducing our new AI-powered features!',
-    priority: 'high',
-    status: 'unread'
-  },
-  {
-    id: '2',
-    platform: 'twitter',
-    type: 'mention',
-    from: {
-      name: 'Tech Reviewer',
-      username: '@techreviewer',
-      avatar: '/api/placeholder/32/32'
-    },
-    content: '@allin_app This looks amazing! Can you tell us more about the pricing plans?',
-    timestamp: '2024-01-20T09:15:00Z',
-    isRead: true,
-    isStarred: false,
-    engagement: { likes: 12, replies: 3, shares: 1 },
-    priority: 'medium',
-    status: 'read'
-  },
-  {
-    id: '3',
-    platform: 'facebook',
-    type: 'message',
-    from: {
-      name: 'Business Owner',
-      username: 'business.owner',
-      avatar: '/api/placeholder/32/32'
-    },
-    content: 'Hi! I\'m interested in using your platform for my business. Could you provide more information about enterprise features?',
-    timestamp: '2024-01-20T08:45:00Z',
-    isRead: false,
-    isStarred: false,
-    priority: 'high',
-    status: 'unread'
-  },
-  {
-    id: '4',
-    platform: 'linkedin',
-    type: 'comment',
-    from: {
-      name: 'Marketing Pro',
-      username: 'marketing.pro',
-      avatar: '/api/placeholder/32/32'
-    },
-    content: 'Great insights on social media automation! This is exactly what our team needs.',
-    timestamp: '2024-01-19T16:20:00Z',
-    isRead: true,
-    isStarred: false,
-    engagement: { likes: 8, replies: 1, shares: 2 },
-    postContext: 'Tips for maximizing your social media ROI',
-    priority: 'medium',
-    status: 'replied'
-  }
-];
-
-const platformIcons = {
-  facebook: <Facebook className="h-4 w-4 text-blue-600" />,
-  instagram: <Instagram className="h-4 w-4 text-pink-600" />,
-  twitter: <Twitter className="h-4 w-4 text-blue-400" />,
-  linkedin: <Linkedin className="h-4 w-4 text-blue-700" />
-};
-
-const typeIcons = {
-  message: <MessageCircle className="h-4 w-4" />,
-  comment: <MessageCircle className="h-4 w-4" />,
-  mention: <Share className="h-4 w-4" />,
-  review: <Star className="h-4 w-4" />
-};
-
-const priorityColors = {
-  low: 'bg-gray-100 text-gray-700',
-  medium: 'bg-yellow-100 text-yellow-700',
-  high: 'bg-red-100 text-red-700'
-};
-
-const statusIcons = {
-  unread: <AlertCircle className="h-4 w-4 text-orange-500" />,
-  read: <Check className="h-4 w-4 text-green-500" />,
-  replied: <CheckCheck className="h-4 w-4 text-blue-500" />,
-  archived: <Archive className="h-4 w-4 text-gray-500" />
-};
+// Import our custom components and types
+import { MessageCard } from '@/components/inbox/MessageCard';
+import { MessageDetailPanel } from '@/components/inbox/MessageDetailPanel';
+import { InboxFilters } from '@/components/inbox/InboxFilters';
+import { useInbox } from '@/hooks/useInbox';
+import { Message, MessageFilters } from '@/types/inbox';
+import { useToast } from '@/hooks/use-toast';
 
 export default function InboxPage() {
-  const [messages, setMessages] = useState<Message[]>(mockMessages);
+  const { toast } = useToast();
+  const {
+    messages,
+    stats,
+    loading,
+    error,
+    pagination,
+    fetchMessages,
+    markAsRead,
+    toggleStar,
+    archiveMessage,
+    replyToMessage,
+    bulkUpdateMessages,
+    refreshData,
+  } = useInbox();
+
+  // Local state for UI
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
-  const [replyText, setReplyText] = useState('');
-
-  const filteredMessages = messages.filter(message => {
-    const matchesSearch = message.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         message.from.name.toLowerCase().includes(searchQuery.toLowerCase());
-
-    switch (activeTab) {
-      case 'unread':
-        return matchesSearch && message.status === 'unread';
-      case 'starred':
-        return matchesSearch && message.isStarred;
-      case 'high-priority':
-        return matchesSearch && message.priority === 'high';
-      default:
-        return matchesSearch;
-    }
+  const [selectedMessages, setSelectedMessages] = useState<string[]>([]);
+  const [filters, setFilters] = useState<MessageFilters>({
+    limit: 50,
+    offset: 0,
   });
 
-  const unreadCount = messages.filter(m => m.status === 'unread').length;
-  const starredCount = messages.filter(m => m.isStarred).length;
-  const highPriorityCount = messages.filter(m => m.priority === 'high').length;
+  // Filter messages based on active tab and search
+  const filteredMessages = useMemo(() => {
+    let filtered = messages;
 
-  const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(message =>
+        message.content.toLowerCase().includes(query) ||
+        message.from.name.toLowerCase().includes(query) ||
+        message.from.username.toLowerCase().includes(query) ||
+        (message.postContext && message.postContext.toLowerCase().includes(query))
+      );
+    }
 
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    return date.toLocaleDateString();
+    // Apply tab filter
+    switch (activeTab) {
+      case 'unread':
+        filtered = filtered.filter(msg => msg.status === 'unread');
+        break;
+      case 'starred':
+        filtered = filtered.filter(msg => msg.isStarred);
+        break;
+      case 'high-priority':
+        filtered = filtered.filter(msg => msg.priority === 'high');
+        break;
+      default:
+        // 'all' - no additional filtering
+        break;
+    }
+
+    return filtered;
+  }, [messages, searchQuery, activeTab]);
+
+  // Handle search and filters
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
   };
 
-  const handleMarkAsRead = (messageId: string) => {
-    setMessages(prev => prev.map(msg =>
-      msg.id === messageId ? { ...msg, status: 'read', isRead: true } : msg
-    ));
+  const handleFiltersChange = async (newFilters: Partial<MessageFilters>) => {
+    const updatedFilters = { ...filters, ...newFilters, offset: 0 };
+    setFilters(updatedFilters);
+    await fetchMessages(updatedFilters);
   };
 
-  const handleToggleStar = (messageId: string) => {
-    setMessages(prev => prev.map(msg =>
-      msg.id === messageId ? { ...msg, isStarred: !msg.isStarred } : msg
-    ));
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
   };
 
-  const handleReply = () => {
-    if (!selectedMessage || !replyText.trim()) return;
-
-    // In a real app, this would send the reply via API
-    setMessages(prev => prev.map(msg =>
-      msg.id === selectedMessage.id ? { ...msg, status: 'replied' } : msg
-    ));
-    setReplyText('');
-    alert('Reply sent successfully!');
+  // Message actions
+  const handleMessageSelect = (message: Message) => {
+    setSelectedMessage(message);
+    if (!message.isRead) {
+      handleMarkAsRead(message.id);
+    }
   };
+
+  const handleMarkAsRead = async (messageId: string) => {
+    try {
+      await markAsRead(messageId);
+      toast({
+        title: "Message marked as read",
+        description: "The message has been marked as read.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to mark message as read.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleToggleStar = async (messageId: string, isStarred: boolean) => {
+    try {
+      await toggleStar(messageId, isStarred);
+      toast({
+        title: isStarred ? "Message starred" : "Star removed",
+        description: isStarred 
+          ? "The message has been added to your starred items." 
+          : "The message has been removed from starred items.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update message.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleArchive = async (messageId: string) => {
+    try {
+      await archiveMessage(messageId);
+      toast({
+        title: "Message archived",
+        description: "The message has been archived.",
+      });
+      // Clear selection if archived message was selected
+      if (selectedMessage?.id === messageId) {
+        setSelectedMessage(null);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to archive message.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleReply = async (messageId: string, content: string) => {
+    try {
+      await replyToMessage(messageId, content);
+      toast({
+        title: "Reply sent",
+        description: "Your reply has been sent successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send reply.",
+        variant: "destructive",
+      });
+      throw error; // Re-throw to handle in component
+    }
+  };
+
+  // Bulk actions
+  const handleBulkArchive = async () => {
+    if (selectedMessages.length === 0) return;
+
+    try {
+      await bulkUpdateMessages({
+        messageIds: selectedMessages,
+        updates: { status: 'archived' }
+      });
+      toast({
+        title: "Messages archived",
+        description: `${selectedMessages.length} messages have been archived.`,
+      });
+      setSelectedMessages([]);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to archive messages.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBulkMarkAsRead = async () => {
+    if (selectedMessages.length === 0) return;
+
+    try {
+      await bulkUpdateMessages({
+        messageIds: selectedMessages,
+        updates: { status: 'read' }
+      });
+      toast({
+        title: "Messages marked as read",
+        description: `${selectedMessages.length} messages have been marked as read.`,
+      });
+      setSelectedMessages([]);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to mark messages as read.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle message selection for bulk actions
+  const toggleMessageSelection = (messageId: string) => {
+    setSelectedMessages(prev => 
+      prev.includes(messageId)
+        ? prev.filter(id => id !== messageId)
+        : [...prev, messageId]
+    );
+  };
+
+  const selectAllMessages = () => {
+    setSelectedMessages(filteredMessages.map(msg => msg.id));
+  };
+
+  const clearSelection = () => {
+    setSelectedMessages([]);
+  };
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Inbox</h1>
+          <p className="text-muted-foreground">
+            Manage all your social media messages, comments, and mentions in one place
+          </p>
+        </div>
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            {error}. Please try refreshing the page.
+          </AlertDescription>
+        </Alert>
+        <div className="flex justify-center">
+          <Button onClick={refreshData}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -222,243 +282,126 @@ export default function InboxPage() {
           </p>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline">
-            <Filter className="h-4 w-4 mr-2" />
-            Filter
-          </Button>
-          <Button variant="outline">
-            <Archive className="h-4 w-4 mr-2" />
-            Archive Selected
-          </Button>
+          {selectedMessages.length > 0 && (
+            <>
+              <Button variant="outline" onClick={handleBulkMarkAsRead}>
+                <CheckSquare className="h-4 w-4 mr-2" />
+                Mark as Read ({selectedMessages.length})
+              </Button>
+              <Button variant="outline" onClick={handleBulkArchive}>
+                <Archive className="h-4 w-4 mr-2" />
+                Archive ({selectedMessages.length})
+              </Button>
+              <Button variant="outline" onClick={clearSelection}>
+                Clear Selection
+              </Button>
+            </>
+          )}
+          {selectedMessages.length === 0 && (
+            <Button variant="outline" onClick={selectAllMessages} disabled={filteredMessages.length === 0}>
+              Select All
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* Search and Tabs */}
-      <div className="space-y-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search messages, mentions, and comments..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
+      {/* Filters and Search */}
+      <InboxFilters
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        filters={filters}
+        onFiltersChange={handleFiltersChange}
+        stats={stats}
+        onRefresh={refreshData}
+        loading={loading}
+      />
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="all">All Messages</TabsTrigger>
-            <TabsTrigger value="unread">
-              Unread {unreadCount > 0 && <Badge variant="destructive" className="ml-2">{unreadCount}</Badge>}
-            </TabsTrigger>
-            <TabsTrigger value="starred">
-              Starred {starredCount > 0 && <Badge variant="secondary" className="ml-2">{starredCount}</Badge>}
-            </TabsTrigger>
-            <TabsTrigger value="high-priority">
-              High Priority {highPriorityCount > 0 && <Badge variant="destructive" className="ml-2">{highPriorityCount}</Badge>}
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
+      {/* Loading State */}
+      {loading && !messages.length && (
+        <div className="flex items-center justify-center py-12">
+          <div className="flex items-center space-x-2">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span>Loading messages...</span>
+          </div>
+        </div>
+      )}
 
       {/* Messages Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Messages List */}
         <div className="lg:col-span-2 space-y-4">
-          {filteredMessages.length === 0 ? (
+          {!loading && filteredMessages.length === 0 ? (
             <Card>
-              <CardContent className="p-6 text-center">
-                <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No messages found</p>
+              <CardContent className="p-8 text-center">
+                <MessageCircle className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">No messages found</h3>
+                <p className="text-muted-foreground mb-4">
+                  {searchQuery || filters.platform || filters.type || filters.priority
+                    ? "Try adjusting your filters or search criteria."
+                    : "You don't have any messages yet. When you receive messages, mentions, or comments, they'll appear here."}
+                </p>
+                {(searchQuery || filters.platform || filters.type || filters.priority) && (
+                  <Button variant="outline" onClick={() => {
+                    setSearchQuery('');
+                    setFilters({ limit: 50, offset: 0 });
+                    setActiveTab('all');
+                    fetchMessages({ limit: 50, offset: 0 });
+                  }}>
+                    Clear all filters
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ) : (
             filteredMessages.map((message) => (
-              <Card
+              <MessageCard
                 key={message.id}
-                className={`cursor-pointer hover:shadow-md transition-shadow ${
-                  selectedMessage?.id === message.id ? 'ring-2 ring-primary' : ''
-                } ${!message.isRead ? 'border-l-4 border-l-blue-500' : ''}`}
-                onClick={() => setSelectedMessage(message)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-3 flex-1">
-                      <Avatar>
-                        <AvatarImage src={message.from.avatar} />
-                        <AvatarFallback>
-                          {message.from.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <span className="font-medium">{message.from.name}</span>
-                          <span className="text-sm text-muted-foreground">{message.from.username}</span>
-                          {platformIcons[message.platform]}
-                          {typeIcons[message.type]}
-                          <Badge className={priorityColors[message.priority]}>
-                            {message.priority}
-                          </Badge>
-                        </div>
-
-                        {message.postContext && (
-                          <div className="text-xs text-muted-foreground mb-2 p-2 bg-muted rounded">
-                            Re: {message.postContext}
-                          </div>
-                        )}
-
-                        <p className="text-sm mb-2 line-clamp-2">{message.content}</p>
-
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4 text-xs text-muted-foreground">
-                            <span className="flex items-center">
-                              <Clock className="h-3 w-3 mr-1" />
-                              {formatTimestamp(message.timestamp)}
-                            </span>
-                            {message.engagement && (
-                              <>
-                                <span className="flex items-center">
-                                  <Heart className="h-3 w-3 mr-1" />
-                                  {message.engagement.likes}
-                                </span>
-                                <span className="flex items-center">
-                                  <MessageCircle className="h-3 w-3 mr-1" />
-                                  {message.engagement.replies}
-                                </span>
-                                <span className="flex items-center">
-                                  <Share className="h-3 w-3 mr-1" />
-                                  {message.engagement.shares}
-                                </span>
-                              </>
-                            )}
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            {statusIcons[message.status]}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleToggleStar(message.id);
-                              }}
-                            >
-                              <Star className={`h-4 w-4 ${message.isStarred ? 'fill-yellow-400 text-yellow-400' : ''}`} />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                message={message}
+                isSelected={selectedMessage?.id === message.id}
+                onClick={handleMessageSelect}
+                onToggleStar={handleToggleStar}
+                onMarkAsRead={handleMarkAsRead}
+              />
             ))
+          )}
+
+          {/* Load More Button */}
+          {pagination.hasMore && (
+            <div className="flex justify-center pt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const newFilters = { ...filters, offset: pagination.offset + pagination.limit };
+                  setFilters(newFilters);
+                  fetchMessages(newFilters);
+                }}
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  'Load More Messages'
+                )}
+              </Button>
+            </div>
           )}
         </div>
 
-        {/* Message Detail and Reply Panel */}
+        {/* Message Detail Panel */}
         <div className="space-y-4">
-          {selectedMessage ? (
-            <>
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">Message Details</CardTitle>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleMarkAsRead(selectedMessage.id)}
-                        disabled={selectedMessage.isRead}
-                      >
-                        Mark as Read
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <Avatar>
-                      <AvatarImage src={selectedMessage.from.avatar} />
-                      <AvatarFallback>
-                        {selectedMessage.from.name.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium">{selectedMessage.from.name}</p>
-                      <p className="text-sm text-muted-foreground">{selectedMessage.from.username}</p>
-                    </div>
-                    <div className="ml-auto flex items-center space-x-2">
-                      {platformIcons[selectedMessage.platform]}
-                      <Badge className={priorityColors[selectedMessage.priority]}>
-                        {selectedMessage.priority}
-                      </Badge>
-                    </div>
-                  </div>
-
-                  {selectedMessage.postContext && (
-                    <div className="p-3 bg-muted rounded">
-                      <p className="text-sm font-medium mb-1">Original Post:</p>
-                      <p className="text-sm text-muted-foreground">{selectedMessage.postContext}</p>
-                    </div>
-                  )}
-
-                  <div className="p-3 border rounded">
-                    <p>{selectedMessage.content}</p>
-                  </div>
-
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <span>{formatTimestamp(selectedMessage.timestamp)}</span>
-                    {selectedMessage.engagement && (
-                      <div className="flex space-x-4">
-                        <span>{selectedMessage.engagement.likes} likes</span>
-                        <span>{selectedMessage.engagement.replies} replies</span>
-                        <span>{selectedMessage.engagement.shares} shares</span>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Quick Reply</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <textarea
-                    placeholder="Type your reply..."
-                    value={replyText}
-                    onChange={(e) => setReplyText(e.target.value)}
-                    className="w-full p-3 border rounded-md resize-none h-24"
-                  />
-                  <div className="flex justify-between">
-                    <div className="flex space-x-2">
-                      <Button variant="outline" size="sm">
-                        Add Template
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        Add Media
-                      </Button>
-                    </div>
-                    <Button onClick={handleReply} disabled={!replyText.trim()}>
-                      <Reply className="h-4 w-4 mr-2" />
-                      Send Reply
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </>
-          ) : (
-            <Card>
-              <CardContent className="p-6 text-center">
-                <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Select a message to view details and reply</p>
-              </CardContent>
-            </Card>
-          )}
+          <MessageDetailPanel
+            message={selectedMessage}
+            onReply={handleReply}
+            onMarkAsRead={handleMarkAsRead}
+            onToggleStar={handleToggleStar}
+            onArchive={handleArchive}
+            loading={loading}
+          />
         </div>
       </div>
     </div>

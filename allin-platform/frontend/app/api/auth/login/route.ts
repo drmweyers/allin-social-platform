@@ -14,16 +14,37 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(body),
     });
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      console.error('Failed to parse response JSON:', parseError);
+      return NextResponse.json(
+        { message: 'Invalid response from server' },
+        { status: 500 }
+      );
+    }
 
-    // If login successful, forward cookies from backend
-    if (response.ok && response.headers.get('set-cookie')) {
-      const cookies = response.headers.get('set-cookie');
+    // If login successful, set cookies including access token
+    if (response.ok && data.success && data.data) {
       const nextResponse = NextResponse.json(data, { status: response.status });
 
-      if (cookies) {
-        nextResponse.headers.set('set-cookie', cookies);
+      // Set session token from backend
+      if (response.headers.get('set-cookie')) {
+        const cookies = response.headers.get('set-cookie');
+        if (cookies) {
+          nextResponse.headers.set('set-cookie', cookies);
+        }
       }
+
+      // Also set access token as cookie for API authentication
+      nextResponse.cookies.set('accessToken', data.data.accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 15 * 60, // 15 minutes
+        path: '/'
+      });
 
       return nextResponse;
     }

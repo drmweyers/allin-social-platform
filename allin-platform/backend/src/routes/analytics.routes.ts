@@ -10,7 +10,11 @@ router.use(authenticateToken);
 // Get aggregated analytics
 router.get('/aggregate', async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const organizationId = req.user?.organizationId || req.query.organizationId as string;
+    // Use organizationId from user, query param, or default to user's ID as fallback
+    const organizationId = req.user?.organizationId || 
+                          req.query.organizationId as string || 
+                          req.user?.id || 
+                          'default';
 
     if (!organizationId) {
       res.status(400).json({
@@ -43,7 +47,10 @@ router.get('/aggregate', async (req: AuthRequest, res: Response): Promise<void> 
 // Competitor analysis
 router.post('/competitors', async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const organizationId = req.user?.organizationId || req.body.organizationId;
+    const organizationId = req.user?.organizationId || 
+                          req.body.organizationId ||
+                          req.user?.id ||
+                          'default';
     const { competitorIds } = req.body;
 
     if (!organizationId) {

@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/src/contexts/AuthContext';
 import {
   ArrowUpRight,
   ArrowDownRight,
@@ -89,13 +90,17 @@ const platformStats = [
 ];
 
 export default function DashboardPage() {
+  const { user } = useAuth();
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back! Here's your social media overview.</p>
+          <p className="text-muted-foreground">
+            Welcome back, {user?.name}! Here's your social media overview.
+          </p>
         </div>
         <div className="flex space-x-2">
           <Button variant="outline">

@@ -105,3 +105,6 @@ export const authenticateToken = authenticate;
 
 // Export authenticate as authMiddleware for consistency with route imports
 export const authMiddleware = authenticate;
+
+// Export authenticate as requireAuth for consistency with media routes
+export const requireAuth = authenticate;

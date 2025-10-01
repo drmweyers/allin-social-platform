@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:5000';
 
 export async function DELETE(
   request: NextRequest,
@@ -9,21 +9,15 @@ export async function DELETE(
   try {
     const { platformId } = params;
 
-    // Get auth token from cookies
-    const token = request.cookies.get('token')?.value;
-
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+    // Get cookies from request
+    const cookies = request.headers.get('cookie');
 
     // Forward request to backend
-    const response = await fetch(`${API_URL}/api/social/disconnect/${platformId}`, {
+    const response = await fetch(`${API_BASE_URL}/api/social/disconnect/${platformId}`, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        ...(cookies && { 'Cookie': cookies }),
       },
     });
 

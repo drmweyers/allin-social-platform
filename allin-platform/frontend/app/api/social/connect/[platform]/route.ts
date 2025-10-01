@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:5000';
 
 export async function POST(
   request: NextRequest,
@@ -8,26 +8,17 @@ export async function POST(
 ) {
   try {
     const { platform } = params;
-    const body = await request.json();
 
-    // Get auth token from cookies
-    const token = request.cookies.get('token')?.value;
-
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+    // Get cookies from request
+    const cookies = request.headers.get('cookie');
 
     // Forward request to backend
-    const response = await fetch(`${API_URL}/api/social/connect/${platform}`, {
+    const response = await fetch(`${API_BASE_URL}/api/social/connect/${platform}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
+        ...(cookies && { 'Cookie': cookies }),
       },
-      body: JSON.stringify(body),
     });
 
     const data = await response.json();
