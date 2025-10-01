@@ -459,6 +459,334 @@ SUGGESTIONS: 1. Post during peak hours 2. Include visuals 3. Ask questions`;
     });
   });
 
+  describe('applyTemplate', () => {
+    it('should apply variables to template successfully', async () => {
+      const templateId = 'product-launch';
+      const variables = {
+        productName: 'Amazing Widget',
+        companyName: 'TechCorp',
+        feature: 'AI-powered analytics',
+      };
+
+      const result = await aiService.applyTemplate(templateId, variables);
+
+      expect(result).toBeDefined();
+      expect(typeof result).toBe('string');
+      expect(result).toContain('Amazing Widget');
+      expect(result).toContain('TechCorp');
+      expect(result).toContain('AI-powered analytics');
+    });
+
+    it('should handle unknown template ID', async () => {
+      const result = await aiService.applyTemplate('unknown-template', {});
+
+      expect(result).toBe('Template not found');
+    });
+
+    it('should handle missing variables gracefully', async () => {
+      const result = await aiService.applyTemplate('product-launch', {
+        productName: 'Test Product',
+        // Missing companyName and feature
+      });
+
+      expect(result).toBeDefined();
+      expect(result).toContain('Test Product');
+      // Should contain placeholder for missing variables
+      expect(result).toContain('[companyName]');
+      expect(result).toContain('[feature]');
+    });
+
+    it('should handle empty variables object', async () => {
+      const result = await aiService.applyTemplate('product-launch', {});
+
+      expect(result).toBeDefined();
+      expect(result).toContain('[productName]');
+      expect(result).toContain('[companyName]');
+      expect(result).toContain('[feature]');
+    });
+  });
+
+  describe('saveDraft', () => {
+    it('should save draft successfully', async () => {
+      const draft = {
+        content: 'This is a draft post about AI',
+        platforms: ['linkedin'],
+        title: 'AI Draft',
+      };
+
+      const result = await aiService.saveDraft(MASTER_CREDENTIALS.creator.email, draft);
+
+      expect(result).toBeDefined();
+      expect(result).toHaveProperty('id');
+      expect(result).toHaveProperty('userId');
+      expect(result).toHaveProperty('content');
+      expect(result).toHaveProperty('platforms');
+      expect(result).toHaveProperty('createdAt');
+      expect(result.content).toBe(draft.content);
+      expect(result.platforms).toEqual(draft.platforms);
+      expect(result.userId).toBe(MASTER_CREDENTIALS.creator.email);
+    });
+
+    it('should save draft for different user roles', async () => {
+      const draft = {
+        content: 'Agency draft content',
+        platforms: ['facebook'],
+        title: 'Agency Post',
+      };
+
+      const result = await aiService.saveDraft(MASTER_CREDENTIALS.agency.email, draft);
+
+      expect(result.userId).toBe(MASTER_CREDENTIALS.agency.email);
+      expect(result.content).toBe(draft.content);
+    });
+
+    it('should handle draft with minimal data', async () => {
+      const draft = {
+        content: 'Minimal draft',
+        platforms: ['twitter'],
+      };
+
+      const result = await aiService.saveDraft(MASTER_CREDENTIALS.manager.email, draft);
+
+      expect(result).toBeDefined();
+      expect(result.content).toBe(draft.content);
+      expect(result.platforms).toEqual(draft.platforms);
+    });
+
+    it('should assign unique IDs to drafts', async () => {
+      const draft1 = { content: 'Draft 1', platforms: ['instagram'] };
+      const draft2 = { content: 'Draft 2', platforms: ['instagram'] };
+
+      const result1 = await aiService.saveDraft(MASTER_CREDENTIALS.team.email, draft1);
+      const result2 = await aiService.saveDraft(MASTER_CREDENTIALS.team.email, draft2);
+
+      expect(result1.id).not.toBe(result2.id);
+    });
+  });
+
+  describe('getDrafts', () => {
+    it('should retrieve drafts for user', async () => {
+      // First save some drafts
+      await aiService.saveDraft(MASTER_CREDENTIALS.admin.email, {
+        content: 'Admin draft 1',
+        platforms: ['linkedin'],
+      });
+      await aiService.saveDraft(MASTER_CREDENTIALS.admin.email, {
+        content: 'Admin draft 2',
+        platforms: ['facebook'],
+      });
+
+      const drafts = await aiService.getDrafts(MASTER_CREDENTIALS.admin.email);
+
+      expect(drafts).toBeDefined();
+      expect(Array.isArray(drafts)).toBe(true);
+      expect(drafts.length).toBeGreaterThanOrEqual(2);
+      
+      drafts.forEach(draft => {
+        expect(draft).toHaveProperty('id');
+        expect(draft).toHaveProperty('content');
+        expect(draft).toHaveProperty('platforms');
+        expect(draft).toHaveProperty('createdAt');
+        expect(draft.userId).toBe(MASTER_CREDENTIALS.admin.email);
+      });
+    });
+
+    it('should return empty array for user with no drafts', async () => {
+      const drafts = await aiService.getDrafts('new-user@example.com');
+
+      expect(drafts).toBeDefined();
+      expect(Array.isArray(drafts)).toBe(true);
+      expect(drafts.length).toBe(0);
+    });
+
+    it('should retrieve drafts sorted by creation date', async () => {
+      const userId = MASTER_CREDENTIALS.client.email;
+      
+      await aiService.saveDraft(userId, {
+        content: 'First draft',
+        platforms: ['twitter'],
+      });
+      
+      // Add small delay to ensure different timestamps
+      await new Promise(resolve => setTimeout(resolve, 10));
+      
+      await aiService.saveDraft(userId, {
+        content: 'Second draft',
+        platforms: ['instagram'],
+      });
+
+      const drafts = await aiService.getDrafts(userId);
+
+      expect(drafts.length).toBeGreaterThanOrEqual(2);
+      // Should be sorted by creation date (most recent first)
+      if (drafts.length >= 2) {
+        expect(new Date(drafts[0].createdAt).getTime())
+          .toBeGreaterThanOrEqual(new Date(drafts[1].createdAt).getTime());
+      }
+    });
+  });
+
+  describe('analyzeContent', () => {
+    it('should analyze content and return insights', async () => {
+      const content = 'Check out our amazing new product! It will revolutionize your workflow. #innovation #productivity';
+      
+      const result = await aiService.analyzeContent(content, 'linkedin');
+
+      expect(result).toBeDefined();
+      expect(result).toHaveProperty('readabilityScore');
+      expect(result).toHaveProperty('sentimentScore');
+      expect(result).toHaveProperty('engagementPrediction');
+      expect(result).toHaveProperty('improvements');
+      
+      expect(typeof result.readabilityScore).toBe('number');
+      expect(result.readabilityScore).toBeGreaterThanOrEqual(0);
+      expect(result.readabilityScore).toBeLessThanOrEqual(100);
+      
+      expect(typeof result.sentimentScore).toBe('number');
+      expect(Array.isArray(result.improvements)).toBe(true);
+    });
+
+    it('should analyze content for different platforms', async () => {
+      const content = 'Great product launch today! 🚀';
+      const platforms = ['facebook', 'instagram', 'twitter', 'linkedin', 'tiktok'];
+
+      for (const platform of platforms) {
+        const result = await aiService.analyzeContent(content, platform);
+        
+        expect(result).toBeDefined();
+        expect(result.readabilityScore).toBeGreaterThanOrEqual(0);
+        expect(result.improvements.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('should handle empty content', async () => {
+      const result = await aiService.analyzeContent('', 'facebook');
+
+      expect(result).toBeDefined();
+      expect(result.readabilityScore).toBeDefined();
+      expect(result.sentimentScore).toBeDefined();
+      expect(result.engagementPrediction).toBeDefined();
+      expect(result.improvements).toBeDefined();
+    });
+
+    it('should provide consistent analysis structure', async () => {
+      const content = 'Amazing day! #blessed #grateful #happiness';
+      
+      const result = await aiService.analyzeContent(content, 'instagram');
+
+      expect(result.readabilityScore).toBeGreaterThanOrEqual(0);
+      expect(result.sentimentScore).toBeGreaterThanOrEqual(-1);
+      expect(result.sentimentScore).toBeLessThanOrEqual(1);
+      expect(result.engagementPrediction).toBeDefined();
+      expect(Array.isArray(result.improvements)).toBe(true);
+    });
+
+    it('should provide consistent analysis across platforms', async () => {
+      const content = 'Professional update about our quarterly results';
+      
+      const linkedinResult = await aiService.analyzeContent(content, 'linkedin');
+      const twitterResult = await aiService.analyzeContent(content, 'twitter');
+
+      expect(linkedinResult.improvements).toBeDefined();
+      expect(twitterResult.improvements).toBeDefined();
+      
+      expect(Array.isArray(linkedinResult.improvements)).toBe(true);
+      expect(Array.isArray(twitterResult.improvements)).toBe(true);
+      expect(linkedinResult.improvements.length).toBeGreaterThan(0);
+      expect(twitterResult.improvements.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('generateMarketingAdvice', () => {
+    it('should generate marketing advice with OpenAI', async () => {
+      const adviceResponse = 'To improve your social media engagement, focus on posting consistently during peak hours, use high-quality visuals, and engage with your audience through comments and stories.';
+      
+      mockOpenAIInstance.chat.completions.create.mockResolvedValue({
+        choices: [{ message: { content: adviceResponse } }],
+      });
+
+      const result = await aiService.generateMarketingAdvice(
+        'How can I improve my social media engagement?'
+      );
+
+      expect(result).toBe(adviceResponse);
+      expect(mockOpenAIInstance.chat.completions.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: 'gpt-4-turbo-preview',
+          messages: expect.arrayContaining([
+            expect.objectContaining({
+              role: 'user',
+              content: expect.stringContaining('How can I improve my social media engagement?')
+            })
+          ])
+        })
+      );
+    });
+
+    it('should handle API errors gracefully', async () => {
+      mockOpenAIInstance.chat.completions.create.mockRejectedValue(
+        new Error('OpenAI API error')
+      );
+
+      const result = await aiService.generateMarketingAdvice(
+        'What are the best posting times?'
+      );
+
+      expect(result).toContain('unable to generate advice');
+      expect(result).toContain('try again later');
+    });
+
+    it('should return fallback advice when OpenAI is not configured', async () => {
+      delete process.env.OPENAI_API_KEY;
+      aiService = new AIService();
+
+      const result = await aiService.generateMarketingAdvice(
+        'How to increase brand awareness?'
+      );
+
+      expect(result).toContain('unable to generate advice');
+      expect(result).toContain('AI features are not available');
+    });
+
+    it('should handle empty prompt', async () => {
+      const result = await aiService.generateMarketingAdvice('');
+
+      expect(result).toContain('Please provide a specific question');
+    });
+
+    it('should handle very long prompts', async () => {
+      const longPrompt = 'A'.repeat(5000);
+      
+      mockOpenAIInstance.chat.completions.create.mockResolvedValue({
+        choices: [{ message: { content: 'Here is some marketing advice for your question.' } }],
+      });
+
+      const result = await aiService.generateMarketingAdvice(longPrompt);
+
+      expect(result).toBeDefined();
+      expect(typeof result).toBe('string');
+    });
+
+    it('should provide advice for different marketing topics', async () => {
+      const topics = [
+        'How to increase engagement?',
+        'Best practices for Instagram?',
+        'Content calendar strategies?',
+        'Influencer marketing tips?',
+      ];
+
+      for (const topic of topics) {
+        mockOpenAIInstance.chat.completions.create.mockResolvedValue({
+          choices: [{ message: { content: `Advice for: ${topic}` } }],
+        });
+
+        const result = await aiService.generateMarketingAdvice(topic);
+        
+        expect(result).toContain(topic);
+      }
+    });
+  });
+
   describe('Error handling', () => {
     it('should handle null response from OpenAI', async () => {
       mockOpenAIInstance.chat.completions.create.mockResolvedValue({
@@ -500,6 +828,61 @@ SUGGESTIONS: 1. Post during peak hours 2. Include visuals 3. Ask questions`;
 
       expect(result).toBeDefined();
       expect(result.content.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Integration tests with master credentials', () => {
+    it('should work with all master credential user types', async () => {
+      const userTypes = Object.keys(MASTER_CREDENTIALS);
+      
+      for (const userType of userTypes) {
+        const userEmail = (MASTER_CREDENTIALS as any)[userType].email;
+        
+        // Test saving and retrieving drafts
+        const draft = {
+          content: `Test content for ${userType}`,
+          platforms: ['facebook'],
+        };
+        
+        const savedDraft = await aiService.saveDraft(userEmail, draft);
+        expect(savedDraft.userId).toBe(userEmail);
+        
+        const drafts = await aiService.getDrafts(userEmail);
+        expect(drafts.some(d => d.id === savedDraft.id)).toBe(true);
+        
+        // Test templates
+        const templates = await aiService.getTemplates(userEmail);
+        expect(Array.isArray(templates)).toBe(true);
+      }
+    });
+
+    it('should maintain data isolation between users', async () => {
+      const user1 = MASTER_CREDENTIALS.admin.email;
+      const user2 = MASTER_CREDENTIALS.creator.email;
+      
+      await aiService.saveDraft(user1, {
+        content: 'User 1 draft',
+        platforms: ['twitter'],
+      });
+      
+      await aiService.saveDraft(user2, {
+        content: 'User 2 draft',
+        platforms: ['instagram'],
+      });
+      
+      const user1Drafts = await aiService.getDrafts(user1);
+      const user2Drafts = await aiService.getDrafts(user2);
+      
+      // Each user should only see their own drafts
+      expect(user1Drafts.every(d => d.userId === user1)).toBe(true);
+      expect(user2Drafts.every(d => d.userId === user2)).toBe(true);
+      
+      // No overlap in draft content
+      const user1Contents = user1Drafts.map(d => d.content);
+      const user2Contents = user2Drafts.map(d => d.content);
+      
+      expect(user1Contents).not.toContain('User 2 draft');
+      expect(user2Contents).not.toContain('User 1 draft');
     });
   });
 });

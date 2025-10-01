@@ -1,4 +1,4 @@
-import { AnalyticsService, analyticsService } from '../../../src/services/analytics.service';
+import { AnalyticsService } from '../../../src/services/analytics.service';
 import { mockPrismaClient, mockRedisClient } from '../../setup/jest.setup';
 import { SocialPlatform, PostStatus } from '../../setup/enums';
 
@@ -361,12 +361,6 @@ describe('AnalyticsService', () => {
 
   describe('streamRealTimeAnalytics', () => {
     it('should create async generator for real-time metrics', async () => {
-      const mockMetrics = {
-        postsLastHour: 5,
-        engagementLastHour: 250,
-        activeAccounts: 3
-      };
-
       mockPrismaClient.post.findMany.mockResolvedValue([]);
       mockPrismaClient.socialAccount.count.mockResolvedValue(3);
 
@@ -378,9 +372,11 @@ describe('AnalyticsService', () => {
       expect(firstResult.done).toBe(false);
       expect(firstResult.value).toHaveProperty('timestamp');
       expect(firstResult.value).toHaveProperty('metrics');
-      expect(firstResult.value.metrics).toHaveProperty('postsLastHour');
-      expect(firstResult.value.metrics).toHaveProperty('engagementLastHour');
-      expect(firstResult.value.metrics).toHaveProperty('activeAccounts');
+      if (firstResult.value && typeof firstResult.value === 'object' && 'metrics' in firstResult.value) {
+        expect(firstResult.value.metrics).toHaveProperty('postsLastHour');
+        expect(firstResult.value.metrics).toHaveProperty('engagementLastHour');
+        expect(firstResult.value.metrics).toHaveProperty('activeAccounts');
+      }
     });
   });
 

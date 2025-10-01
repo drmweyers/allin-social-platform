@@ -9,7 +9,10 @@
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "test:unit": "jest",
+    "test:integration": "jest --testPathPattern=integration",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",

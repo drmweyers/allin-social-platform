@@ -3,9 +3,9 @@ import { logger } from '../utils/logger';
 
 // Production-optimized Prisma configuration
 const prismaConfig = {
-  log: process.env.NODE_ENV === 'development' 
-    ? ['query', 'error', 'warn'] as const
-    : ['error'] as const,
+  log: (process.env.NODE_ENV === 'development' 
+    ? ['query', 'error', 'warn']
+    : ['error']) as ('query' | 'error' | 'warn' | 'info')[],
   
   // Connection pool settings for production
   datasources: {
@@ -24,16 +24,16 @@ const prismaConfig = {
   errorFormat: 'minimal' as const,
   
   // Query engine optimizations
-  engineType: 'binary' as const,
+  // engineType: 'binary' as const, // Removed due to Prisma compatibility issues
 };
 
 // Create Prisma client with optimized settings
-const prisma = new PrismaClient(prismaConfig);
+const prismaInstance = new PrismaClient(prismaConfig);
 
 // Connection pool monitoring
 let connectionCount = 0;
 let lastHealthCheck = 0;
-const HEALTH_CHECK_INTERVAL = 30000; // 30 seconds
+// const HEALTH_CHECK_INTERVAL = 30000; // 30 seconds (for future use)
 
 // Database health metrics
 interface DatabaseMetrics {
@@ -60,7 +60,7 @@ class DatabaseService {
   private startTime: number = Date.now();
 
   constructor() {
-    this.prisma = prisma;
+    this.prisma = prismaInstance;
     this.setupQueryLogging();
     this.setupGracefulShutdown();
   }
@@ -232,7 +232,7 @@ class DatabaseService {
     maxRetries: number = 3,
     delay: number = 1000
   ): Promise<T> {
-    let lastError: Error;
+    let lastError: Error | undefined;
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
@@ -271,7 +271,7 @@ class DatabaseService {
     }
     
     logger.error('Database operation failed after all retries:', lastError);
-    throw lastError;
+    throw lastError || new Error('Unknown error occurred');
   }
 
   // Batch operations for better performance
@@ -312,7 +312,7 @@ class DatabaseService {
 
   // Transaction with automatic retry
   async transaction<T>(
-    operations: (prisma: PrismaClient) => Promise<T>,
+    operations: (prisma: Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>) => Promise<T>,
     options?: { timeout?: number; maxWait?: number }
   ): Promise<T> {
     return this.executeWithRetry(async () => {

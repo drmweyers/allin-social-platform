@@ -43,17 +43,15 @@ jest.mock('winston', () => {
 });
 
 describe('Logger', () => {
-  let mockWinston: jest.Mocked<typeof winston>;
-  let consoleLogSpy: jest.SpyInstance;
-  let consoleErrorSpy: jest.SpyInstance;
+  let consoleLogSpy: any;
+  let consoleErrorSpy: any;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockWinston = winston as jest.Mocked<typeof winston>;
 
     // Spy on console methods in case logger falls back to console
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
     // Reset environment variable
     delete process.env.LOG_LEVEL;

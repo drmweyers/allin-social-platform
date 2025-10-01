@@ -1,4 +1,4 @@
-import OpenAI from 'openai';
+const OpenAI = require('openai');
 
 interface ContentGenerationOptions {
   platform: 'facebook' | 'instagram' | 'twitter' | 'linkedin' | 'tiktok';
@@ -30,6 +30,16 @@ interface ContentTemplate {
 export class AIService {
   private openai: OpenAI | null = null;
   private isInitialized = false;
+  private drafts: Array<{
+    id: string;
+    userId: string;
+    content: string;
+    platforms: string[];
+    mediaUrls?: string[];
+    scheduledFor?: Date;
+    createdAt: Date;
+    status: string;
+  }> = [];
 
   constructor() {
     this.initialize();
@@ -286,7 +296,7 @@ export class AIService {
       const response = completion.choices[0]?.message?.content || '';
       return response
         .split(/\s+/)
-        .filter(tag => tag.startsWith('#'))
+        .filter((tag: string) => tag.startsWith('#'))
         .slice(0, count);
     } catch (error) {
       console.error('Error generating hashtags:', error);
@@ -408,21 +418,24 @@ export class AIService {
     mediaUrls?: string[];
     scheduledFor?: Date;
   }) {
-    // Save draft to database
-    // This would be implemented with Prisma
-    return {
-      id: `draft_${Date.now()}`,
+    // Save draft to in-memory store (would be database in real implementation)
+    const savedDraft = {
+      id: `draft_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       ...draft,
       userId,
       createdAt: new Date(),
       status: 'draft',
     };
+    
+    this.drafts.push(savedDraft);
+    return savedDraft;
   }
 
-  async getDrafts(_userId: string) {
-    // Fetch drafts from database
-    // This would be implemented with Prisma
-    return [];
+  async getDrafts(userId: string) {
+    // Fetch drafts from in-memory store (would be database in real implementation)
+    return this.drafts
+      .filter(draft => draft.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   // Analytics and Optimization

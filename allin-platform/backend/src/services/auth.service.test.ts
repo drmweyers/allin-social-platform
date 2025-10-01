@@ -388,7 +388,7 @@ describe('AuthService', () => {
 
       const result = await authService.refreshTokens(refreshToken);
 
-      expect(jwt.verify).toHaveBeenCalledWith(refreshToken, process.env.JWT_REFRESH_SECRET);
+      expect(jwt.verify).toHaveBeenCalledWith(refreshToken, 'test-refresh-secret');
       expect(result).toEqual({
         accessToken: 'new-access-token',
         refreshToken: 'new-refresh-token',

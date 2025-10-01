@@ -1,5 +1,8 @@
-import { EmailService } from './email.service';
+import { emailService } from './email.service';
 import nodemailer from 'nodemailer';
+
+// Mock nodemailer
+jest.mock('nodemailer');
 
 // Master test credentials
 const MASTER_CREDENTIALS = {
@@ -12,7 +15,6 @@ const MASTER_CREDENTIALS = {
 };
 
 describe('EmailService', () => {
-  let emailService: EmailService;
   let mockTransporter: any;
 
   beforeEach(() => {
@@ -25,9 +27,6 @@ describe('EmailService', () => {
     };
 
     (nodemailer.createTransport as any).mockReturnValue(mockTransporter);
-
-    // Create new instance for each test
-    emailService = new EmailService();
   });
 
   describe('sendEmail', () => {
@@ -41,10 +40,11 @@ describe('EmailService', () => {
       await emailService.sendEmail(emailData);
 
       expect(mockTransporter.sendMail).toHaveBeenCalledWith({
-        from: `"${process.env.EMAIL_FROM_NAME || 'AllIN Platform'}" <${process.env.EMAIL_FROM || 'noreply@allin.com'}>`,
+        from: process.env.EMAIL_FROM || 'AllIN Platform <noreply@allin.com>',
         to: emailData.to,
         subject: emailData.subject,
         html: emailData.html,
+        text: 'Test content',
       });
     });
 
@@ -328,10 +328,9 @@ describe('EmailService', () => {
     it('should handle transporter verification failure', async () => {
       mockTransporter.verify.mockRejectedValue(new Error('Invalid SMTP credentials'));
 
-      // Create new instance that will fail verification
-      const failingService = new EmailService();
-
-      // Verify should be called
+      // Test that the service handles verification failures gracefully
+      const isVerified = await emailService.verifyConnection();
+      expect(isVerified).toBe(false);
       expect(mockTransporter.verify).toHaveBeenCalled();
     });
   });

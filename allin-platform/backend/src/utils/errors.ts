@@ -4,8 +4,17 @@ export class AppError extends Error {
 
   constructor(message: string, statusCode: number) {
     super(message);
+    this.name = this.constructor.name;
     this.statusCode = statusCode;
     this.isOperational = true;
+
+    // Make message enumerable
+    Object.defineProperty(this, 'message', {
+      value: message,
+      enumerable: true,
+      writable: true,
+      configurable: true
+    });
 
     // Capture stack trace
     Error.captureStackTrace(this, this.constructor);
@@ -20,19 +29,19 @@ export class ValidationError extends AppError {
 
 export class UnauthorizedError extends AppError {
   constructor(message: string = 'Unauthorized') {
-    super(message, 401);
+    super(message ?? 'Unauthorized', 401);
   }
 }
 
 export class ForbiddenError extends AppError {
   constructor(message: string = 'Forbidden') {
-    super(message, 403);
+    super(message ?? 'Forbidden', 403);
   }
 }
 
 export class NotFoundError extends AppError {
   constructor(message: string = 'Not found') {
-    super(message, 404);
+    super(message ?? 'Not found', 404);
   }
 }
 
@@ -44,6 +53,6 @@ export class ConflictError extends AppError {
 
 export class InternalServerError extends AppError {
   constructor(message: string = 'Internal server error') {
-    super(message, 500);
+    super(message ?? 'Internal server error', 500);
   }
 }

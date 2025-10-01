@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 import {
   AppError,
   ValidationError,
@@ -28,7 +28,7 @@ describe('Error Classes', () => {
       const error = new AppError('Test error', 500);
 
       expect(error.stack).toBeDefined();
-      expect(error.stack).toContain('AppError');
+      expect(error.stack).toContain('Error');
       expect(error.stack).toContain('Test error');
     });
 

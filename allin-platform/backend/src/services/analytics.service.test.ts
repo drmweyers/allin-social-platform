@@ -5,16 +5,24 @@ import { SocialPlatform, PostStatus } from '@prisma/client';
 
 // Mock dependencies
 jest.mock('./database');
-jest.mock('./redis');
-
-// Mock Redis instance
-const mockRedis = {
-  setex: jest.fn(),
-  get: jest.fn(),
-  del: jest.fn(),
-};
-
-(getRedis as any).mockReturnValue(mockRedis);
+jest.mock('./redis', () => ({
+  getRedis: jest.fn(() => ({
+    setex: jest.fn(),
+    get: jest.fn(),
+    del: jest.fn(),
+  })),
+  cacheService: {
+    set: jest.fn(),
+    get: jest.fn(),
+    del: jest.fn(),
+    exists: jest.fn(),
+    ttl: jest.fn(),
+    flush: jest.fn(),
+    getKeys: jest.fn(),
+    getInfo: jest.fn(),
+    ping: jest.fn(),
+  },
+}));
 
 // Master test credentials (kept for consistency with other tests)
 // const MASTER_CREDENTIALS = {
