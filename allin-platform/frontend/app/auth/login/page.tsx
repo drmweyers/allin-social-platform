@@ -109,7 +109,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Admin123!@#"
+                  placeholder="AdminPass123"
                   required
                 />
                 <button
@@ -219,13 +219,13 @@ export default function LoginPage() {
             <p className="text-xs font-semibold text-purple-900 mb-2">Demo Accounts:</p>
             <div className="space-y-1">
               <p className="text-xs text-purple-700">
-                <span className="font-medium">Admin:</span> admin@allin.demo / Admin123!@#
+                <span className="font-medium">Admin:</span> admin@allin.demo / AdminPass123
               </p>
               <p className="text-xs text-purple-700">
-                <span className="font-medium">Manager:</span> manager@allin.demo / Manager123!@#
+                <span className="font-medium">Manager:</span> manager@allin.demo / ManagerPass123
               </p>
               <p className="text-xs text-purple-700">
-                <span className="font-medium">Creator:</span> creator@allin.demo / Creator123!@#
+                <span className="font-medium">Creator:</span> creator@allin.demo / CreatorPass123
               </p>
             </div>
           </div>

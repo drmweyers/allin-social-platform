@@ -2,10 +2,9 @@ import { Router } from 'express';
 import authRoutes from './auth.routes';
 import healthRoutes from './health.routes';
 import aiRoutes from './ai.routes';
-// Temporarily disable problematic routes while fixing TypeScript issues
-// import socialRoutes from './social.routes';
-// import scheduleRoutes from './schedule.routes';
-// import analyticsRoutes from './analytics.routes';
+// Re-enabling routes with proper fixes
+import socialRoutes from './social.routes';
+import analyticsRoutes from './analytics.routes';
 // Re-enable these routes one by one after testing
 // import aiSupportRoutes from './ai-support.routes';
 // import aiChatRoutes from './ai-chat.routes';
@@ -40,10 +39,13 @@ router.get('/', (_req, res) => {
   });
 });
 
-// API Route modules - Basic working routes only
+// API Route modules - Core operational routes
 router.use('/health', healthRoutes);
 router.use('/auth', authRoutes);
 router.use('/ai', aiRoutes);
+router.use('/social', socialRoutes);
+// router.use('/schedule', scheduleRoutes); // TODO: Schedule routes need schema fixes
+router.use('/analytics', analyticsRoutes);
 
 // TODO: Re-enable routes after fixing TypeScript issues:
 // - Social routes (OAuth integration)

@@ -1,12 +1,11 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Request, Response } from 'express';
 import { SocialPlatform } from '@prisma/client';
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { validateRequest } from '../middleware/validation';
 import { body, param } from 'express-validator';
 import { OAuthService } from '../services/oauth.service';
 import { FacebookOAuthService } from '../services/oauth/facebook.oauth';
 import { AppError } from '../utils/errors';
-import { AuthRequest } from '../types/auth';
 
 const router = Router();
 
@@ -24,14 +23,14 @@ const oauthStates: Map<string, { userId: string; platform: SocialPlatform; organ
  * @desc    Get all connected social accounts for the authenticated user
  * @access  Private
  */
-router.get('/accounts', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/accounts', authenticateToken, async (req: AuthRequest, res: Response): Promise<Response> => {
   try {
     const userId = req.user!.id;
     const organizationId = req.query.organizationId as string | undefined;
 
     const accounts = await OAuthService.getUserAccounts(userId, organizationId);
 
-    res.json({
+    return res.json({
       success: true,
       data: accounts,
     });
@@ -56,7 +55,7 @@ router.post(
     param('platform').isIn(Object.values(SocialPlatform)),
     body('organizationId').optional().isString(),
   ]),
-  async (req: AuthRequest, res: Response) => {
+  async (req: AuthRequest, res: Response): Promise<Response> => {
     try {
       const platform = req.params.platform as SocialPlatform;
       const userId = req.user!.id;
@@ -85,7 +84,7 @@ router.post(
       // Get authorization URL
       const authUrl = oauthService.getAuthorizationUrl(state);
 
-      res.json({
+      return res.json({
         success: true,
         authUrl,
       });
@@ -109,7 +108,7 @@ router.get(
   validateRequest([
     param('platform').isIn(Object.values(SocialPlatform)),
   ]),
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const platform = req.params.platform as SocialPlatform;
       const { code, state, error } = req.query;
@@ -165,7 +164,7 @@ router.delete(
   validateRequest([
     param('accountId').isString(),
   ]),
-  async (req: AuthRequest, res: Response) => {
+  async (req: AuthRequest, res: Response): Promise<Response> => {
     try {
       const { accountId } = req.params;
       const userId = req.user!.id;
@@ -187,7 +186,7 @@ router.delete(
       // Disconnect the account
       await oauthService.disconnectAccount(userId, accountId);
 
-      res.json({
+      return res.json({
         success: true,
         message: `Successfully disconnected from ${account.platform}`,
       });
@@ -212,7 +211,7 @@ router.post(
   validateRequest([
     param('accountId').isString(),
   ]),
-  async (req: AuthRequest, res: Response) => {
+  async (req: AuthRequest, res: Response): Promise<Response> => {
     try {
       const { accountId } = req.params;
       const userId = req.user!.id;
@@ -234,7 +233,7 @@ router.post(
       // Refresh tokens
       await oauthService.refreshTokensIfNeeded(accountId);
 
-      res.json({
+      return res.json({
         success: true,
         message: 'Tokens refreshed successfully',
       });
@@ -259,7 +258,7 @@ router.get(
   validateRequest([
     param('accountId').isString(),
   ]),
-  async (req: AuthRequest, res: Response) => {
+  async (req: AuthRequest, res: Response): Promise<Response> => {
     try {
       const { accountId } = req.params;
       const userId = req.user!.id;
@@ -285,7 +284,7 @@ router.get(
         followersLost: 2,
       };
 
-      res.json({
+      return res.json({
         success: true,
         data: insights,
       });

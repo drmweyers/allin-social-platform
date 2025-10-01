@@ -1,11 +1,11 @@
 import { Router, Response } from 'express';
-import { authenticate, AuthRequest } from '../middleware/auth';
+import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { analyticsService } from '../services/analytics.service';
 
 const router = Router();
 
 // All analytics routes require authentication
-router.use(authenticate);
+router.use(authenticateToken);
 
 // Get aggregated analytics
 router.get('/aggregate', async (req: AuthRequest, res: Response): Promise<void> => {
