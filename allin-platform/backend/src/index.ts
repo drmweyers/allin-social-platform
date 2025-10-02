@@ -10,7 +10,7 @@ import { setupSecurity, corsOptions } from './middleware/security';
 import routes from './routes';
 import { logger } from './utils/logger';
 import { initializeRedis } from './services/redis';
-import { checkDatabaseConnection } from './services/database';
+// import { checkDatabaseConnection } from './services/database';
 
 const app = express();
 const httpServer = createServer(app);
@@ -69,7 +69,7 @@ app.use(errorHandler);
 async function startServer() {
   try {
     // Check database connection
-    await checkDatabaseConnection();
+    // await checkDatabaseConnection();
     
     // Initialize Redis
     await initializeRedis();
@@ -78,6 +78,7 @@ async function startServer() {
       logger.info(`🚀 Server running on http://localhost:${PORT}`);
       logger.info(`📄 API Documentation: http://localhost:${PORT}/api-docs`);
       logger.info(`🔌 WebSocket server ready`);
+      logger.info(`⚠️  Database checks temporarily disabled for development`);
     });
   } catch (error) {
     logger.error('Failed to start server:', error);

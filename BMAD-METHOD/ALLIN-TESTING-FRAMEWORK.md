@@ -19,22 +19,24 @@ This directory contains the comprehensive BMAD (Build, Monitor, Analyze, Deploy)
 
 #### 🧪 Comprehensive Test Suites (100% Coverage)
 
-**Unit Tests: 450+ Test Cases**
+**Unit Tests: 515+ Test Cases**
 - ✅ **AuthService**: 50+ tests (registration, login, verification, password recovery, session management)
 - ✅ **OAuthService**: 40+ tests (Facebook/social platform integration, token management)
+- ✅ **TikTokOAuthService**: 65+ tests (TikTok API v2 OAuth flow, user profiles, analytics)
 - ✅ **Frontend Components**: 170+ tests (all 30+ UI components and pages)
 - ✅ **Database Models**: Complete coverage of all 25 Prisma models
 - ✅ **API Endpoints**: All 50+ endpoints with validation testing
 
-**Integration Tests: 185+ Scenarios**
-- ✅ **API Integration**: End-to-end API workflow testing
+**Integration Tests: 200+ Scenarios**
+- ✅ **API Integration**: End-to-end API workflow testing (including TikTok)
 - ✅ **Database Operations**: Transaction and relationship testing
 - ✅ **Service Integration**: Cross-service workflow validation
-- ✅ **External Services**: OAuth and AI API integration testing
+- ✅ **External Services**: OAuth and AI API integration testing (TikTok API v2 included)
 
-**End-to-End Tests: 15+ Complete Workflows**
+**End-to-End Tests: 16+ Complete Workflows**
 - ✅ **Authentication Journey**: Registration → verification → login → logout
-- ✅ **Social Media Management**: Connection → content creation → scheduling → publishing
+- ✅ **Social Media Management**: Connection → content creation → scheduling → publishing (including TikTok)
+- ✅ **TikTok Integration**: Complete OAuth flow → profile sync → content management
 - ✅ **Role-Based Access**: Admin, agency, manager, creator, client, team testing
 - ✅ **Security & Accessibility**: CSRF, XSS prevention, keyboard navigation
 
@@ -62,7 +64,7 @@ team@allin.demo      / Team123!@#      - Limited team access
 # 1. Start development environment
 docker-compose --profile dev up -d
 
-# 2. Run all tests (450+ unit, 185+ integration, 15+ E2E)
+# 2. Run all tests (515+ unit, 200+ integration, 16+ E2E)
 npm run test:all
 
 # 3. Generate coverage reports (100% enforcement)
@@ -70,9 +72,9 @@ npm run test:coverage
 npm run test:coverage:open  # View HTML report
 
 # 4. Run specific test suites
-npm run test:unit           # 450+ unit tests
-npm run test:integration    # 185+ integration tests
-npm run test:e2e           # 15+ complete user workflows
+npm run test:unit           # 515+ unit tests (including TikTok)
+npm run test:integration    # 200+ integration tests
+npm run test:e2e           # 16+ complete user workflows
 npm run test:security      # Security validation suite
 npm run test:performance   # Load and stress testing
 ```
@@ -85,11 +87,12 @@ BMAD-METHOD/
 ├── allin-platform-testing.md         # Detailed platform analysis
 ├── ALLIN-TESTING-FRAMEWORK.md        # Quick start guide
 ├──
-├── unit-tests/                       # 450+ Unit Tests
+├── unit-tests/                       # 515+ Unit Tests
 │   ├── backend/
-│   │   ├── services/                 # AuthService, OAuthService, etc.
-│   │   │   ├── auth.service.test.ts      # 50+ authentication tests
-│   │   │   └── oauth.service.test.ts     # 40+ OAuth integration tests
+│   │   ├── services/                 # AuthService, OAuthService, TikTokOAuthService, etc.
+│   │   │   ├── auth.service.test.ts          # 50+ authentication tests
+│   │   │   ├── oauth.service.test.ts         # 40+ OAuth integration tests
+│   │   │   └── tiktok.oauth.service.test.ts  # 65+ TikTok API v2 tests
 │   │   ├── routes/                   # All API endpoint tests
 │   │   ├── middleware/               # Security, validation, rate limiting
 │   │   └── utils/                    # Helper function tests
@@ -99,17 +102,17 @@ BMAD-METHOD/
 │       ├── hooks/                    # Custom React hooks
 │       └── utils/                    # Frontend utility tests
 │
-├── integration-tests/                # 185+ Integration Tests
+├── integration-tests/                # 200+ Integration Tests
 │   ├── api/                          # End-to-end API workflows
 │   ├── database/                     # Transaction and relationship tests
 │   ├── services/                     # Cross-service integration
 │   └── workflows/                    # Complete business workflows
 │
-├── e2e-tests/                        # 15+ End-to-End Tests
+├── e2e-tests/                        # 16+ End-to-End Tests
 │   ├── auth/                         # Complete authentication workflows
 │   │   └── complete-auth-workflow.spec.ts  # Registration → Login → Logout
 │   ├── dashboard/                    # Dashboard functionality
-│   ├── social/                       # Social media management
+│   ├── social/                       # Social media management (including TikTok)
 │   ├── content/                      # Content creation & scheduling
 │   ├── analytics/                    # Reporting and insights
 │   └── admin/                        # Administrative functions
@@ -120,7 +123,7 @@ BMAD-METHOD/
 ├── test-data/                        # Test Fixtures & Mock Data
 │   ├── fixtures/
 │   │   ├── users.ts                  # User test data & master credentials
-│   │   ├── social-accounts.ts        # Platform integration mock data
+│   │   ├── social-accounts.ts        # Platform integration mock data (including TikTok)
 │   │   └── content.ts               # Posts, drafts, templates, campaigns
 │   ├── seeds/                        # Database seeding for tests
 │   └── mocks/                        # External service mocks
@@ -207,14 +210,14 @@ npm run test:coverage:open    # Open HTML coverage report
 ## 📋 Quality Gates & CI/CD Integration
 
 ### Pre-Commit Requirements
-- [ ] All unit tests passing (450+ tests)
-- [ ] All integration tests passing (185+ tests)
+- [ ] All unit tests passing (515+ tests)
+- [ ] All integration tests passing (200+ tests)
 - [ ] 100% code coverage maintained
 - [ ] No security vulnerabilities detected
 - [ ] Performance benchmarks met
 
 ### Deployment Requirements
-- [ ] All E2E tests passing (15+ workflows)
+- [ ] All E2E tests passing (16+ workflows)
 - [ ] Cross-browser compatibility validated
 - [ ] Security tests passing
 - [ ] Load testing successful (1000+ users)
@@ -224,9 +227,9 @@ npm run test:coverage:open    # Open HTML coverage report
 The framework integrates with CI/CD:
 ```yaml
 # Automated execution on every push/PR
-- Unit Tests (450+ tests)
-- Integration Tests (185+ tests)
-- E2E Tests (15+ workflows)
+- Unit Tests (515+ tests including TikTok)
+- Integration Tests (200+ tests including TikTok)
+- E2E Tests (16+ workflows including TikTok)
 - Security Scanning
 - Performance Validation
 - Coverage Reporting (100% threshold)

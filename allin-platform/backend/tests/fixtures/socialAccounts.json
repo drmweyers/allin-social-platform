@@ -42,6 +42,27 @@
     "updatedAt": "2024-01-16T00:00:00.000Z"
   },
   {
+    "id": "social-account-linkedin",
+    "userId": "user-id-123",
+    "organizationId": "org-id-123",
+    "platform": "LINKEDIN",
+    "username": "testuser-linkedin",
+    "displayName": "Test User LinkedIn",
+    "profileUrl": "https://linkedin.com/in/testuser-linkedin",
+    "profileImage": "https://media.licdn.com/dms/image/profile.jpg",
+    "followersCount": 1500,
+    "followingCount": 800,
+    "postsCount": 75,
+    "status": "ACTIVE",
+    "accessToken": "mock-linkedin-access-token",
+    "refreshToken": "mock-linkedin-refresh-token",
+    "scope": ["openid", "profile", "email", "w_member_social"],
+    "connectedAt": "2024-01-03T00:00:00.000Z",
+    "lastSyncAt": "2024-01-17T00:00:00.000Z",
+    "createdAt": "2024-01-03T00:00:00.000Z",
+    "updatedAt": "2024-01-17T00:00:00.000Z"
+  },
+  {
     "id": "social-account-inactive",
     "userId": "user-id-123",
     "organizationId": "org-id-123",

@@ -39,6 +39,13 @@ export const mockTokens = {
     refreshToken: 'linkedin_refresh_token_123',
     expiresIn: 5184000,
     tokenType: 'Bearer'
+  },
+  tiktok: {
+    accessToken: 'tiktok_access_token_123',
+    refreshToken: 'tiktok_refresh_token_123',
+    expiresIn: 86400,
+    tokenType: 'Bearer',
+    openId: 'tiktok_open_id_123'
   }
 };
 
@@ -83,6 +90,19 @@ export const mockPlatformUsers = {
     followersCount: 500,
     followingCount: 800,
     postsCount: 45
+  },
+  tiktok: {
+    platformId: 'tiktok_open_id_123',
+    username: 'testuser_tiktok',
+    displayName: 'Test User TikTok',
+    profileUrl: 'https://tiktok.com/@testuser_tiktok',
+    profileImage: 'https://tiktok.com/testuser_tiktok/avatar_100.jpg',
+    followersCount: 10000,
+    followingCount: 250,
+    postsCount: 50,
+    videosCount: 50,
+    likesCount: 50000,
+    isVerified: false
   }
 };
 
@@ -298,8 +318,92 @@ export const mockApiResponses = {
         }
       }
     }
+  },
+
+  tiktok: {
+    tokenExchange: {
+      access_token: mockTokens.tiktok.accessToken,
+      refresh_token: mockTokens.tiktok.refreshToken,
+      token_type: 'bearer',
+      expires_in: 86400,
+      scope: 'user.info.basic,user.info.profile,user.info.stats,video.list,video.upload,video.publish',
+      open_id: mockTokens.tiktok.openId
+    },
+    userProfile: {
+      data: {
+        user: {
+          open_id: mockPlatformUsers.tiktok.platformId,
+          union_id: 'tiktok_union_id_456',
+          avatar_url: 'https://tiktok.com/testuser_tiktok/avatar.jpg',
+          avatar_url_100: mockPlatformUsers.tiktok.profileImage,
+          avatar_large_url: 'https://tiktok.com/testuser_tiktok/avatar_large.jpg',
+          display_name: mockPlatformUsers.tiktok.displayName,
+          bio_description: 'Test TikTok creator sharing amazing content!',
+          profile_deep_link: mockPlatformUsers.tiktok.profileUrl,
+          is_verified: mockPlatformUsers.tiktok.isVerified,
+          follower_count: mockPlatformUsers.tiktok.followersCount,
+          following_count: mockPlatformUsers.tiktok.followingCount,
+          likes_count: mockPlatformUsers.tiktok.likesCount,
+          video_count: mockPlatformUsers.tiktok.videosCount
+        }
+      },
+      error: null
+    },
+    videoList: {
+      data: {
+        videos: [
+          {
+            id: 'tiktok_video_001',
+            title: 'Amazing Dance Video',
+            cover_image_url: 'https://tiktok.com/cover1.jpg',
+            share_url: 'https://tiktok.com/@testuser/video/001',
+            video_description: 'Check out this amazing dance!',
+            duration: 30000,
+            height: 1920,
+            width: 1080,
+            create_time: 1640995200,
+            view_count: 15000,
+            like_count: 1200,
+            comment_count: 300,
+            share_count: 150
+          },
+          {
+            id: 'tiktok_video_002',
+            title: 'Cooking Tutorial',
+            cover_image_url: 'https://tiktok.com/cover2.jpg',
+            share_url: 'https://tiktok.com/@testuser/video/002',
+            video_description: 'Easy cooking recipe!',
+            duration: 45000,
+            height: 1920,
+            width: 1080,
+            create_time: 1640908800,
+            view_count: 8500,
+            like_count: 650,
+            comment_count: 120,
+            share_count: 80
+          }
+        ],
+        cursor: 0,
+        has_more: false
+      },
+      error: null
+    },
+    insights: {
+      totalVideos: 2,
+      totalViews: 23500,
+      totalLikes: 1850,
+      totalComments: 420,
+      totalShares: 230,
+      averageViews: 11750,
+      averageLikes: 925,
+      engagementRate: '10.64',
+      topPerformingVideo: 'tiktok_video_001'
+    }
   }
 };
+
+// Export TikTok responses separately for easier import
+export const mockTikTokResponses = mockApiResponses.tiktok;
 
 // Helper functions
 export const createTestSocialAccount = (

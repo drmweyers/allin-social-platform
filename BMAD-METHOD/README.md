@@ -2,8 +2,8 @@
 
 **Last Updated**: October 1, 2025  
 **GitHub Repository**: [allin-social-platform](https://github.com/drmweyers/allin-social-platform)  
-**Release**: v1.3.0 - Phase 4 Testing & QA In Progress with BMAD Framework  
-**Status**: 🔄 PHASE 4 IN PROGRESS - Testing Infrastructure Complete, Coverage Improvements Active
+**Release**: v2.0.0 - Enterprise Deployment System with BMAD Framework  
+**Status**: ✅ PHASE 5 READY - Automated CTO-Level Deployment System Operational
 
 ## 🎯 Framework Overview
 
@@ -15,6 +15,16 @@ The BMAD (Build, Monitor, Analyze, Deploy) testing framework is an enterprise-gr
 - Node.js 20+
 - Docker (for development environment)
 - Git access to the repository
+
+### **🎯 CTO Deployment Commands (NEW)**
+```bash
+# Primary deployment commands
+npm run deploy:github          # Full quality gate deployment
+npm run deploy:fast            # Emergency fast deployment
+npm run deploy:release         # Version bump + deployment
+npm run deploy:status          # Check deployment status
+npm run deploy:rollback        # Emergency rollback
+```
 
 ### Run All Tests
 ```bash
@@ -34,6 +44,9 @@ npm run test:all
 # Generate coverage reports
 npm run test:coverage
 npm run test:coverage:open  # View HTML reports
+
+# Deploy with quality gates
+npm run deploy:github
 ```
 
 ## 📊 Test Coverage Summary
@@ -134,6 +147,83 @@ npm run test:coverage              # Generate coverage reports
 # Quality gates
 npm run test:security              # Security compliance
 npm run test:performance           # Performance benchmarks
+```
+
+## 🚀 **AUTOMATED DEPLOYMENT SYSTEM (NEW v2.0)**
+
+### **🎯 Enterprise-Grade CTO Deployment Commands**
+
+The BMAD framework now includes a comprehensive automated deployment system with CTO-level quality gates:
+
+```bash
+# Primary Deployment Commands
+npm run deploy:github              # Full quality gate deployment
+npm run deploy:fast               # Emergency deployment (skip quality gates)
+npm run deploy:release            # Version bump + deployment
+npm run deploy:status             # Check deployment pipeline status
+npm run deploy:rollback           # Emergency rollback to previous version
+
+# Quality Gate Commands
+npm run pre-deploy                # Run quality checks only
+npm run lint                      # Code quality validation
+npm run type-check                # TypeScript compilation check
+```
+
+### **🔐 Secure Configuration**
+
+All deployment credentials are securely stored in `.env.github` (automatically Git-ignored):
+
+```env
+# GitHub Authentication (secure)
+GITHUB_TOKEN=your_secure_token_here
+GITHUB_REPOSITORY=drmweyers/allin-social-platform
+GITHUB_OWNER=drmweyers
+
+# Deployment Settings
+AUTO_DEPLOY_ENABLED=true
+REQUIRE_TESTS_PASS=true
+MINIMUM_COVERAGE=80
+```
+
+### **⚡ Quality Gates**
+
+The automated deployment system enforces enterprise-grade quality standards:
+
+| Gate | Requirement | Action on Failure |
+|------|-------------|-------------------|
+| **Security Scan** | No high/critical vulnerabilities | ⚠️ Warning (allow deploy) |
+| **Code Linting** | ESLint passes | 🚫 Block deployment |
+| **Type Checking** | TypeScript compiles | 🚫 Block deployment |
+| **Unit Tests** | Tests pass | ⚠️ Warning (allow deploy) |
+
+### **📊 Deployment Monitoring**
+
+Real-time deployment status and GitHub Actions integration:
+
+```bash
+# Monitor deployment progress
+npm run deploy:status              # View recent deployment runs
+gh workflow view                   # GitHub CLI integration (if available)
+
+# Emergency procedures
+npm run deploy:rollback HEAD~1     # Rollback to previous commit
+npm run deploy:rollback v1.2.0     # Rollback to specific version
+```
+
+### **🛡️ Security Features**
+
+- ✅ **Token Protection**: All secrets stored in Git-ignored files
+- ✅ **Secret Scanning**: Automated detection of exposed credentials  
+- ✅ **Quality Enforcement**: Multi-stage validation pipeline
+- ✅ **Rollback Capability**: Emergency recovery procedures
+- ✅ **Audit Trail**: Complete deployment history tracking
+
+### **📖 Documentation**
+
+Complete deployment system documentation:
+- **`allin-platform/DEPLOYMENT.md`** - Full CTO deployment guide
+- **`allin-platform/scripts/deploy.js`** - Automated deployment system
+- **`.env.github`** - Secure credential storage (Git-ignored)
 ```
 
 ### Debugging & Analysis

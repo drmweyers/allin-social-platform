@@ -5,13 +5,17 @@ import { validateRequest } from '../middleware/validation';
 import { body, param } from 'express-validator';
 import { OAuthService } from '../services/oauth.service';
 import { FacebookOAuthService } from '../services/oauth/facebook.oauth';
+import { LinkedInOAuthService } from '../services/oauth/linkedin.oauth';
+import { TikTokOAuthService } from '../services/oauth/tiktok.oauth';
 import { AppError } from '../utils/errors';
 
 const router = Router();
 
 // OAuth service instances
-const oauthServices: Map<SocialPlatform, OAuthService> = new Map([
-  [SocialPlatform.FACEBOOK, new FacebookOAuthService()],
+const oauthServices: Map<SocialPlatform, OAuthService> = new Map<SocialPlatform, OAuthService>([
+  [SocialPlatform.FACEBOOK, new FacebookOAuthService() as OAuthService],
+  [SocialPlatform.LINKEDIN, new LinkedInOAuthService() as OAuthService],
+  [SocialPlatform.TIKTOK, new TikTokOAuthService() as OAuthService],
   // Add other platforms as implemented
 ]);
 

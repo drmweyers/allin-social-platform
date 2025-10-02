@@ -42,7 +42,13 @@
     "coverage:merge": "nyc merge coverage/backend coverage/frontend coverage/merged",
     "coverage:report": "nyc report --reporter=html --reporter=text --temp-dir=coverage/merged",
     "reports:generate": "npm run test:coverage && npm run test:mutation && npm run test:e2e",
-    "reports:open": "concurrently \"open-cli coverage/lcov-report/index.html\" \"open-cli reports/mutation/mutation-report.html\" \"open-cli playwright-report/index.html\""
+    "reports:open": "concurrently \"open-cli coverage/lcov-report/index.html\" \"open-cli reports/mutation/mutation-report.html\" \"open-cli playwright-report/index.html\"",
+    "deploy:github": "node scripts/deploy.js deploy",
+    "deploy:fast": "node scripts/deploy.js deploy --fast",
+    "deploy:release": "npm version patch && node scripts/deploy.js deploy 'feat: release version bump'",
+    "deploy:rollback": "node scripts/deploy.js rollback",
+    "deploy:status": "node scripts/deploy.js status",
+    "pre-deploy": "npm run lint && npm run type-check && npm run test:unit"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.2",

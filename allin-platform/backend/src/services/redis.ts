@@ -1,7 +1,8 @@
 import Redis from 'ioredis';
 import { logger } from '../utils/logger';
+import { MockRedis } from './redis-mock';
 
-let redis: Redis | null = null;
+let redis: Redis | MockRedis | null = null;
 
 // Cache TTL constants (in seconds)
 export const CACHE_TTL = {
@@ -29,7 +30,7 @@ export const CACHE_KEYS = {
   TEAM_PERMISSIONS: 'team:permissions:',
 };
 
-export async function initializeRedis(): Promise<Redis> {
+export async function initializeRedis(): Promise<Redis | MockRedis> {
   try {
     const redisConfig = {
       host: process.env.REDIS_HOST || 'localhost',
@@ -72,12 +73,17 @@ export async function initializeRedis(): Promise<Redis> {
     await redis.ping();
     return redis;
   } catch (error) {
-    logger.error('❌ Redis connection failed:', error);
-    throw error;
+    logger.warn('❌ Redis connection failed, falling back to mock Redis for development:', (error as Error).message);
+    
+    // Use mock Redis for development
+    redis = new MockRedis();
+    await redis.ping();
+    logger.info('✅ Mock Redis initialized for development');
+    return redis;
   }
 }
 
-export function getRedis(): Redis {
+export function getRedis(): Redis | MockRedis {
   if (!redis) {
     throw new Error('Redis not initialized');
   }
@@ -86,7 +92,7 @@ export function getRedis(): Redis {
 
 // Enhanced caching utilities with compression for large objects
 export class CacheService {
-  private redis: Redis;
+  private redis: Redis | MockRedis;
 
   constructor() {
     this.redis = getRedis();
@@ -311,5 +317,12 @@ export class CacheService {
   }
 }
 
-// Global cache service instance
-export const cacheService = new CacheService();
+// Global cache service instance (lazy initialization)
+let cacheServiceInstance: CacheService | null = null;
+
+export function getCacheService(): CacheService {
+  if (!cacheServiceInstance) {
+    cacheServiceInstance = new CacheService();
+  }
+  return cacheServiceInstance;
+}

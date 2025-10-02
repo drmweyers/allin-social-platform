@@ -1,4 +1,4 @@
-const OpenAI = require('openai');
+import OpenAI from 'openai';
 
 interface ContentGenerationOptions {
   platform: 'facebook' | 'instagram' | 'twitter' | 'linkedin' | 'tiktok';
@@ -28,7 +28,7 @@ interface ContentTemplate {
 }
 
 export class AIService {
-  private openai: OpenAI | null = null;
+  private openai: InstanceType<typeof OpenAI> | null = null;
   private isInitialized = false;
   private drafts: Array<{
     id: string;
