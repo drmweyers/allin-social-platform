@@ -1,6 +1,22 @@
 import { authenticate, authorize, optionalAuth, AuthRequest } from '../../../src/middleware/auth';
 import { authService } from '../../../src/services/auth.service';
-import { AppError } from '../../../src/utils/errors';
+
+// Mock AppError first
+jest.mock('../../../src/utils/errors', () => {
+  class MockAppError extends Error {
+    public statusCode: number;
+    
+    constructor(message: string, statusCode: number) {
+      super(message);
+      this.statusCode = statusCode;
+      this.name = 'AppError';
+    }
+  }
+  
+  return {
+    AppError: MockAppError
+  };
+});
 
 // Mock the auth service
 jest.mock('../../../src/services/auth.service', () => ({
@@ -9,14 +25,7 @@ jest.mock('../../../src/services/auth.service', () => ({
   }
 }));
 
-// Mock AppError
-jest.mock('../../../src/utils/errors', () => ({
-  AppError: jest.fn().mockImplementation((message, statusCode) => {
-    const error = new Error(message);
-    (error as any).statusCode = statusCode;
-    return error;
-  })
-}));
+// MockAppError reference no longer needed since we check error properties directly
 
 const mockAuthService = authService as jest.Mocked<typeof authService>;
 
@@ -123,8 +132,11 @@ describe('Authentication Middleware', () => {
     it('should call next with AppError when no token provided', async () => {
       await authenticate(mockRequest as AuthRequest, mockResponse, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(expect.any(Error));
-      expect(AppError).toHaveBeenCalledWith('No authentication token provided', 401);
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      const calledWith = mockNext.mock.calls[0][0];
+      expect(calledWith).toBeInstanceOf(Error);
+      expect(calledWith.message).toBe('No authentication token provided');
+      expect(calledWith.statusCode).toBe(401);
     });
 
     it('should call next with error when token verification fails', async () => {
@@ -148,8 +160,11 @@ describe('Authentication Middleware', () => {
 
       await authenticate(mockRequest as AuthRequest, mockResponse, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(expect.any(Error));
-      expect(AppError).toHaveBeenCalledWith('No authentication token provided', 401);
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      const calledWith = mockNext.mock.calls[0][0];
+      expect(calledWith).toBeInstanceOf(Error);
+      expect(calledWith.message).toBe('No authentication token provided');
+      expect(calledWith.statusCode).toBe(401);
     });
 
     it('should handle Authorization header without token', async () => {
@@ -159,8 +174,11 @@ describe('Authentication Middleware', () => {
 
       await authenticate(mockRequest as AuthRequest, mockResponse, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(expect.any(Error));
-      expect(AppError).toHaveBeenCalledWith('No authentication token provided', 401);
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      const calledWith = mockNext.mock.calls[0][0];
+      expect(calledWith).toBeInstanceOf(Error);
+      expect(calledWith.message).toBe('No authentication token provided');
+      expect(calledWith.statusCode).toBe(401);
     });
 
     it('should handle empty token in cookies', async () => {
@@ -170,8 +188,11 @@ describe('Authentication Middleware', () => {
 
       await authenticate(mockRequest as AuthRequest, mockResponse, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(expect.any(Error));
-      expect(AppError).toHaveBeenCalledWith('No authentication token provided', 401);
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      const calledWith = mockNext.mock.calls[0][0];
+      expect(calledWith).toBeInstanceOf(Error);
+      expect(calledWith.message).toBe('No authentication token provided');
+      expect(calledWith.statusCode).toBe(401);
     });
   });
 
@@ -210,8 +231,11 @@ describe('Authentication Middleware', () => {
       const authorizeAdmin = authorize('admin');
       authorizeAdmin(mockRequest as AuthRequest, mockResponse, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(expect.any(Error));
-      expect(AppError).toHaveBeenCalledWith('Authentication required', 401);
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      const calledWith = mockNext.mock.calls[0][0];
+      expect(calledWith).toBeInstanceOf(Error);
+      expect(calledWith.message).toBe('Authentication required');
+      expect(calledWith.statusCode).toBe(401);
     });
 
     it('should call next with error when user role not allowed', () => {
@@ -225,8 +249,11 @@ describe('Authentication Middleware', () => {
       const authorizeAdmin = authorize('admin', 'superadmin');
       authorizeAdmin(mockRequest as AuthRequest, mockResponse, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(expect.any(Error));
-      expect(AppError).toHaveBeenCalledWith('You do not have permission to access this resource', 403);
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      const calledWith = mockNext.mock.calls[0][0];
+      expect(calledWith).toBeInstanceOf(Error);
+      expect(calledWith.message).toBe('You do not have permission to access this resource');
+      expect(calledWith.statusCode).toBe(403);
     });
 
     it('should handle user without role property', () => {
@@ -240,8 +267,11 @@ describe('Authentication Middleware', () => {
       const authorizeAdmin = authorize('admin');
       authorizeAdmin(mockRequest as AuthRequest, mockResponse, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(expect.any(Error));
-      expect(AppError).toHaveBeenCalledWith('You do not have permission to access this resource', 403);
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      const calledWith = mockNext.mock.calls[0][0];
+      expect(calledWith).toBeInstanceOf(Error);
+      expect(calledWith.message).toBe('You do not have permission to access this resource');
+      expect(calledWith.statusCode).toBe(403);
     });
 
     it('should be case sensitive for roles', () => {
@@ -255,8 +285,11 @@ describe('Authentication Middleware', () => {
       const authorizeAdmin = authorize('admin'); // lowercase
       authorizeAdmin(mockRequest as AuthRequest, mockResponse, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(expect.any(Error));
-      expect(AppError).toHaveBeenCalledWith('You do not have permission to access this resource', 403);
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      const calledWith = mockNext.mock.calls[0][0];
+      expect(calledWith).toBeInstanceOf(Error);
+      expect(calledWith.message).toBe('You do not have permission to access this resource');
+      expect(calledWith.statusCode).toBe(403);
     });
   });
 
@@ -381,8 +414,11 @@ describe('Authentication Middleware', () => {
 
       await authenticate(mockRequest as AuthRequest, mockResponse, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(expect.any(Error));
-      expect(AppError).toHaveBeenCalledWith('No authentication token provided', 401);
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      const calledWith = mockNext.mock.calls[0][0];
+      expect(calledWith).toBeInstanceOf(Error);
+      expect(calledWith.message).toBe('No authentication token provided');
+      expect(calledWith.statusCode).toBe(401);
     });
   });
 

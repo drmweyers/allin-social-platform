@@ -153,5 +153,7 @@ afterEach(() => {
 
 // Clean up after all tests
 afterAll(async () => {
-  await new Promise(resolve => setTimeout(resolve, 500));
+  // Quick cleanup without delays that cause timeouts
+  jest.clearAllTimers();
+  jest.useRealTimers();
 });

@@ -5,7 +5,7 @@
     "module": "commonjs",
     "lib": ["ES2022"],
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "./",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -29,28 +29,11 @@
     "baseUrl": "."
   },
   "include": [
-    "src/index.ts",
-    "src/middleware/**/*",
-    "src/routes/index.ts",
-    "src/routes/auth.routes.ts",
-    "src/routes/health.routes.ts",
-    "src/routes/ai.routes.ts",
-    "src/services/ai.service.ts",
-    "src/services/auth.service.ts",
-    "src/services/database.ts",
-    "src/services/redis.ts",
-    "src/services/email.service.ts",
-    "src/types/**/*",
-    "src/utils/**/*"
+    "src/**/*",
+    "tests/**/*"
   ],
   "exclude": [
     "node_modules",
-    "dist",
-    "**/*.test.ts",
-    "**/*.spec.ts",
-    "**/*.test.*.ts",
-    "**/test/**/*",
-    "**/tests/**/*",
-    "src/utils/crypto.ts"
+    "dist"
   ]
 }

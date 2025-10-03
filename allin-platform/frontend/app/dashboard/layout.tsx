@@ -4,8 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/src/contexts/AuthContext';
-import ProtectedRoute from '@/src/components/ProtectedRoute';
+import { useAuth } from '@/contexts/AuthContext';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import {
   Home,
   PlusCircle,

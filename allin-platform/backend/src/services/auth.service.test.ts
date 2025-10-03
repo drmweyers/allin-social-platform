@@ -1,3 +1,7 @@
+// Set up environment before importing services
+process.env.JWT_SECRET = 'test-jwt-secret';
+process.env.JWT_REFRESH_SECRET = 'test-refresh-secret';
+
 import { authService } from './auth.service';
 import { AppError } from '../utils/errors';
 
@@ -87,6 +91,9 @@ describe('AuthService', () => {
     jest.clearAllMocks();
     process.env.JWT_SECRET = 'test-jwt-secret';
     process.env.JWT_REFRESH_SECRET = 'test-refresh-secret';
+    
+    // Force reload of auth service to pick up new env vars
+    jest.resetModules();
   });
 
   afterEach(() => {

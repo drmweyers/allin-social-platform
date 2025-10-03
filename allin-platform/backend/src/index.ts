@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import express from 'express';
+import express from 'express'; // restart port 8090
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
@@ -10,7 +10,7 @@ import { setupSecurity, corsOptions } from './middleware/security';
 import routes from './routes';
 import { logger } from './utils/logger';
 import { initializeRedis } from './services/redis';
-// import { checkDatabaseConnection } from './services/database';
+import { checkDatabaseConnection } from './services/database';
 
 const app = express();
 const httpServer = createServer(app);
@@ -18,7 +18,7 @@ const io = new Server(httpServer, {
   cors: corsOptions,
 });
 
-const PORT = process.env.API_PORT || 5000;
+const PORT = process.env.PORT || process.env.API_PORT || 5000;
 
 // Security middleware (comprehensive setup)
 setupSecurity(app);
@@ -68,17 +68,21 @@ app.use(errorHandler);
 // Start server
 async function startServer() {
   try {
-    // Check database connection
-    // await checkDatabaseConnection();
-    
     // Initialize Redis
     await initializeRedis();
+    
+    // Check database connection (with graceful fallback)
+    try {
+      await checkDatabaseConnection();
+      logger.info(`✅ Database connected successfully`);
+    } catch (dbError) {
+      logger.warn(`⚠️  Database connection failed - some features may be limited:`, (dbError as Error).message);
+    }
     
     httpServer.listen(PORT, () => {
       logger.info(`🚀 Server running on http://localhost:${PORT}`);
       logger.info(`📄 API Documentation: http://localhost:${PORT}/api-docs`);
       logger.info(`🔌 WebSocket server ready`);
-      logger.info(`⚠️  Database checks temporarily disabled for development`);
     });
   } catch (error) {
     logger.error('Failed to start server:', error);

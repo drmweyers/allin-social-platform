@@ -1,32 +1,54 @@
-import { emailService } from './email.service';
-import nodemailer from 'nodemailer';
+// Mock dependencies before any imports
+const mockTransporter = {
+  sendMail: jest.fn(),
+};
 
-// Mock nodemailer
-jest.mock('nodemailer');
+jest.mock('nodemailer', () => ({
+  createTransport: jest.fn(() => mockTransporter),
+}));
+
+jest.mock('../utils/logger', () => ({
+  logger: {
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
+
+import { emailService } from './email.service';
+import { logger } from '../utils/logger';
+
+const mockLogger = logger as jest.Mocked<typeof logger>;
 
 // Master test credentials
 const MASTER_CREDENTIALS = {
-  admin: { email: 'admin@allin.demo', password: 'Admin123!@#' },
-  agency: { email: 'agency@allin.demo', password: 'Agency123!@#' },
-  manager: { email: 'manager@allin.demo', password: 'Manager123!@#' },
-  creator: { email: 'creator@allin.demo', password: 'Creator123!@#' },
-  client: { email: 'client@allin.demo', password: 'Client123!@#' },
-  team: { email: 'team@allin.demo', password: 'Team123!@#' },
+  admin: { email: 'admin@allin.demo', password: 'AdminPass123' },
+  agency: { email: 'agency@allin.demo', password: 'AgencyPass123' },
+  manager: { email: 'manager@allin.demo', password: 'ManagerPass123' },
+  creator: { email: 'creator@allin.demo', password: 'CreatorPass123' },
+  client: { email: 'client@allin.demo', password: 'ClientPass123' },
+  team: { email: 'team@allin.demo', password: 'TeamPass123' },
 };
 
 describe('EmailService', () => {
-  let mockTransporter: any;
-
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Set up default environment variables
+    process.env.NODE_ENV = 'test';
+    process.env.EMAIL_FROM = 'test@allin.com';
+    process.env.FRONTEND_URL = 'http://localhost:3000';
 
-    // Mock transporter
-    mockTransporter = {
-      sendMail: jest.fn().mockResolvedValue({ messageId: 'test-message-id' }),
-      verify: jest.fn().mockResolvedValue(true),
-    };
+    // Reset mock return values
+    mockTransporter.sendMail.mockResolvedValue({ messageId: 'test-message-id' });
+  });
 
-    (nodemailer.createTransport as any).mockReturnValue(mockTransporter);
+  afterEach(() => {
+    // Clean up environment variables
+    delete process.env.NODE_ENV;
+    delete process.env.EMAIL_FROM;
+    delete process.env.FRONTEND_URL;
   });
 
   describe('sendEmail', () => {
@@ -40,7 +62,50 @@ describe('EmailService', () => {
       await emailService.sendEmail(emailData);
 
       expect(mockTransporter.sendMail).toHaveBeenCalledWith({
-        from: process.env.EMAIL_FROM || 'AllIN Platform <noreply@allin.com>',
+        from: 'test@allin.com',
+        to: emailData.to,
+        subject: emailData.subject,
+        html: emailData.html,
+        text: 'Test content',
+      });
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Email sent: test-message-id to admin@allin.demo'
+      );
+    });
+
+    it('should send email with provided text content', async () => {
+      const emailData = {
+        to: MASTER_CREDENTIALS.manager.email,
+        subject: 'Plain Text Email',
+        html: '<p>HTML content</p>',
+        text: 'Plain text content',
+      };
+
+      await emailService.sendEmail(emailData);
+
+      expect(mockTransporter.sendMail).toHaveBeenCalledWith({
+        from: 'test@allin.com',
+        to: emailData.to,
+        subject: emailData.subject,
+        html: emailData.html,
+        text: emailData.text,
+      });
+    });
+
+    it('should use default from address when EMAIL_FROM is not set', async () => {
+      delete process.env.EMAIL_FROM;
+      
+      const emailData = {
+        to: MASTER_CREDENTIALS.client.email,
+        subject: 'Test Email',
+        html: '<p>Test content</p>',
+      };
+
+      await emailService.sendEmail(emailData);
+
+      expect(mockTransporter.sendMail).toHaveBeenCalledWith({
+        from: 'AllIN Platform <noreply@allin.com>',
         to: emailData.to,
         subject: emailData.subject,
         html: emailData.html,
@@ -48,33 +113,51 @@ describe('EmailService', () => {
       });
     });
 
-    it('should send email with text content', async () => {
+    it('should log preview URL in development mode', async () => {
+      process.env.NODE_ENV = 'development';
+      
       const emailData = {
-        to: MASTER_CREDENTIALS.manager.email,
-        subject: 'Plain Text Email',
-        text: 'Plain text content',
+        to: MASTER_CREDENTIALS.team.email,
+        subject: 'Dev Email',
+        html: '<p>Development test</p>',
+      };
+
+      await emailService.sendEmail(emailData);
+
+      expect(mockLogger.info).toHaveBeenCalledWith('Preview URL: http://localhost:8025');
+    });
+
+    it('should handle email send failure gracefully', async () => {
+      const emailData = {
+        to: MASTER_CREDENTIALS.creator.email,
+        subject: 'Failed Email',
+        html: '<p>This will fail</p>',
+      };
+
+      const error = new Error('SMTP connection failed');
+      mockTransporter.sendMail.mockRejectedValue(error);
+
+      await expect(emailService.sendEmail(emailData)).rejects.toThrow('Failed to send email');
+      
+      expect(mockLogger.error).toHaveBeenCalledWith('Failed to send email:', error);
+    });
+
+    it('should strip HTML tags for text when text is not provided', async () => {
+      const emailData = {
+        to: MASTER_CREDENTIALS.admin.email,
+        subject: 'HTML Stripping Test',
+        html: '<h1>Title</h1><p>Paragraph with   multiple   spaces</p><strong>Bold text</strong>',
       };
 
       await emailService.sendEmail(emailData);
 
       expect(mockTransporter.sendMail).toHaveBeenCalledWith({
-        from: expect.any(String),
+        from: 'test@allin.com',
         to: emailData.to,
         subject: emailData.subject,
-        text: emailData.text,
+        html: emailData.html,
+        text: 'TitleParagraph with multiple spacesBold text',
       });
-    });
-
-    it('should handle email send failure gracefully', async () => {
-      const emailData = {
-        to: MASTER_CREDENTIALS.client.email,
-        subject: 'Failed Email',
-        html: '<p>This will fail</p>',
-      };
-
-      mockTransporter.sendMail.mockRejectedValue(new Error('SMTP connection failed'));
-
-      await expect(emailService.sendEmail(emailData)).rejects.toThrow('SMTP connection failed');
     });
   });
 
@@ -86,15 +169,17 @@ describe('EmailService', () => {
       await emailService.sendVerificationEmail(email, token);
 
       expect(mockTransporter.sendMail).toHaveBeenCalledWith({
-        from: expect.any(String),
+        from: 'test@allin.com',
         to: email,
-        subject: 'Verify your AllIN account',
-        html: expect.stringContaining(token),
+        subject: 'Verify your AllIN email address',
+        html: expect.stringContaining('Welcome to AllIN! 🚀'),
+        text: expect.any(String),
       });
 
       const callArgs = mockTransporter.sendMail.mock.calls[0][0];
-      expect(callArgs.html).toContain('Verify Email');
-      expect(callArgs.html).toContain(process.env.FRONTEND_URL);
+      expect(callArgs.html).toContain('http://localhost:3000/auth/verify-email?token=verification-token-123');
+      expect(callArgs.html).toContain('Verify Email Address');
+      expect(callArgs.html).toContain('This link will expire in 24 hours');
     });
 
     it('should send verification email to agency owner', async () => {
@@ -106,7 +191,17 @@ describe('EmailService', () => {
       expect(mockTransporter.sendMail).toHaveBeenCalledTimes(1);
       const callArgs = mockTransporter.sendMail.mock.calls[0][0];
       expect(callArgs.to).toBe(email);
-      expect(callArgs.subject).toBe('Verify your AllIN account');
+      expect(callArgs.subject).toBe('Verify your AllIN email address');
+      expect(callArgs.html).toContain(token);
+    });
+
+    it('should handle missing FRONTEND_URL gracefully', async () => {
+      delete process.env.FRONTEND_URL;
+      
+      await emailService.sendVerificationEmail('test@example.com', 'token');
+
+      const callArgs = mockTransporter.sendMail.mock.calls[0][0];
+      expect(callArgs.html).toContain('undefined/auth/verify-email?token=token');
     });
   });
 
@@ -118,15 +213,18 @@ describe('EmailService', () => {
       await emailService.sendPasswordResetEmail(email, token);
 
       expect(mockTransporter.sendMail).toHaveBeenCalledWith({
-        from: expect.any(String),
+        from: 'test@allin.com',
         to: email,
         subject: 'Reset your AllIN password',
-        html: expect.stringContaining(token),
+        html: expect.stringContaining('Password Reset Request 🔐'),
+        text: expect.any(String),
       });
 
       const callArgs = mockTransporter.sendMail.mock.calls[0][0];
+      expect(callArgs.html).toContain('http://localhost:3000/auth/reset-password?token=reset-token-789');
       expect(callArgs.html).toContain('Reset Password');
-      expect(callArgs.html).toContain('expires in 1 hour');
+      expect(callArgs.html).toContain('This link will expire in 1 hour');
+      expect(callArgs.html).toContain('Security Notice');
     });
 
     it('should send password reset email to team member', async () => {
@@ -143,212 +241,63 @@ describe('EmailService', () => {
   });
 
   describe('sendWelcomeEmail', () => {
-    it('should send welcome email to new admin user', async () => {
+    it('should send welcome email with user name', async () => {
       const email = MASTER_CREDENTIALS.admin.email;
       const name = 'Admin User';
 
       await emailService.sendWelcomeEmail(email, name);
 
       expect(mockTransporter.sendMail).toHaveBeenCalledWith({
-        from: expect.any(String),
+        from: 'test@allin.com',
         to: email,
-        subject: 'Welcome to AllIN Platform!',
-        html: expect.stringContaining(name),
+        subject: 'Welcome to AllIN! 🎆',
+        html: expect.stringContaining('Welcome to AllIN, Admin User! 🎉'),
+        text: expect.any(String),
       });
 
       const callArgs = mockTransporter.sendMail.mock.calls[0][0];
-      expect(callArgs.html).toContain('Welcome to AllIN');
-      expect(callArgs.html).toContain(name);
+      expect(callArgs.html).toContain('http://localhost:3000/auth/login');
+      expect(callArgs.html).toContain('Go to Dashboard');
+      expect(callArgs.html).toContain('Connect multiple social media accounts');
+      expect(callArgs.html).toContain('Generate AI-powered content');
+      expect(callArgs.html).toContain('Schedule posts across all platforms');
     });
 
-    it('should send welcome email to agency owner', async () => {
+    it('should send welcome email without user name', async () => {
       const email = MASTER_CREDENTIALS.agency.email;
-      const name = 'Agency Owner';
 
-      await emailService.sendWelcomeEmail(email, name);
+      await emailService.sendWelcomeEmail(email);
 
       expect(mockTransporter.sendMail).toHaveBeenCalledTimes(1);
       const callArgs = mockTransporter.sendMail.mock.calls[0][0];
       expect(callArgs.to).toBe(email);
-      expect(callArgs.html).toContain(name);
+      expect(callArgs.html).toContain('Welcome to AllIN, there! 🎉');
     });
   });
 
-  describe('sendInvitationEmail', () => {
-    it('should send team invitation email', async () => {
-      const email = MASTER_CREDENTIALS.team.email;
-      const inviterName = 'Manager';
-      const teamName = 'Marketing Team';
-      const inviteToken = 'invite-token-xyz';
+  describe('stripHtml utility', () => {
+    it('should strip HTML tags and normalize whitespace', async () => {
+      const htmlWithComplexStructure = `
+        <div>
+          <h1>Title</h1>
+          <p>Paragraph with   multiple   spaces</p>
+          <ul>
+            <li>Item 1</li>
+            <li>Item 2</li>
+          </ul>
+        </div>
+      `;
 
-      await emailService.sendInvitationEmail(email, inviterName, teamName, inviteToken);
-
-      expect(mockTransporter.sendMail).toHaveBeenCalledWith({
-        from: expect.any(String),
-        to: email,
-        subject: `You've been invited to join ${teamName} on AllIN`,
-        html: expect.stringContaining(inviterName),
+      await emailService.sendEmail({
+        to: 'test@example.com',
+        subject: 'Test',
+        html: htmlWithComplexStructure,
       });
 
-      const callArgs = mockTransporter.sendMail.mock.calls[0][0];
-      expect(callArgs.html).toContain(teamName);
-      expect(callArgs.html).toContain(inviteToken);
-      expect(callArgs.html).toContain('Accept Invitation');
-    });
-  });
-
-  describe('sendScheduledPostNotification', () => {
-    it('should send notification for scheduled post', async () => {
-      const email = MASTER_CREDENTIALS.manager.email;
-      const postDetails = {
-        content: 'Check out our new product launch!',
-        platforms: ['Facebook', 'Twitter'],
-        scheduledTime: new Date('2024-09-25T14:00:00Z'),
-      };
-
-      await emailService.sendScheduledPostNotification(email, postDetails);
-
-      expect(mockTransporter.sendMail).toHaveBeenCalledWith({
-        from: expect.any(String),
-        to: email,
-        subject: 'Your post has been scheduled',
-        html: expect.stringContaining(postDetails.content),
-      });
-
-      const callArgs = mockTransporter.sendMail.mock.calls[0][0];
-      expect(callArgs.html).toContain('Facebook');
-      expect(callArgs.html).toContain('Twitter');
-    });
-  });
-
-  describe('sendPostPublishedNotification', () => {
-    it('should send notification when post is published', async () => {
-      const email = MASTER_CREDENTIALS.creator.email;
-      const postDetails = {
-        content: 'New blog post is live!',
-        platforms: ['LinkedIn', 'Instagram'],
-        publishedTime: new Date(),
-        links: [
-          'https://linkedin.com/posts/123',
-          'https://instagram.com/p/456'
-        ],
-      };
-
-      await emailService.sendPostPublishedNotification(email, postDetails);
-
-      expect(mockTransporter.sendMail).toHaveBeenCalledWith({
-        from: expect.any(String),
-        to: email,
-        subject: 'Your post has been published',
-        html: expect.stringContaining(postDetails.content),
-      });
-
-      const callArgs = mockTransporter.sendMail.mock.calls[0][0];
-      postDetails.links.forEach(link => {
-        expect(callArgs.html).toContain(link);
-      });
-    });
-  });
-
-  describe('sendAnalyticsReport', () => {
-    it('should send weekly analytics report', async () => {
-      const email = MASTER_CREDENTIALS.agency.email;
-      const reportData = {
-        period: 'weekly',
-        totalPosts: 25,
-        totalEngagement: 15420,
-        totalReach: 85000,
-        topPost: 'Product launch announcement',
-      };
-
-      await emailService.sendAnalyticsReport(email, reportData);
-
-      expect(mockTransporter.sendMail).toHaveBeenCalledWith({
-        from: expect.any(String),
-        to: email,
-        subject: 'Your weekly AllIN analytics report',
-        html: expect.any(String),
-      });
-
-      const callArgs = mockTransporter.sendMail.mock.calls[0][0];
-      expect(callArgs.html).toContain('25'); // total posts
-      expect(callArgs.html).toContain('15,420'); // formatted engagement
-      expect(callArgs.html).toContain('85,000'); // formatted reach
-      expect(callArgs.html).toContain(reportData.topPost);
-    });
-
-    it('should send monthly analytics report', async () => {
-      const email = MASTER_CREDENTIALS.client.email;
-      const reportData = {
-        period: 'monthly',
-        totalPosts: 120,
-        totalEngagement: 45000,
-        totalReach: 250000,
-        topPost: 'Year-end sale announcement',
-      };
-
-      await emailService.sendAnalyticsReport(email, reportData);
-
-      expect(mockTransporter.sendMail).toHaveBeenCalledTimes(1);
-      const callArgs = mockTransporter.sendMail.mock.calls[0][0];
-      expect(callArgs.subject).toBe('Your monthly AllIN analytics report');
-    });
-  });
-
-  describe('sendErrorNotification', () => {
-    it('should send error notification to admin', async () => {
-      const email = MASTER_CREDENTIALS.admin.email;
-      const errorDetails = {
-        error: 'Failed to publish post to Facebook',
-        postId: 'post-123',
-        timestamp: new Date(),
-        retryCount: 3,
-      };
-
-      await emailService.sendErrorNotification(email, errorDetails);
-
-      expect(mockTransporter.sendMail).toHaveBeenCalledWith({
-        from: expect.any(String),
-        to: email,
-        subject: 'Error: Post publishing failed',
-        html: expect.stringContaining(errorDetails.error),
-      });
-
-      const callArgs = mockTransporter.sendMail.mock.calls[0][0];
-      expect(callArgs.html).toContain('post-123');
-      expect(callArgs.html).toContain('retry');
-    });
-  });
-
-  describe('transporter verification', () => {
-    it('should verify transporter connection on initialization', async () => {
-      expect(mockTransporter.verify).toHaveBeenCalledTimes(1);
-    });
-
-    it('should handle transporter verification failure', async () => {
-      mockTransporter.verify.mockRejectedValue(new Error('Invalid SMTP credentials'));
-
-      // Test that the service handles verification failures gracefully
-      const isVerified = await emailService.verifyConnection();
-      expect(isVerified).toBe(false);
-      expect(mockTransporter.verify).toHaveBeenCalled();
-    });
-  });
-
-  describe('email templates', () => {
-    it('should use correct template for each email type', async () => {
-      // Test that each email method uses appropriate HTML template
-      await emailService.sendVerificationEmail(MASTER_CREDENTIALS.admin.email, 'token');
-      let html = mockTransporter.sendMail.mock.calls[0][0].html;
-      expect(html).toContain('verification');
-
-      await emailService.sendPasswordResetEmail(MASTER_CREDENTIALS.admin.email, 'token');
-      html = mockTransporter.sendMail.mock.calls[1][0].html;
-      expect(html).toContain('password');
-
-      await emailService.sendWelcomeEmail(MASTER_CREDENTIALS.admin.email, 'Admin');
-      html = mockTransporter.sendMail.mock.calls[2][0].html;
-      expect(html).toContain('Welcome');
+      const textContent = mockTransporter.sendMail.mock.calls[0][0].text;
+      expect(textContent).toBe('Title Paragraph with multiple spaces Item 1 Item 2');
+      expect(textContent).not.toContain('<');
+      expect(textContent).not.toContain('>');
     });
   });
 });

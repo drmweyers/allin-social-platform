@@ -44,6 +44,68 @@ interface PredictiveInsights {
   suggestedContent: string[];
   predictedEngagement: number;
   recommendedHashtags: string[];
+  contentPerformancePrediction: {
+    contentType: string;
+    predictedEngagement: number;
+    confidence: number;
+  }[];
+  audienceGrowthForecast: {
+    platform: SocialPlatform;
+    predictedGrowth: number;
+    timeframe: string;
+  }[];
+}
+
+interface AdvancedMetrics {
+  viralityScore: number;
+  brandMentions: number;
+  shareOfVoice: number;
+  influencerReach: number;
+  audienceQualityScore: number;
+  contentMix: {
+    type: string;
+    percentage: number;
+    performance: number;
+  }[];
+}
+
+interface RealTimeAlert {
+  id: string;
+  type: 'engagement_spike' | 'viral_content' | 'negative_sentiment' | 'competitor_activity';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  message: string;
+  timestamp: Date;
+  platform?: SocialPlatform;
+  data?: any;
+}
+
+interface ComprehensiveDashboard {
+  summary: {
+    totalFollowers: number;
+    totalEngagement: number;
+    brandMentions: number;
+    viralityScore: number;
+    sentimentScore: number;
+  };
+  realTimeMetrics: {
+    activeUsers: number;
+    postsLastHour: number;
+    engagementRate: number;
+    trendingHashtags: string[];
+  };
+  platformPerformance: PlatformMetrics[];
+  contentAnalysis: {
+    topPerforming: any[];
+    underPerforming: any[];
+    contentMix: any[];
+  };
+  audienceInsights: {
+    demographics: any;
+    interests: string[];
+    behavior: any;
+  };
+  competitorComparison: any;
+  alerts: RealTimeAlert[];
 }
 
 type PostWithAccount = Post & {
@@ -78,21 +140,24 @@ export class AnalyticsService {
       },
     }) as PostWithAccount[];
 
+    // Add null check for posts array
+    const safePosts = posts || [];
+
     // Calculate platform-specific metrics
-    const platformMetrics = await this.calculatePlatformMetrics(posts);
+    const platformMetrics = await this.calculatePlatformMetrics(safePosts);
 
     // Get overall engagement trends
-    const engagementTrends = await this.calculateEngagementTrends(posts);
+    const engagementTrends = await this.calculateEngagementTrends(safePosts);
 
     // Get top performing content
-    const topContent = await this.getTopPerformingContent(posts);
+    const topContent = await this.getTopPerformingContent(safePosts);
 
     return {
       platformMetrics,
       engagementTrends,
       topContent,
-      totalPosts: posts.length,
-      avgEngagementRate: this.calculateAverageEngagement(posts),
+      totalPosts: safePosts.length,
+      avgEngagementRate: this.calculateAverageEngagement(safePosts),
     };
   }
 
@@ -230,6 +295,19 @@ export class AnalyticsService {
       suggestedContent: contentSuggestions,
       predictedEngagement,
       recommendedHashtags,
+      contentPerformancePrediction: [],
+      audienceGrowthForecast: [
+        {
+          platform: 'INSTAGRAM' as SocialPlatform,
+          predictedGrowth: Math.floor(Math.random() * 20) + 10,
+          timeframe: '30 days'
+        },
+        {
+          platform: 'FACEBOOK' as SocialPlatform,
+          predictedGrowth: Math.floor(Math.random() * 15) + 5,
+          timeframe: '30 days'
+        }
+      ]
     };
 
     // Cache insights
@@ -243,25 +321,136 @@ export class AnalyticsService {
     return insights;
   }
 
-  // Real-time analytics stream
+  // Advanced Dashboard Analytics
+  async getComprehensiveDashboard(organizationId: string): Promise<ComprehensiveDashboard> {
+    const [summary, realTimeMetrics, platformMetrics, contentAnalysis, audienceInsights, competitors, alerts] = await Promise.all([
+      this.getDashboardSummary(organizationId),
+      this.getRealTimeMetrics(organizationId),
+      this.getAggregatedAnalytics(organizationId),
+      this.getContentAnalysis(organizationId),
+      this.getAudienceInsights(organizationId),
+      this.getCompetitorComparison(organizationId),
+      this.getActiveAlerts(organizationId)
+    ]);
+
+    return {
+      summary,
+      realTimeMetrics,
+      platformPerformance: platformMetrics.platformMetrics,
+      contentAnalysis,
+      audienceInsights,
+      competitorComparison: competitors,
+      alerts
+    };
+  }
+
+  // Enhanced Real-time analytics with alerting
   async *streamRealTimeAnalytics(organizationId: string) {
+    let previousMetrics: any = null;
+    
     while (true) {
-      // Get latest metrics
-      const metrics = await this.getLatestMetrics(organizationId);
+      try {
+        // Get latest comprehensive metrics
+        const metrics = await this.getLatestMetrics(organizationId);
+        const alerts = await this.detectRealTimeAlerts(organizationId, metrics, previousMetrics);
+        
+        // Yield the enhanced data
+        yield {
+          timestamp: new Date(),
+          metrics,
+          alerts,
+          trends: await this.calculateTrends(metrics, previousMetrics),
+        };
 
-      // Yield the data
-      yield {
-        timestamp: new Date(),
-        metrics,
-      };
-
-      // Wait 5 seconds before next update
-      await new Promise(resolve => setTimeout(resolve, 5000));
+        previousMetrics = metrics;
+        
+        // Wait 5 seconds before next update
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      } catch (error) {
+        console.error('Real-time analytics error:', error);
+        yield {
+          timestamp: new Date(),
+          error: 'Failed to fetch real-time data',
+          metrics: null,
+          alerts: [],
+        };
+        await new Promise(resolve => setTimeout(resolve, 10000)); // Wait longer on error
+      }
     }
+  }
+
+  // Advanced Content Performance Prediction
+  async predictContentPerformance(organizationId: string, contentData: {
+    type: string;
+    text: string;
+    platform: SocialPlatform;
+    scheduledTime?: Date;
+    hashtags?: string[];
+  }) {
+    const historicalData = await this.getHistoricalPerformanceData(organizationId, contentData.platform);
+    
+    // Analyze content characteristics
+    const contentScore = this.analyzeContentCharacteristics(contentData.text);
+    const hashtagScore = contentData.hashtags ? await this.analyzeHashtagPerformance(contentData.hashtags, organizationId) : 0;
+    const timingScore = contentData.scheduledTime ? this.analyzePostingTime(contentData.scheduledTime, historicalData) : 0;
+    
+    // Calculate prediction
+    const baseEngagement = this.getBaselineEngagement(historicalData);
+    const multiplier = (contentScore + hashtagScore + timingScore) / 3;
+    const predictedEngagement = Math.round(baseEngagement * (0.5 + multiplier));
+    const confidence = Math.min(95, Math.max(60, multiplier * 100));
+    
+    return {
+      predictedEngagement,
+      confidence,
+      factors: {
+        contentQuality: contentScore,
+        hashtagRelevance: hashtagScore,
+        optimalTiming: timingScore,
+      },
+      recommendations: await this.generateContentRecommendations(contentData, historicalData),
+    };
+  }
+
+  // Viral Content Detection
+  async detectViralContent(organizationId: string) {
+    const recentPosts = await prisma.post.findMany({
+      where: {
+        organizationId,
+        createdAt: {
+          gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
+        },
+      },
+      include: {
+        socialAccount: true,
+      },
+    });
+
+    const viralCandidates = recentPosts.filter(() => {
+      const engagement = 100; // Mock - would get real engagement
+      const followersCount = 10000; // Mock - would get real followers
+      const viralityThreshold = followersCount * 0.05; // 5% engagement rate
+      
+      return engagement > viralityThreshold;
+    });
+
+    return viralCandidates.map(post => ({
+      id: post.id,
+      content: post.content.substring(0, 100),
+      platform: post.socialAccount.platform,
+      engagement: 100, // Mock engagement
+      viralityScore: this.calculateViralityScore(post),
+      trend: 'rising',
+    }));
   }
 
   // Private helper methods
   private async calculatePlatformMetrics(posts: PostWithAccount[]): Promise<PlatformMetrics[]> {
+    // Add null/undefined check
+    if (!posts || !Array.isArray(posts)) {
+      return [];
+    }
+
     const platformMap = new Map<SocialPlatform, PostWithAccount[]>();
 
     posts.forEach(post => {
@@ -292,6 +481,11 @@ export class AnalyticsService {
   }
 
   private calculateEngagementTrends(posts: PostWithAccount[]) {
+    // Add null/undefined check
+    if (!posts || !Array.isArray(posts)) {
+      return [];
+    }
+
     // Group posts by date and calculate engagement
     const trendMap = new Map<string, number>();
 
@@ -309,6 +503,11 @@ export class AnalyticsService {
   }
 
   private async getTopPerformingContent(posts: PostWithAccount[]) {
+    // Add null/undefined check
+    if (!posts || !Array.isArray(posts)) {
+      return [];
+    }
+
     return posts
       .map(post => ({
         id: post.id,
@@ -320,7 +519,7 @@ export class AnalyticsService {
   }
 
   private calculateAverageEngagement(posts: PostWithAccount[]) {
-    if (posts.length === 0) return 0;
+    if (!posts || !Array.isArray(posts) || posts.length === 0) return 0;
 
     // Mock analytics data - in production would come from actual analytics
     const totalEngagement = posts.length * 50;
@@ -448,6 +647,157 @@ export class AnalyticsService {
       .map(([tag]) => tag);
   }
 
+  // Private helper methods for advanced analytics
+  private async getDashboardSummary(organizationId: string) {
+    const analytics = await this.getAggregatedAnalytics(organizationId);
+    const viralContent = await this.detectViralContent(organizationId);
+    const sentiment = await this.analyzeSentiment(organizationId);
+    
+    return {
+      totalFollowers: 125000, // Mock - would aggregate from all platforms
+      totalEngagement: analytics.platformMetrics.reduce((sum, p) => sum + p.totalEngagement, 0),
+      brandMentions: 450, // Mock - would track mentions across platforms
+      viralityScore: viralContent.length > 0 ? viralContent[0].viralityScore : 0,
+      sentimentScore: (sentiment.positive / (sentiment.positive + sentiment.negative + sentiment.neutral)) * 100,
+    };
+  }
+
+  private async getRealTimeMetrics(organizationId: string) {
+    const recentActivity = await this.getLatestMetrics(organizationId);
+    
+    return {
+      activeUsers: Math.floor(Math.random() * 500) + 100, // Mock active users
+      postsLastHour: recentActivity.postsLastHour,
+      engagementRate: recentActivity.engagementLastHour > 0 ? 
+        (recentActivity.engagementLastHour / (recentActivity.postsLastHour * 1000)) * 100 : 0,
+      trendingHashtags: ['#marketing', '#socialmedia', '#ai', '#automation'],
+    };
+  }
+
+  private async getContentAnalysis(organizationId: string) {
+    const posts = await prisma.post.findMany({
+      where: { organizationId },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+      include: { socialAccount: true },
+    });
+
+    const topPerforming = posts.slice(0, 5).map(post => ({
+      id: post.id,
+      content: post.content.substring(0, 100),
+      engagement: 150, // Mock
+      platform: post.socialAccount.platform,
+    }));
+
+    const underPerforming = posts.slice(-5).map(post => ({
+      id: post.id,
+      content: post.content.substring(0, 100),
+      engagement: 25, // Mock
+      platform: post.socialAccount.platform,
+    }));
+
+    const contentMix = [
+      { type: 'Educational', percentage: 35, performance: 4.2 },
+      { type: 'Entertainment', percentage: 25, performance: 3.8 },
+      { type: 'Promotional', percentage: 20, performance: 2.9 },
+      { type: 'Behind-the-scenes', percentage: 20, performance: 4.5 },
+    ];
+
+    return { topPerforming, underPerforming, contentMix };
+  }
+
+  private async getAudienceInsights(_organizationId: string) {
+    // Mock audience data - in production would come from platform APIs
+    return {
+      demographics: {
+        ageGroups: [
+          { range: '18-24', percentage: 25 },
+          { range: '25-34', percentage: 40 },
+          { range: '35-44', percentage: 25 },
+          { range: '45+', percentage: 10 },
+        ],
+        genders: [
+          { gender: 'Female', percentage: 55 },
+          { gender: 'Male', percentage: 43 },
+          { gender: 'Other', percentage: 2 },
+        ],
+        locations: [
+          { country: 'United States', percentage: 45 },
+          { country: 'Canada', percentage: 20 },
+          { country: 'United Kingdom', percentage: 15 },
+          { country: 'Australia', percentage: 10 },
+          { country: 'Other', percentage: 10 },
+        ],
+      },
+      interests: ['Technology', 'Marketing', 'Business', 'Entrepreneurship', 'AI'],
+      behavior: {
+        bestTimeToEngage: ['9:00-11:00', '14:00-16:00', '19:00-21:00'],
+        avgSessionDuration: '3:45',
+        engagementPreferences: ['Video', 'Images', 'Text posts'],
+      },
+    };
+  }
+
+  private async getCompetitorComparison(_organizationId: string) {
+    // Simplified competitor comparison
+    return {
+      marketPosition: 'Top 25%',
+      engagementVsCompetitors: '+15%',
+      growthRate: '+8% (last 30 days)',
+      shareOfVoice: '12%',
+    };
+  }
+
+  private async getActiveAlerts(_organizationId: string): Promise<RealTimeAlert[]> {
+    // Mock real-time alerts - in production would track actual events
+    const alerts: RealTimeAlert[] = [];
+    
+    // Simulate engagement spike detection
+    if (Math.random() > 0.7) {
+      alerts.push({
+        id: `alert_${Date.now()}`,
+        type: 'engagement_spike',
+        severity: 'high',
+        message: 'Your Instagram post is experiencing 300% higher engagement than average',
+        timestamp: new Date(),
+        platform: SocialPlatform.INSTAGRAM,
+        data: { engagementIncrease: 300 },
+      });
+    }
+
+    return alerts;
+  }
+
+  private async detectRealTimeAlerts(_organizationId: string, currentMetrics: any, previousMetrics: any): Promise<RealTimeAlert[]> {
+    const alerts: RealTimeAlert[] = [];
+    
+    if (previousMetrics && currentMetrics.engagementLastHour > previousMetrics.engagementLastHour * 2) {
+      alerts.push({
+        id: `spike_${Date.now()}`,
+        type: 'engagement_spike',
+        severity: 'high',
+        message: `Engagement increased by ${Math.round(((currentMetrics.engagementLastHour / previousMetrics.engagementLastHour) - 1) * 100)}% in the last hour`,
+        timestamp: new Date(),
+      });
+    }
+
+    return alerts;
+  }
+
+  private async calculateTrends(currentMetrics: any, previousMetrics: any) {
+    if (!previousMetrics) return {};
+    
+    return {
+      engagement: this.calculatePercentageChange(currentMetrics.engagementLastHour, previousMetrics.engagementLastHour),
+      posts: this.calculatePercentageChange(currentMetrics.postsLastHour, previousMetrics.postsLastHour),
+    };
+  }
+
+  private calculatePercentageChange(current: number, previous: number): number {
+    if (previous === 0) return current > 0 ? 100 : 0;
+    return Math.round(((current - previous) / previous) * 100);
+  }
+
   private async getLatestMetrics(organizationId: string) {
     // Get real-time metrics
     const recentPosts = await prisma.post.findMany({
@@ -463,7 +813,7 @@ export class AnalyticsService {
     });
 
     const totalEngagement = recentPosts.reduce((sum, _post) => {
-      return sum + 50; // Mock engagement - in production would come from actual analytics
+      return sum + Math.floor(Math.random() * 100) + 50; // More realistic mock engagement
     }, 0);
 
     const activeAccountsCount = await prisma.socialAccount.count({
@@ -477,8 +827,94 @@ export class AnalyticsService {
       postsLastHour: recentPosts.length,
       engagementLastHour: totalEngagement,
       activeAccounts: activeAccountsCount,
+      avgEngagementPerPost: recentPosts.length > 0 ? Math.round(totalEngagement / recentPosts.length) : 0,
     };
+  }
+
+  // Additional helper methods for advanced features
+  private async getHistoricalPerformanceData(organizationId: string, platform: SocialPlatform) {
+    return await prisma.post.findMany({
+      where: {
+        organizationId,
+        socialAccount: { platform },
+        status: PostStatus.PUBLISHED,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+    });
+  }
+
+  private analyzeContentCharacteristics(text: string): number {
+    // Simple content scoring - in production would use AI
+    let score = 0.5;
+    
+    // Check for engagement triggers
+    if (text.includes('?')) score += 0.1; // Questions
+    if (text.match(/[!]{1,3}/)) score += 0.05; // Excitement
+    if (text.length > 50 && text.length < 280) score += 0.1; // Optimal length
+    if (text.match(/#\w+/g)) score += 0.1; // Hashtags
+    if (text.match(/@\w+/g)) score += 0.05; // Mentions
+    
+    return Math.min(1, score);
+  }
+
+  private async analyzeHashtagPerformance(hashtags: string[], _organizationId: string): Promise<number> {
+    // Mock hashtag analysis - would check historical performance
+    const performanceMap = new Map([
+      ['#marketing', 0.8],
+      ['#socialmedia', 0.7],
+      ['#ai', 0.9],
+      ['#business', 0.6],
+    ]);
+    
+    const scores = hashtags.map(tag => performanceMap.get(tag.toLowerCase()) || 0.5);
+    return scores.reduce((sum, score) => sum + score, 0) / scores.length;
+  }
+
+  private analyzePostingTime(scheduledTime: Date, _historicalData: any[]): number {
+    // Analyze if scheduled time aligns with best performing times
+    const hour = scheduledTime.getHours();
+    const dayOfWeek = scheduledTime.getDay();
+    
+    // Mock optimal times - would analyze historical data
+    const optimalHours = [9, 10, 11, 14, 15, 19, 20];
+    const optimalDays = [1, 2, 3, 4, 5]; // Weekdays
+    
+    let score = 0.5;
+    if (optimalHours.includes(hour)) score += 0.3;
+    if (optimalDays.includes(dayOfWeek)) score += 0.2;
+    
+    return Math.min(1, score);
+  }
+
+  private getBaselineEngagement(historicalData: any[]): number {
+    if (historicalData.length === 0) return 50;
+    return 75; // Mock baseline
+  }
+
+  private async generateContentRecommendations(contentData: any, _historicalData: any[]) {
+    const recommendations = [];
+    
+    if (contentData.text.length > 280) {
+      recommendations.push('Consider shortening your content for better engagement');
+    }
+    
+    if (!contentData.hashtags || contentData.hashtags.length < 3) {
+      recommendations.push('Add 3-5 relevant hashtags to increase discoverability');
+    }
+    
+    if (!contentData.text.includes('?')) {
+      recommendations.push('Consider adding a question to encourage engagement');
+    }
+    
+    return recommendations;
+  }
+
+  private calculateViralityScore(_post: any): number {
+    // Mock virality calculation - would use real engagement metrics
+    return Math.floor(Math.random() * 100) + 50;
   }
 }
 
 export const analyticsService = new AnalyticsService();
+export { AdvancedMetrics, RealTimeAlert, ComprehensiveDashboard };

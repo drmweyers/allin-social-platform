@@ -51,7 +51,27 @@ jest.mock('@prisma/client', () => {
         update: jest.fn(),
         delete: jest.fn(),
       },
-      // Add more as needed
+      post: {
+        findUnique: jest.fn(),
+        findMany: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+      },
+      scheduledPost: {
+        findUnique: jest.fn(),
+        findMany: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+      },
+      analytics: {
+        findUnique: jest.fn(),
+        findMany: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+      }
     })),
     // Export all enums
     Role: enums.Role,

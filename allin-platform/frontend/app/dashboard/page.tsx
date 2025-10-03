@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/src/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   ArrowUpRight,
   ArrowDownRight,

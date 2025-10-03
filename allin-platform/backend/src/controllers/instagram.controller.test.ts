@@ -255,15 +255,7 @@ describe('InstagramController', () => {
       (instagramService.createInstagramService as jest.Mock).mockReturnValue(mockService);
       controller = new InstagramController();
       
-      // Mock setTimeout to speed up test
-      jest.useFakeTimers();
-      
-      const createPostPromise = controller.createPost(mockRequest as any, mockResponse as Response);
-      
-      // Fast-forward 15 seconds
-      jest.advanceTimersByTime(15000);
-      
-      await createPostPromise;
+      await controller.createPost(mockRequest as any, mockResponse as Response);
       
       expect(mockService.createMediaContainer).toHaveBeenCalledWith({
         imageUrl: 'https://example.com/image.jpg',
@@ -282,8 +274,6 @@ describe('InstagramController', () => {
           message: 'Instagram post created successfully'
         }
       });
-      
-      jest.useRealTimers();
     });
 
     it('should return error when image URL is missing', async () => {

@@ -30,12 +30,14 @@ describe('Database Service', () => {
       'contentTemplate',
       'media',
       'analytics',
-      'inboxMessage',
-      'collaboration',
-      'workflow',
-      'aiAgent',
-      'aiChatHistory',
-      'aiSettings'
+      'campaign',
+      'campaignPost',
+      'conversation',
+      'document',
+      'invitation',
+      'knowledgebaseStats',
+      'message',
+      'supportQuery'
     ];
 
     requiredModels.forEach(model => {
