@@ -3,7 +3,7 @@ import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import mongoSanitize from 'express-mongo-sanitize';
 import hpp from 'hpp';
-import cors from 'cors';
+import cors from 'cors'; // force restart
 
 // Rate limiting configurations for different endpoints
 export const createRateLimiter = (windowMs: number, max: number, message?: string) => {
