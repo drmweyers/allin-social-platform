@@ -185,7 +185,7 @@ test.describe('Instagram Integration End-to-End Tests', () => {
     });
 
     test('should validate media details endpoint', async ({ request }) => {
-      const response = await request.get(`${baseURL}/api/instagram/media/invalid_media_id`, {
+      const _response = await request.get(`${baseURL}/api/instagram/media/invalid_media_id`, {
         headers: {
           'Authorization': `Bearer ${authToken}`
         }
@@ -197,7 +197,7 @@ test.describe('Instagram Integration End-to-End Tests', () => {
     });
 
     test('should validate media insights endpoint', async ({ request }) => {
-      const response = await request.get(`${baseURL}/api/instagram/media/test_media_id/insights`, {
+      const _response = await request.get(`${baseURL}/api/instagram/media/test_media_id/insights`, {
         headers: {
           'Authorization': `Bearer ${authToken}`
         }
@@ -227,7 +227,7 @@ test.describe('Instagram Integration End-to-End Tests', () => {
     });
 
     test('should validate comment deletion endpoint', async ({ request }) => {
-      const response = await request.delete(`${baseURL}/api/instagram/comments/test_comment_id`, {
+      const _response = await request.delete(`${baseURL}/api/instagram/comments/test_comment_id`, {
         headers: {
           'Authorization': `Bearer ${authToken}`
         }
@@ -266,7 +266,7 @@ test.describe('Instagram Integration End-to-End Tests', () => {
     });
 
     test('should search hashtags', async ({ request }) => {
-      const response = await request.get(`${baseURL}/api/instagram/hashtags/search?q=photography`, {
+      const _response = await request.get(`${baseURL}/api/instagram/hashtags/search?q=photography`, {
         headers: {
           'Authorization': `Bearer ${authToken}`
         }

@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import express from 'express'; // port 8092
+import express from 'express';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
@@ -18,7 +18,9 @@ const io = new Server(httpServer, {
   cors: corsOptions,
 });
 
-const PORT = process.env.PORT || process.env.API_PORT || 5000;
+// Force port 5000 for now
+const PORT = 3010;
+console.log('Starting server on PORT:', PORT);
 
 // Security middleware (comprehensive setup)
 setupSecurity(app);

@@ -1,7 +1,6 @@
 import { EngagementMonitoringService, EngagementEvent, EngagementAlert } from './engagement-monitoring.service';
 import { prisma } from './database';
 import { getRedis } from './redis';
-import { analyticsService } from './analytics.service';
 import { SocialPlatform, PostStatus } from '@prisma/client';
 
 // Mock dependencies

@@ -1,7 +1,7 @@
 import Bull from 'bull';
 import { PrismaClient } from '@prisma/client';
-import { addDays, addWeeks, addMonths, setHours, setMinutes } from 'date-fns';
-// import { socialService } from './social.service'; // TODO: Create social.service
+import { addDays, addWeeks, addMonths } from 'date-fns';
+import { socialService } from './social.service';
 
 const prisma = new PrismaClient();
 
@@ -14,7 +14,7 @@ const schedulingQueue = new Bull('post-scheduling', {
 });
 
 // Queue processor
-schedulingQueue.process(async (job) => {
+schedulingQueue.process(async (job: any) => {
   const { postId, action } = job.data;
 
   try {
@@ -72,7 +72,7 @@ async function publishScheduledPost(scheduledPostId: string) {
     });
 
     // If it's a recurring post, schedule the next occurrence
-    if (scheduledPost.isRecurring && scheduledPost.recurringGroup) {
+    if (scheduledPost.isRecurring && scheduledPost.recurringPattern) {
       await scheduleNextRecurrence(scheduledPost);
     }
   } catch (error) {
@@ -127,9 +127,9 @@ async function processRecurringPost(recurringGroupId: string) {
       userId: recurringGroup.scheduledPost.userId,
       organizationId: recurringGroup.scheduledPost.organizationId,
       content: recurringGroup.scheduledPost.post.content,
-      media: recurringGroup.scheduledPost.post.media,
-      hashtags: recurringGroup.scheduledPost.post.hashtags,
-      mentions: recurringGroup.scheduledPost.post.mentions,
+      // media: recurringGroup.scheduledPost.post.media, // TODO: Add media field to Post model
+      hashtags: recurringGroup.scheduledPost.post.hashtags || [],
+      mentions: recurringGroup.scheduledPost.post.mentions || [],
       socialAccountId: recurringGroup.scheduledPost.socialAccountId,
       status: 'DRAFT',
     },
@@ -152,7 +152,7 @@ async function processRecurringPost(recurringGroupId: string) {
   });
 
   // Schedule the job
-  await schedulePost(newScheduledPost.id, nextDate);
+  await schedulingService.schedulePost(newScheduledPost.id, nextDate);
 
   // Update next run date
   await prisma.recurringPostGroup.update({
@@ -183,7 +183,7 @@ function calculateNextRecurrence(
 async function scheduleNextRecurrence(scheduledPost: any) {
   const nextDate = calculateNextRecurrence(
     scheduledPost.recurringPattern,
-    scheduledPost.recurringGroup?.frequency || 1,
+    1, // Default frequency
     new Date(scheduledPost.scheduledFor)
   );
 
@@ -192,10 +192,10 @@ async function scheduleNextRecurrence(scheduledPost: any) {
     return;
   }
 
-  // Schedule the next occurrence
+  // Schedule the next occurrence  
   await schedulingQueue.add(
     'process-recurring',
-    { postId: scheduledPost.recurringGroup.id, action: 'process-recurring' },
+    { postId: scheduledPost.id, action: 'process-recurring' },
     { delay: nextDate.getTime() - Date.now() }
   );
 }

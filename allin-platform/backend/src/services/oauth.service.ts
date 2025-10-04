@@ -4,20 +4,13 @@ import { AppError } from '../utils/errors';
 
 const prisma = new PrismaClient();
 
-interface OAuthConfig {
-  clientId: string;
-  clientSecret: string;
-  redirectUri: string;
-  scope: string[];
-}
-
-interface OAuthTokens {
+export interface OAuthTokens {
   accessToken: string;
   refreshToken?: string;
   expiresIn?: number;
 }
 
-interface PlatformProfile {
+export interface PlatformProfile {
   id: string;
   username?: string;
   displayName?: string;
@@ -26,6 +19,13 @@ interface PlatformProfile {
   profileUrl?: string;
   followersCount?: number;
   followingCount?: number;
+}
+
+export interface OAuthConfig {
+  clientId: string;
+  clientSecret: string;
+  redirectUri: string;
+  scope: string[];
 }
 
 export abstract class OAuthService {

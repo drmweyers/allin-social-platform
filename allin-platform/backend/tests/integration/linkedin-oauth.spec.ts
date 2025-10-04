@@ -235,7 +235,7 @@ describe('LinkedIn OAuth Integration', () => {
     });
 
     it('should not return access tokens in response', async () => {
-      const response = await request(app)
+      const _response = await request(app)
         .get('/api/social/accounts')
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);

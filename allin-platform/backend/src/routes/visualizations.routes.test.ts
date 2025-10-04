@@ -2,9 +2,6 @@ import request from 'supertest';
 import express from 'express';
 import visualizationsRoutes from './visualizations.routes';
 import { authenticateToken } from '../middleware/auth';
-import { analyticsService } from '../services/analytics.service';
-import { engagementMonitoringService } from '../services/engagement-monitoring.service';
-
 // Mock dependencies
 jest.mock('../middleware/auth');
 jest.mock('../services/analytics.service');
@@ -34,7 +31,7 @@ describe('Visualization Routes - Priority 2 Enhanced Features', () => {
 
     // Mock authentication middleware
     mockAuthMiddleware = authenticateToken as jest.MockedFunction<typeof authenticateToken>;
-    mockAuthMiddleware.mockImplementation((req: any, res: any, next: any) => {
+    mockAuthMiddleware.mockImplementation(async (req: any, _res: any, next: any) => {
       req.user = {
         id: 'test-user-id',
         email: MASTER_CREDENTIALS.admin.email,
@@ -69,7 +66,7 @@ describe('Visualization Routes - Priority 2 Enhanced Features', () => {
     });
 
     it('should validate engagement trend chart structure', async () => {
-      const response = await request(app)
+      const _response = await request(app)
         .get('/api/visualizations/dashboard-charts')
         .query({ organizationId: 'test-org-id' });
 
@@ -91,7 +88,7 @@ describe('Visualization Routes - Priority 2 Enhanced Features', () => {
     });
 
     it('should validate platform performance chart structure', async () => {
-      const response = await request(app)
+      const _response = await request(app)
         .get('/api/visualizations/dashboard-charts')
         .query({ organizationId: 'test-org-id' });
 
@@ -104,7 +101,7 @@ describe('Visualization Routes - Priority 2 Enhanced Features', () => {
     });
 
     it('should validate audience demographics structure', async () => {
-      const response = await request(app)
+      const _response = await request(app)
         .get('/api/visualizations/dashboard-charts')
         .query({ organizationId: 'test-org-id' });
 
@@ -124,7 +121,7 @@ describe('Visualization Routes - Priority 2 Enhanced Features', () => {
     });
 
     it('should validate real-time metrics structure', async () => {
-      const response = await request(app)
+      const _response = await request(app)
         .get('/api/visualizations/dashboard-charts')
         .query({ organizationId: 'test-org-id' });
 
@@ -180,7 +177,7 @@ describe('Visualization Routes - Priority 2 Enhanced Features', () => {
     });
 
     it('should include correct metadata structure', async () => {
-      const response = await request(app)
+      const _response = await request(app)
         .get('/api/visualizations/dashboard-charts')
         .query({ organizationId: 'test-org-id', timeframe: '7d', platform: 'instagram' });
 
@@ -198,7 +195,7 @@ describe('Visualization Routes - Priority 2 Enhanced Features', () => {
       const users = Object.values(MASTER_CREDENTIALS);
       
       for (const user of users) {
-        mockAuthMiddleware.mockImplementationOnce((req: any, res: any, next: any) => {
+        mockAuthMiddleware.mockImplementationOnce(async (req: any, _res: any, next: any) => {
           req.user = {
             id: 'test-user-id',
             email: user.email,
@@ -249,7 +246,7 @@ describe('Visualization Routes - Priority 2 Enhanced Features', () => {
     });
 
     it('should work with user organization ID from auth token', async () => {
-      mockAuthMiddleware.mockImplementationOnce((req: any, res: any, next: any) => {
+      mockAuthMiddleware.mockImplementationOnce(async (req: any, _res: any, next: any) => {
         req.user = {
           id: 'test-user-id',
           email: MASTER_CREDENTIALS.manager.email,
@@ -459,7 +456,7 @@ describe('Visualization Routes - Priority 2 Enhanced Features', () => {
     });
 
     it('should include proper expiration time (24 hours)', async () => {
-      const response = await request(app)
+      const _response = await request(app)
         .post('/api/visualizations/export')
         .send(validExportRequest);
 
@@ -598,7 +595,7 @@ describe('Visualization Routes - Priority 2 Enhanced Features', () => {
 
   describe('Error Handling and Edge Cases', () => {
     it('should handle missing authentication token', async () => {
-      mockAuthMiddleware.mockImplementationOnce((req: any, res: any, next: any) => {
+      mockAuthMiddleware.mockImplementationOnce(async (req: any, _res: any, next: any) => {
         res.status(401).json({ error: 'Unauthorized' });
       });
 
@@ -610,7 +607,7 @@ describe('Visualization Routes - Priority 2 Enhanced Features', () => {
     });
 
     it('should handle server errors gracefully in dashboard-charts', async () => {
-      mockAuthMiddleware.mockImplementationOnce((req: any, res: any, next: any) => {
+      mockAuthMiddleware.mockImplementationOnce(async (req: any, _res: any, next: any) => {
         throw new Error('Database connection failed');
       });
 
@@ -688,7 +685,7 @@ describe('Visualization Routes - Priority 2 Enhanced Features', () => {
       ];
 
       for (const [role, credentials] of Object.entries(MASTER_CREDENTIALS)) {
-        mockAuthMiddleware.mockImplementation((req: any, res: any, next: any) => {
+        mockAuthMiddleware.mockImplementation(async (req: any, _res: any, next: any) => {
           req.user = {
             id: `${role}-user-id`,
             email: credentials.email,
@@ -719,7 +716,7 @@ describe('Visualization Routes - Priority 2 Enhanced Features', () => {
       const orgIds = ['org-1', 'org-2', 'org-3'];
       
       for (const orgId of orgIds) {
-        mockAuthMiddleware.mockImplementationOnce((req: any, res: any, next: any) => {
+        mockAuthMiddleware.mockImplementationOnce(async (req: any, _res: any, next: any) => {
           req.user = {
             id: 'test-user-id',
             email: MASTER_CREDENTIALS.admin.email,
@@ -737,7 +734,7 @@ describe('Visualization Routes - Priority 2 Enhanced Features', () => {
     });
 
     it('should prioritize explicit organization ID over auth token', async () => {
-      mockAuthMiddleware.mockImplementation((req: any, res: any, next: any) => {
+      mockAuthMiddleware.mockImplementation(async (req: any, _res: any, next: any) => {
         req.user = {
           id: 'test-user-id',
           email: MASTER_CREDENTIALS.admin.email,
@@ -788,7 +785,7 @@ describe('Visualization Routes - Priority 2 Enhanced Features', () => {
     });
 
     it('should validate chart data integrity', async () => {
-      const response = await request(app)
+      const _response = await request(app)
         .get('/api/visualizations/dashboard-charts')
         .query({ organizationId: 'test-org-id' });
 

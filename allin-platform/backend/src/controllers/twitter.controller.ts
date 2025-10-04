@@ -211,7 +211,7 @@ export class TwitterController {
       console.error('Twitter get tweet details error:', error);
       res.status(500).json({
         success: false,
-        message: 'Failed to get Twitter tweet details',
+        message: 'Failed to get tweet details',
         error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
       });
     }
@@ -224,7 +224,7 @@ export class TwitterController {
   async createTweet(req: Request, res: Response): Promise<void> {
     try {
       const accessToken = req.headers.authorization?.replace('Bearer ', '');
-      const tweetData: TwitterPostRequest = req.body;
+      const { text, mediaIds, pollOptions, pollDurationMinutes, replyTo, quoteTweetId, replySettings } = req.body;
       
       if (!accessToken) {
         res.status(401).json({
@@ -234,7 +234,7 @@ export class TwitterController {
         return;
       }
 
-      if (!tweetData.text || tweetData.text.trim().length === 0) {
+      if (!text) {
         res.status(400).json({
           success: false,
           message: 'Tweet text is required'
@@ -242,26 +242,27 @@ export class TwitterController {
         return;
       }
 
-      if (tweetData.text.length > 280) {
-        res.status(400).json({
-          success: false,
-          message: 'Tweet text exceeds 280 character limit'
-        });
-        return;
-      }
+      const postData: TwitterPostRequest = {
+        text,
+        mediaIds,
+        pollOptions,
+        pollDurationMinutes,
+        replyTo,
+        quoteTweetId,
+        replySettings
+      };
 
-      const tweet = await twitterService.createTweet(tweetData, accessToken);
+      const tweet = await twitterService.createTweet(postData, accessToken);
       
-      res.json({
+      res.status(201).json({
         success: true,
-        data: tweet,
-        message: 'Tweet created successfully'
+        data: tweet
       });
     } catch (error) {
       console.error('Twitter create tweet error:', error);
       res.status(500).json({
         success: false,
-        message: 'Failed to create Twitter tweet',
+        message: 'Failed to create tweet',
         error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
       });
     }
@@ -296,14 +297,13 @@ export class TwitterController {
       
       res.json({
         success: true,
-        data: result,
-        message: 'Tweet deleted successfully'
+        data: result
       });
     } catch (error) {
       console.error('Twitter delete tweet error:', error);
       res.status(500).json({
         success: false,
-        message: 'Failed to delete Twitter tweet',
+        message: 'Failed to delete tweet',
         error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
       });
     }
@@ -335,8 +335,8 @@ export class TwitterController {
       }
 
       const tweets = await twitterService.searchTweets(
-        query as string, 
-        parseInt(maxResults as string, 10), 
+        query as string,
+        parseInt(maxResults as string, 10),
         accessToken
       );
       
@@ -345,10 +345,10 @@ export class TwitterController {
         data: tweets
       });
     } catch (error) {
-      console.error('Twitter search tweets error:', error);
+      console.error('Twitter search error:', error);
       res.status(500).json({
         success: false,
-        message: 'Failed to search Twitter tweets',
+        message: 'Failed to search tweets',
         error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
       });
     }
@@ -372,8 +372,8 @@ export class TwitterController {
       }
 
       const followers = await twitterService.getFollowers(
-        userId as string, 
-        parseInt(maxResults as string, 10), 
+        userId as string,
+        parseInt(maxResults as string, 10),
         accessToken
       );
       
@@ -385,7 +385,7 @@ export class TwitterController {
       console.error('Twitter get followers error:', error);
       res.status(500).json({
         success: false,
-        message: 'Failed to get Twitter followers',
+        message: 'Failed to get followers',
         error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
       });
     }
@@ -393,7 +393,7 @@ export class TwitterController {
 
   /**
    * GET /api/twitter/following
-   * Get users being followed
+   * Get user following
    */
   async getFollowing(req: Request, res: Response): Promise<void> {
     try {
@@ -409,8 +409,8 @@ export class TwitterController {
       }
 
       const following = await twitterService.getFollowing(
-        userId as string, 
-        parseInt(maxResults as string, 10), 
+        userId as string,
+        parseInt(maxResults as string, 10),
         accessToken
       );
       
@@ -422,20 +422,20 @@ export class TwitterController {
       console.error('Twitter get following error:', error);
       res.status(500).json({
         success: false,
-        message: 'Failed to get Twitter following',
+        message: 'Failed to get following',
         error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
       });
     }
   }
 
   /**
-   * POST /api/twitter/follow/:userId
+   * POST /api/twitter/follow
    * Follow a user
    */
   async followUser(req: Request, res: Response): Promise<void> {
     try {
       const accessToken = req.headers.authorization?.replace('Bearer ', '');
-      const { userId } = req.params;
+      const { targetUserId } = req.body;
       
       if (!accessToken) {
         res.status(401).json({
@@ -445,26 +445,25 @@ export class TwitterController {
         return;
       }
 
-      if (!userId) {
+      if (!targetUserId) {
         res.status(400).json({
           success: false,
-          message: 'User ID is required'
+          message: 'Target user ID is required'
         });
         return;
       }
 
-      const result = await twitterService.followUser(userId, accessToken);
+      const result = await twitterService.followUser(targetUserId, accessToken);
       
       res.json({
         success: true,
-        data: result,
-        message: 'User followed successfully'
+        data: result
       });
     } catch (error) {
       console.error('Twitter follow user error:', error);
       res.status(500).json({
         success: false,
-        message: 'Failed to follow Twitter user',
+        message: 'Failed to follow user',
         error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
       });
     }
@@ -499,27 +498,26 @@ export class TwitterController {
       
       res.json({
         success: true,
-        data: result,
-        message: 'User unfollowed successfully'
+        data: result
       });
     } catch (error) {
       console.error('Twitter unfollow user error:', error);
       res.status(500).json({
         success: false,
-        message: 'Failed to unfollow Twitter user',
+        message: 'Failed to unfollow user',
         error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
       });
     }
   }
 
   /**
-   * POST /api/twitter/likes/:tweetId
+   * POST /api/twitter/like
    * Like a tweet
    */
   async likeTweet(req: Request, res: Response): Promise<void> {
     try {
       const accessToken = req.headers.authorization?.replace('Bearer ', '');
-      const { tweetId } = req.params;
+      const { tweetId } = req.body;
       
       if (!accessToken) {
         res.status(401).json({
@@ -541,21 +539,20 @@ export class TwitterController {
       
       res.json({
         success: true,
-        data: result,
-        message: 'Tweet liked successfully'
+        data: result
       });
     } catch (error) {
       console.error('Twitter like tweet error:', error);
       res.status(500).json({
         success: false,
-        message: 'Failed to like Twitter tweet',
+        message: 'Failed to like tweet',
         error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
       });
     }
   }
 
   /**
-   * DELETE /api/twitter/likes/:tweetId
+   * DELETE /api/twitter/like/:tweetId
    * Unlike a tweet
    */
   async unlikeTweet(req: Request, res: Response): Promise<void> {
@@ -583,27 +580,26 @@ export class TwitterController {
       
       res.json({
         success: true,
-        data: result,
-        message: 'Tweet unliked successfully'
+        data: result
       });
     } catch (error) {
       console.error('Twitter unlike tweet error:', error);
       res.status(500).json({
         success: false,
-        message: 'Failed to unlike Twitter tweet',
+        message: 'Failed to unlike tweet',
         error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
       });
     }
   }
 
   /**
-   * POST /api/twitter/retweets/:tweetId
+   * POST /api/twitter/retweet
    * Retweet a tweet
    */
   async retweet(req: Request, res: Response): Promise<void> {
     try {
       const accessToken = req.headers.authorization?.replace('Bearer ', '');
-      const { tweetId } = req.params;
+      const { tweetId } = req.body;
       
       if (!accessToken) {
         res.status(401).json({
@@ -625,21 +621,20 @@ export class TwitterController {
       
       res.json({
         success: true,
-        data: result,
-        message: 'Tweet retweeted successfully'
+        data: result
       });
     } catch (error) {
       console.error('Twitter retweet error:', error);
       res.status(500).json({
         success: false,
-        message: 'Failed to retweet Twitter tweet',
+        message: 'Failed to retweet',
         error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
       });
     }
   }
 
   /**
-   * DELETE /api/twitter/retweets/:tweetId
+   * DELETE /api/twitter/retweet/:tweetId
    * Unretweet a tweet
    */
   async unretweet(req: Request, res: Response): Promise<void> {
@@ -667,19 +662,15 @@ export class TwitterController {
       
       res.json({
         success: true,
-        data: result,
-        message: 'Tweet unretweeted successfully'
+        data: result
       });
     } catch (error) {
       console.error('Twitter unretweet error:', error);
       res.status(500).json({
         success: false,
-        message: 'Failed to unretweet Twitter tweet',
+        message: 'Failed to unretweet',
         error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
       });
     }
   }
 }
-
-// Export singleton instance
-export const twitterController = new TwitterController();

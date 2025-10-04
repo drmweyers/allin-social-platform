@@ -10,6 +10,7 @@ import instagramRoutes from './instagram.routes';
 import twitterRoutes from './twitter.routes';
 import engagementRoutes from './engagement.routes';
 import visualizationRoutes from './visualizations.routes';
+// import schedulingRoutes from './scheduling.routes';
 
 const router = Router();
 
@@ -30,6 +31,7 @@ router.get('/', (_req, res) => {
       visualizations: '/api/visualizations',
       instagram: '/api/instagram',
       twitter: '/api/twitter',
+      // scheduling: '/api/scheduling',
     },
   });
 });
@@ -46,6 +48,7 @@ router.use('/visualizations', visualizationRoutes);
 router.use('/media', mediaRoutes);
 router.use('/instagram', instagramRoutes);
 router.use('/twitter', twitterRoutes);
+// router.use('/scheduling', schedulingRoutes);
 
 // TODO: Additional routes to be enabled after core API stabilization:
 // - AI Support routes (RAG system)

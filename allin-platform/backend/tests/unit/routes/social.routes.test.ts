@@ -53,7 +53,7 @@ const app = express();
 app.use(express.json());
 
 // Mock auth middleware - inject user into request
-app.use((req: any, res, next) => {
+app.use((req: any, _res, next) => {
   req.user = mockUser;
   next();
 });
@@ -109,7 +109,7 @@ describe('Social Routes', () => {
     it('should return 401 if user not authenticated', async () => {
       const appNoAuth = express();
       appNoAuth.use(express.json());
-      appNoAuth.use((req: any, res, next) => {
+      appNoAuth.use((req: any, _res, next) => {
         req.user = null;
         next();
       });
@@ -167,7 +167,7 @@ describe('Social Routes', () => {
       expect(mockPrismaClient.socialAccount.findFirst).toHaveBeenCalledWith({
         where: {
           id: 'social-account-123',
-          userId: mockUser.userId
+          userId: mockUser.id
         },
         select: {
           id: true,
@@ -206,7 +206,7 @@ describe('Social Routes', () => {
     it('should return 401 if user not authenticated', async () => {
       const appNoAuth = express();
       appNoAuth.use(express.json());
-      appNoAuth.use((req: any, res, next) => {
+      appNoAuth.use((req: any, _res, next) => {
         req.user = null;
         next();
       });
@@ -222,14 +222,14 @@ describe('Social Routes', () => {
     it('should not return account belonging to another user', async () => {
       mockPrismaClient.socialAccount.findFirst.mockResolvedValue(null);
 
-      const response = await request(app)
+      const _response = await request(app)
         .get('/api/social/accounts/other-user-account')
         .expect(404);
 
       expect(mockPrismaClient.socialAccount.findFirst).toHaveBeenCalledWith({
         where: {
           id: 'other-user-account',
-          userId: mockUser.userId // Should only find accounts for current user
+          userId: mockUser.id // Should only find accounts for current user
         },
         select: expect.any(Object)
       });
@@ -274,7 +274,7 @@ describe('Social Routes', () => {
     it('should return 401 if user not authenticated', async () => {
       const appNoAuth = express();
       appNoAuth.use(express.json());
-      appNoAuth.use((req: any, res, next) => {
+      appNoAuth.use((req: any, _res, next) => {
         req.user = null;
         next();
       });
@@ -375,7 +375,7 @@ describe('Social Routes', () => {
     it('should return 401 if user not authenticated', async () => {
       const appNoAuth = express();
       appNoAuth.use(express.json());
-      appNoAuth.use((req: any, res, next) => {
+      appNoAuth.use((req: any, _res, next) => {
         req.user = null;
         next();
       });
@@ -444,7 +444,7 @@ describe('Social Routes', () => {
     });
 
     it('should include Facebook platform', async () => {
-      const response = await request(app)
+      const _response = await request(app)
         .get('/api/social/platforms')
         .expect(200);
 
@@ -459,7 +459,7 @@ describe('Social Routes', () => {
     });
 
     it('should include Instagram platform', async () => {
-      const response = await request(app)
+      const _response = await request(app)
         .get('/api/social/platforms')
         .expect(200);
 
@@ -474,7 +474,7 @@ describe('Social Routes', () => {
     });
 
     it('should include Twitter platform', async () => {
-      const response = await request(app)
+      const _response = await request(app)
         .get('/api/social/platforms')
         .expect(200);
 
@@ -488,7 +488,7 @@ describe('Social Routes', () => {
     });
 
     it('should include LinkedIn platform', async () => {
-      const response = await request(app)
+      const _response = await request(app)
         .get('/api/social/platforms')
         .expect(200);
 
@@ -502,7 +502,7 @@ describe('Social Routes', () => {
     });
 
     it('should include TikTok platform', async () => {
-      const response = await request(app)
+      const _response = await request(app)
         .get('/api/social/platforms')
         .expect(200);
 
@@ -570,7 +570,7 @@ describe('Social Routes', () => {
     it('should require authentication for all protected routes', async () => {
       const appNoAuth = express();
       appNoAuth.use(express.json());
-      appNoAuth.use((req: any, res, next) => {
+      appNoAuth.use((req: any, _res, next) => {
         req.user = null;
         next();
       });
@@ -586,7 +586,7 @@ describe('Social Routes', () => {
     it('should allow access to platforms endpoint without auth', async () => {
       const appNoAuth = express();
       appNoAuth.use(express.json());
-      appNoAuth.use((req: any, res, next) => {
+      appNoAuth.use((req: any, _res, next) => {
         req.user = null;
         next();
       });

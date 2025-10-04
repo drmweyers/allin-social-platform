@@ -50,7 +50,7 @@ const app = express();
 app.use(express.json());
 
 // Mock auth middleware - inject user into request
-app.use((req: any, res, next) => {
+app.use((req: any, _res, next) => {
   req.user = mockUser;
   next();
 });
@@ -209,7 +209,7 @@ describe('Schedule Routes', () => {
       // Create app without user in request
       const appNoAuth = express();
       appNoAuth.use(express.json());
-      appNoAuth.use((req: any, res, next) => {
+      appNoAuth.use((req: any, _res, next) => {
         req.user = null; // No user
         next();
       });
@@ -359,7 +359,7 @@ describe('Schedule Routes', () => {
     it('should return 401 if user not authenticated', async () => {
       const appNoAuth = express();
       appNoAuth.use(express.json());
-      appNoAuth.use((req: any, res, next) => {
+      appNoAuth.use((req: any, _res, next) => {
         req.user = null;
         next();
       });
@@ -427,7 +427,7 @@ describe('Schedule Routes', () => {
     });
 
     it('should return 400 for invalid ID format', async () => {
-      const response = await request(app)
+      const _response = await request(app)
         .get('/api/schedule/posts/') // Empty ID
         .expect(404); // Express returns 404 for missing route parameter
 

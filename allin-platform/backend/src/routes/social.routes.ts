@@ -7,6 +7,7 @@ import { OAuthService } from '../services/oauth.service';
 import { FacebookOAuthService } from '../services/oauth/facebook.oauth';
 import { LinkedInOAuthService } from '../services/oauth/linkedin.oauth';
 import { TikTokOAuthService } from '../services/oauth/tiktok.oauth';
+import { TwitterOAuthService } from '../services/oauth/twitter.oauth';
 import { AppError } from '../utils/errors';
 
 const router = Router();
@@ -16,6 +17,7 @@ const oauthServices: Map<SocialPlatform, OAuthService> = new Map<SocialPlatform,
   [SocialPlatform.FACEBOOK, new FacebookOAuthService() as OAuthService],
   [SocialPlatform.LINKEDIN, new LinkedInOAuthService() as OAuthService],
   [SocialPlatform.TIKTOK, new TikTokOAuthService() as OAuthService],
+  [SocialPlatform.TWITTER, new TwitterOAuthService() as OAuthService],
   // Add other platforms as implemented
 ]);
 

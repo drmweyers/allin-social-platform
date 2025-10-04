@@ -1,14 +1,15 @@
 import { Router } from 'express';
-import { twitterController } from '../controllers/twitter.controller';
-import { requireAuth } from '../middleware/auth';
+import { TwitterController } from '../controllers/twitter.controller';
+import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
+const twitterController = new TwitterController();
 
-// All Twitter routes require authentication
-router.use(requireAuth);
-
-// OAuth Authentication routes
+// OAuth Authentication routes (public)
 router.get('/auth/url', (req, res) => twitterController.getAuthUrl(req, res));
+
+// All other Twitter routes require authentication
+router.use(authenticateToken);
 router.post('/auth/callback', (req, res) => twitterController.completeAuth(req, res));
 router.post('/auth/refresh', (req, res) => twitterController.refreshToken(req, res));
 

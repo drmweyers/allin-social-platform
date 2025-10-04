@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import ProtectedRoute from '@/components/ProtectedRoute';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 import {
   Home,
   PlusCircle,
@@ -53,146 +53,146 @@ export default function DashboardLayout({
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-background">
-      {/* Mobile menu overlay */}
-      {mobileMenuOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-          onClick={() => setMobileMenuOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside
-        className={`fixed top-0 left-0 z-50 h-full bg-card border-r transition-all duration-300 ${
-          sidebarOpen ? 'w-64' : 'w-20'
-        } ${
-          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0`}
-      >
-        {/* Logo */}
-        <div className="flex items-center justify-between h-16 px-4 border-b">
-          <Link href="/dashboard" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg" />
-            {sidebarOpen && (
-              <span className="text-xl font-bold">AllIN</span>
-            )}
-          </Link>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="hidden lg:flex"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-          >
-            <ChevronLeft className={`h-4 w-4 transition-transform ${!sidebarOpen ? 'rotate-180' : ''}`} />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="lg:hidden"
+      <div className="min-h-screen bg-gray-100">
+        {/* Mobile menu overlay */}
+        {mobileMenuOpen && (
+          <div 
+            className="fixed inset-0 z-50 lg:hidden bg-gray-900 bg-opacity-50" 
             onClick={() => setMobileMenuOpen(false)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
+          />
+        )}
 
-        {/* Navigation */}
-        <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
-          {navigation.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  isActive
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                }`}
-              >
-                <Icon className="h-5 w-5 flex-shrink-0" />
-                {sidebarOpen && (
-                  <span className="ml-3">{item.name}</span>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* User section */}
-        <div className="border-t p-4">
-          <div className={`flex items-center ${sidebarOpen ? 'space-x-3' : 'justify-center'}`}>
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
-              <User className="h-4 w-4 text-white" />
-            </div>
+        {/* Sidebar */}
+        <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
+          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        } lg:translate-x-0 ${sidebarOpen ? 'lg:w-64' : 'lg:w-16'}`}>
+          
+          {/* Sidebar header */}
+          <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
             {sidebarOpen && (
-              <div className="flex-1">
-                <p className="text-sm font-medium">{user?.name || 'User'}</p>
-                <p className="text-xs text-muted-foreground">{user?.email}</p>
-                <p className="text-xs text-purple-600 font-medium">{user?.role}</p>
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">AI</span>
+                  </div>
+                </div>
+                <span className="ml-2 text-xl font-bold text-gray-900">AllIN</span>
               </div>
             )}
-          </div>
-          {sidebarOpen && (
-            <Button 
-              variant="ghost" 
-              className="w-full mt-3 justify-start" 
-              size="sm"
-              onClick={handleLogout}
+            
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="hidden lg:block p-1.5 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
             >
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
+              <ChevronLeft className={`h-5 w-5 transform transition-transform ${sidebarOpen ? '' : 'rotate-180'}`} />
+            </button>
+
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="lg:hidden p-1.5 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Navigation */}
+          <nav className="mt-8 px-4">
+            <div className="space-y-1">
+              {navigation.map((item) => {
+                const isActive = pathname === item.href;
+                const Icon = item.icon;
+                
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
+                      isActive
+                        ? 'bg-purple-100 text-purple-700'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    }`}
+                  >
+                    <Icon className={`mr-3 h-5 w-5 ${isActive ? 'text-purple-500' : 'text-gray-400 group-hover:text-gray-500'}`} />
+                    {sidebarOpen && item.name}
+                  </Link>
+                );
+              })}
+            </div>
+          </nav>
+
+          {/* User info and logout */}
+          {sidebarOpen && (
+            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                    <User className="h-4 w-4 text-gray-600" />
+                  </div>
+                </div>
+                <div className="ml-3 flex-1">
+                  <p className="text-sm font-medium text-gray-700 truncate">
+                    {user?.email || 'User'}
+                  </p>
+                  <p className="text-xs text-gray-500 capitalize">
+                    {user?.role || 'Member'}
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="ml-2 p-1.5"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           )}
         </div>
-      </aside>
 
-      {/* Main content */}
-      <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
-        {/* Top header */}
-        <header className="sticky top-0 z-30 h-16 bg-background border-b">
-          <div className="flex items-center justify-between h-full px-4">
-            {/* Mobile menu button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="lg:hidden"
-              onClick={() => setMobileMenuOpen(true)}
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
+        {/* Main content */}
+        <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-16'}`}>
+          {/* Top navigation */}
+          <div className="bg-white shadow-sm border-b border-gray-200">
+            <div className="px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between h-16">
+                <div className="flex items-center">
+                  <button
+                    onClick={() => setMobileMenuOpen(true)}
+                    className="lg:hidden -ml-0.5 -mt-0.5 h-12 w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900"
+                  >
+                    <Menu className="h-6 w-6" />
+                  </button>
+                  
+                  <div className="hidden lg:flex lg:items-center lg:space-x-4">
+                    <h1 className="text-2xl font-semibold text-gray-900">
+                      {navigation.find(item => item.href === pathname)?.name || 'Dashboard'}
+                    </h1>
+                  </div>
+                </div>
 
-            {/* Search bar */}
-            <div className="flex-1 max-w-xl mx-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Search posts, accounts, or analytics..."
-                  className="w-full pl-10 pr-4 py-2 bg-muted rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                />
+                <div className="flex items-center space-x-4">
+                  <button className="p-2 text-gray-400 hover:text-gray-500">
+                    <Search className="h-5 w-5" />
+                  </button>
+                  <button className="p-2 text-gray-400 hover:text-gray-500 relative">
+                    <Bell className="h-5 w-5" />
+                    <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+                  </button>
+                </div>
               </div>
             </div>
-
-            {/* Right side buttons */}
-            <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="sm">
-                <Bell className="h-5 w-5" />
-              </Button>
-              <Button size="sm" className="hidden sm:flex">
-                <PlusCircle className="h-4 w-4 mr-2" />
-                New Post
-              </Button>
-            </div>
           </div>
-        </header>
 
-        {/* Page content */}
-        <main className="p-6">
-          {children}
-        </main>
+          {/* Page content */}
+          <main className="flex-1">
+            <div className="py-6">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                {children}
+              </div>
+            </div>
+          </main>
+        </div>
       </div>
     </ProtectedRoute>
   );
