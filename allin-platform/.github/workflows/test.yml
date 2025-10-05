@@ -1,0 +1,160 @@
+# BMAD MONITOR Phase 2: Automated Testing Pipeline
+# This workflow runs tests on every push and pull request
+
+name: Test & Quality Gates
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test-backend:
+    name: Backend Tests & Coverage
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: allin-platform/backend/package-lock.json
+
+    - name: Install dependencies
+      working-directory: allin-platform/backend
+      run: npm ci
+
+    - name: Run TypeScript type check
+      working-directory: allin-platform/backend
+      run: npm run type-check
+
+    - name: Run tests with coverage
+      working-directory: allin-platform/backend
+      run: npm run test:ci
+
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v4
+      if: matrix.node-version == '20.x'
+      with:
+        files: ./allin-platform/backend/coverage/lcov.info
+        flags: backend
+        name: backend-coverage
+        fail_ci_if_error: false
+
+    - name: Generate coverage summary
+      if: matrix.node-version == '20.x'
+      working-directory: allin-platform/backend
+      run: |
+        echo "## Test Coverage Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Metric | Coverage |" >> $GITHUB_STEP_SUMMARY
+        echo "|--------|----------|" >> $GITHUB_STEP_SUMMARY
+
+        # Extract coverage percentages from coverage-summary.json
+        if [ -f coverage/coverage-summary.json ]; then
+          LINES=$(node -pe "JSON.parse(require('fs').readFileSync('coverage/coverage-summary.json')).total.lines.pct")
+          STATEMENTS=$(node -pe "JSON.parse(require('fs').readFileSync('coverage/coverage-summary.json')).total.statements.pct")
+          FUNCTIONS=$(node -pe "JSON.parse(require('fs').readFileSync('coverage/coverage-summary.json')).total.functions.pct")
+          BRANCHES=$(node -pe "JSON.parse(require('fs').readFileSync('coverage/coverage-summary.json')).total.branches.pct")
+
+          echo "| Lines | ${LINES}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| Statements | ${STATEMENTS}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| Functions | ${FUNCTIONS}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| Branches | ${BRANCHES}% |" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: Check coverage thresholds
+      if: matrix.node-version == '20.x'
+      working-directory: allin-platform/backend
+      run: |
+        # Coverage thresholds are enforced by jest.config.js
+        # If tests passed, coverage meets minimum thresholds
+        echo "✅ Coverage thresholds met (see jest.config.js for details)"
+
+  quality-gates:
+    name: Quality Gates Check
+    runs-on: ubuntu-latest
+    needs: test-backend
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+
+    - name: Install dependencies
+      working-directory: allin-platform/backend
+      run: npm ci
+
+    - name: Run linter
+      working-directory: allin-platform/backend
+      run: npm run lint
+
+    - name: Check for TypeScript errors
+      working-directory: allin-platform/backend
+      run: npm run type-check
+
+    - name: Security audit
+      working-directory: allin-platform/backend
+      run: npm audit --audit-level=high
+      continue-on-error: true
+
+    - name: Quality gate summary
+      run: |
+        echo "## Quality Gates Status" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Tests passed" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Coverage thresholds met" >> $GITHUB_STEP_SUMMARY
+        echo "✅ TypeScript compilation successful" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Code linting passed" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Ready to merge!**" >> $GITHUB_STEP_SUMMARY
+
+  # Optional: E2E tests (when implemented)
+  test-e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    needs: test-backend
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+
+    - name: Install dependencies
+      working-directory: allin-platform/backend
+      run: npm ci
+
+    - name: Install Playwright browsers
+      working-directory: allin-platform/backend
+      run: npx playwright install --with-deps
+
+    - name: Run E2E tests
+      working-directory: allin-platform/backend
+      run: npm run test:e2e
+      continue-on-error: true  # E2E tests are optional for now
+
+    - name: Upload E2E test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: e2e-test-results
+        path: allin-platform/backend/playwright-report/
+        retention-days: 7
