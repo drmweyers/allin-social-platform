@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { checkDatabaseConnection, prisma } from '../../../src/services/database';
+import { checkDatabaseConnection } from '../../../src/services/database';
 import { logger } from '../../../src/utils/logger';
 
 // Mock PrismaClient
@@ -15,46 +15,56 @@ describe('Database Service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // Create a mock Prisma instance
+    // Create a mock Prisma instance with proper jest.Mock typing
     mockPrismaInstance = {
       $connect: jest.fn(),
       $disconnect: jest.fn(),
       $transaction: jest.fn(),
+      $queryRaw: jest.fn(),
       user: {
-        findMany: jest.fn(),
-        findUnique: jest.fn(),
-        findFirst: jest.fn(),
-        create: jest.fn(),
-        update: jest.fn(),
-        delete: jest.fn(),
-        count: jest.fn(),
+        findMany: jest.fn() as jest.Mock,
+        findUnique: jest.fn() as jest.Mock,
+        findFirst: jest.fn() as jest.Mock,
+        create: jest.fn() as jest.Mock,
+        update: jest.fn() as jest.Mock,
+        delete: jest.fn() as jest.Mock,
+        count: jest.fn() as jest.Mock,
       },
       socialAccount: {
-        findMany: jest.fn(),
-        findUnique: jest.fn(),
-        findFirst: jest.fn(),
-        create: jest.fn(),
-        update: jest.fn(),
-        delete: jest.fn(),
-        count: jest.fn(),
+        findMany: jest.fn() as jest.Mock,
+        findUnique: jest.fn() as jest.Mock,
+        findFirst: jest.fn() as jest.Mock,
+        create: jest.fn() as jest.Mock,
+        update: jest.fn() as jest.Mock,
+        delete: jest.fn() as jest.Mock,
+        count: jest.fn() as jest.Mock,
       },
       post: {
-        findMany: jest.fn(),
-        findUnique: jest.fn(),
-        findFirst: jest.fn(),
-        create: jest.fn(),
-        update: jest.fn(),
-        delete: jest.fn(),
-        count: jest.fn(),
+        findMany: jest.fn() as jest.Mock,
+        findUnique: jest.fn() as jest.Mock,
+        findFirst: jest.fn() as jest.Mock,
+        create: jest.fn() as jest.Mock,
+        update: jest.fn() as jest.Mock,
+        delete: jest.fn() as jest.Mock,
+        count: jest.fn() as jest.Mock,
+      },
+      draft: {
+        findMany: jest.fn() as jest.Mock,
+        findUnique: jest.fn() as jest.Mock,
+        findFirst: jest.fn() as jest.Mock,
+        create: jest.fn() as jest.Mock,
+        update: jest.fn() as jest.Mock,
+        delete: jest.fn() as jest.Mock,
+        count: jest.fn() as jest.Mock,
       },
       scheduledPost: {
-        findMany: jest.fn(),
-        findUnique: jest.fn(),
-        findFirst: jest.fn(),
-        create: jest.fn(),
-        update: jest.fn(),
-        delete: jest.fn(),
-        count: jest.fn(),
+        findMany: jest.fn() as jest.Mock,
+        findUnique: jest.fn() as jest.Mock,
+        findFirst: jest.fn() as jest.Mock,
+        create: jest.fn() as jest.Mock,
+        update: jest.fn() as jest.Mock,
+        delete: jest.fn() as jest.Mock,
+        count: jest.fn() as jest.Mock,
       },
     } as any;
 

@@ -4,6 +4,26 @@
 
 ---
 
+## 🚀 Quick Reference - Test Credentials & Access
+
+**Login URL**: http://localhost:3009/auth/login
+
+| Role | Email | Password | Key Features |
+|------|-------|----------|--------------|
+| 🔑 **Super Admin** | admin@allin.demo | Admin123!@# | All features, system configuration, global access |
+| 🏢 **Agency Owner** | agency@allin.demo | Agency123!@# | Multi-client management, white-label, agency billing |
+| 📋 **Content Manager** | manager@allin.demo | Manager123!@# | Content strategy, team coordination, campaign management |
+| ✏️ **Content Creator** | creator@allin.demo | Creator123!@# | Content creation, AI tools, basic scheduling |
+| 👁️ **Client Viewer** | client@allin.demo | Client123!@# | Performance monitoring, content approval, reports |
+| 👥 **Team Member** | team@allin.demo | Team123!@# | Limited collaboration, assigned projects only |
+
+**Priority 2 Enhanced Features**:
+- ✅ **Advanced Dashboard Analytics**: Multi-platform insights, competitive analysis, ROI attribution
+- ✅ **Real-time Engagement Monitoring**: Live streaming, custom alerts, anomaly detection
+- ✅ **Enhanced AI Content Optimization**: Performance prediction, variant generation, viral scoring
+
+---
+
 ## Table of Contents
 
 1. [Platform Overview](#platform-overview)
@@ -94,90 +114,331 @@ AllIN supports all major social media platforms with native integration:
    - Select target platforms
    - Choose to publish now or schedule for later
 
-### Test Credentials
+### Master Test Credentials (PERMANENT)
 
-For demonstration and testing purposes, the following accounts are available:
+**⚠️ IMPORTANT**: These are the official test credentials for the AllIN Social Media Management Platform. They are permanent and should never be changed as they are integrated into the testing framework.
 
 | Role | Email | Password | Access Level |
 |------|-------|----------|--------------|
-| Admin | admin@allin.demo | AdminPass123 | Full system access |
-| Agency Owner | agency@allin.demo | AgencyPass123 | Manage all clients |
-| Manager | manager@allin.demo | ManagerPass123 | Create & schedule content |
-| Creator | creator@allin.demo | CreatorPass123 | Content creation only |
-| Client | client@allin.demo | ClientPass123 | Read-only view |
-| Team | team@allin.demo | TeamPass123 | Limited access |
+| **Super Admin** | admin@allin.demo | Admin123!@# | Full system access |
+| **Agency Owner** | agency@allin.demo | Agency123!@# | Manage all clients |
+| **Content Manager** | manager@allin.demo | Manager123!@# | Create & schedule content |
+| **Content Creator** | creator@allin.demo | Creator123!@# | Content creation only |
+| **Client Viewer** | client@allin.demo | Client123!@# | Read-only view |
+| **Team Member** | team@allin.demo | Team123!@# | Limited team access |
+
+**Login URL**: http://localhost:3009/auth/login (when development server is running)
 
 ---
 
 ## User Roles & Permissions
 
-### Role Hierarchy
+### Detailed Role Hierarchy & Test Account Functions
 
-AllIN uses a comprehensive role-based access control system to ensure the right people have the right level of access.
+AllIN uses a comprehensive role-based access control system to ensure the right people have the right level of access. Each test credential provides specific functionality for testing different user scenarios.
 
-#### Super Admin
-- **Full system access** across all organizations
-- **User management** - Create, modify, delete any user
-- **System configuration** - Platform settings and features
-- **Billing management** - Handle subscriptions and payments
-- **Support access** - Can assist any user or organization
+#### 🔑 Super Admin (admin@allin.demo)
+**Test Credential**: admin@allin.demo / Admin123!@#
+**Role in System**: SUPER_ADMIN
 
-#### Organization Admin
-- **Organization-wide control** within their organization
-- **Team management** - Invite, remove, and manage team members
-- **Account management** - Connect and manage social media accounts
-- **Content oversight** - Approve or reject content before publishing
-- **Analytics access** - View all performance data
-- **Billing control** - Manage organization subscriptions
+**Full Access Features**:
+- ✅ **Complete System Control** - Access to all platform features without restrictions
+- ✅ **Global User Management** - Create, modify, delete any user across all organizations
+- ✅ **System Configuration** - Platform settings, feature flags, and global configurations
+- ✅ **Multi-Organization Access** - View and manage all organizations in the system
+- ✅ **Billing & Subscriptions** - Handle all subscription plans and payment management
+- ✅ **Support Functions** - Assist any user, impersonate accounts for troubleshooting
+- ✅ **API & Webhooks** - Full API access and webhook configuration
+- ✅ **Advanced Analytics** - Access to platform-wide analytics and performance metrics
+- ✅ **Security Management** - Configure security settings, monitor login attempts
+- ✅ **Content Management** - Create, edit, approve, and delete any content
+- ✅ **Social Account Management** - Connect, disconnect, and manage all social media accounts
 
-#### Agency Owner
-- **Multi-client management** - Handle multiple client accounts
-- **Client onboarding** - Set up new client organizations
-- **Team coordination** - Manage content creators and managers
-- **Client reporting** - Generate and share client reports
-- **White-label options** - Customize interface for clients
+**Test Scenarios**:
+- Platform administration testing
+- Global settings configuration
+- Multi-tenant management validation
+- System-wide analytics review
+- Emergency access and troubleshooting
 
-#### Manager
-- **Content strategy** - Plan and coordinate content calendars
-- **Team coordination** - Assign tasks to content creators
-- **Approval workflows** - Review and approve content
-- **Performance monitoring** - Track content performance
-- **Client communication** - Direct client interaction
+#### 🏢 Agency Owner (agency@allin.demo)
+**Test Credential**: agency@allin.demo / Agency123!@#
+**Role in System**: ADMIN (Agency Level)
 
-#### Content Creator
-- **Content creation** - Write, design, and produce content
-- **Draft management** - Save and organize content drafts
-- **Media handling** - Upload and manage media assets
-- **Basic scheduling** - Schedule approved content
-- **Performance viewing** - See how their content performs
+**Agency Management Features**:
+- ✅ **Multi-Client Management** - Handle multiple client accounts and organizations
+- ✅ **Client Onboarding** - Set up new client organizations and team structures
+- ✅ **Team Coordination** - Manage content creators, managers, and assign teams to clients
+- ✅ **White-Label Access** - Customize branding and interface for client-facing features
+- ✅ **Client Reporting** - Generate and share comprehensive client performance reports
+- ✅ **Billing Management** - Handle client billing, subscriptions, and payment processing
+- ✅ **Resource Allocation** - Distribute team resources across multiple client accounts
+- ✅ **Cross-Client Analytics** - View aggregated performance across all managed clients
+- ✅ **Advanced Workflow Management** - Set up complex approval workflows for different clients
+- ✅ **Client Communication Tools** - Direct client interaction and feedback management
 
-#### Client
-- **View-only access** - Monitor their social media performance
-- **Analytics viewing** - See reports and insights
-- **Content approval** - Approve content before publishing
-- **Communication** - Provide feedback on content
-- **Account information** - View connected social accounts
+**Restricted Access**:
+- ❌ **System Configuration** - Cannot modify platform-wide settings
+- ❌ **Other Agency Data** - Cannot access other agencies' client data
+- ⚠️ **API Access** - Limited to agency-specific endpoints
 
-#### Team Member
-- **Limited collaboration** - Participate in specific projects
-- **Comment and feedback** - Provide input on content
-- **View assigned content** - See content they're involved with
-- **Basic analytics** - View performance of their contributions
+**Test Scenarios**:
+- Multi-client agency workflow testing
+- Client onboarding and management
+- Cross-client reporting and analytics
+- Team assignment and coordination
+- White-label functionality validation
 
-### Permission Matrix
+#### 📋 Content Manager (manager@allin.demo)
+**Test Credential**: manager@allin.demo / Manager123!@#
+**Role in System**: ADMIN (Organization Level)
 
-| Feature | Super Admin | Org Admin | Agency Owner | Manager | Creator | Client | Team |
-|---------|-------------|-----------|--------------|---------|---------|--------|------|
-| Create Content | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ⚠️ |
-| Approve Content | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ |
-| Manage Social Accounts | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| View Analytics | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ |
-| Manage Team | ✅ | ✅ | ✅ | ⚠️ | ❌ | ❌ | ❌ |
-| Billing & Subscriptions | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| AI Features | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ⚠️ |
-| API Access | ✅ | ✅ | ✅ | ⚠️ | ❌ | ❌ | ❌ |
+**Content Strategy Features**:
+- ✅ **Content Calendar Management** - Plan and coordinate comprehensive content calendars
+- ✅ **Team Coordination** - Assign tasks to content creators and monitor progress
+- ✅ **Approval Workflows** - Review, approve, or reject content before publishing
+- ✅ **Performance Monitoring** - Track content performance and team productivity
+- ✅ **Social Account Management** - Connect and manage organization's social media accounts
+- ✅ **Advanced Scheduling** - Set up complex scheduling rules and recurring posts
+- ✅ **Campaign Management** - Create and manage multi-platform marketing campaigns
+- ✅ **Analytics Dashboard** - Access to detailed analytics and reporting features
+- ✅ **AI Content Tools** - Full access to AI-powered content generation and optimization
+- ✅ **Media Library Management** - Organize and manage all media assets
+- ✅ **Template Management** - Create and manage content templates for the team
 
-*Legend: ✅ Full Access, ⚠️ Limited Access, ❌ No Access*
+**Limited Access**:
+- ⚠️ **Team Management** - Can assign tasks but cannot hire/fire team members
+- ⚠️ **Billing Management** - View billing info but cannot modify payment methods
+- ❌ **Organization Settings** - Cannot modify organization-level settings
+
+**Test Scenarios**:
+- Content planning and strategy testing
+- Team workflow coordination
+- Approval process validation
+- Campaign management and analytics
+- AI-powered content optimization
+
+#### ✏️ Content Creator (creator@allin.demo)
+**Test Credential**: creator@allin.demo / Creator123!@#
+**Role in System**: USER (Content Creation Focus)
+
+**Content Creation Features**:
+- ✅ **Content Writing & Design** - Create engaging text, image, and video content
+- ✅ **AI Writing Assistant** - Access to AI-powered content generation tools
+- ✅ **Draft Management** - Save, organize, and manage multiple content drafts
+- ✅ **Media Upload & Editing** - Upload images/videos and use basic editing tools
+- ✅ **Content Templates** - Use pre-built templates for consistent content creation
+- ✅ **Basic Scheduling** - Schedule approved content for optimal posting times
+- ✅ **Performance Viewing** - View how their published content performs
+- ✅ **Collaboration Tools** - Comment on content and collaborate with team members
+- ✅ **Brand Guidelines** - Access to organization's brand guidelines and assets
+- ✅ **Hashtag Research** - Use AI-powered hashtag suggestions and research tools
+
+**Restricted Access**:
+- ❌ **Account Management** - Cannot connect or disconnect social media accounts
+- ❌ **Team Management** - Cannot manage other team members
+- ❌ **Advanced Analytics** - Limited to basic performance metrics
+- ❌ **Billing Access** - No access to billing or subscription information
+- ⚠️ **Publishing Rights** - Content may require approval before publishing
+
+**Test Scenarios**:
+- Content creation workflow testing
+- AI-assisted content generation
+- Draft management and collaboration
+- Basic scheduling and performance tracking
+- Template usage and brand compliance
+
+#### 👁️ Client Viewer (client@allin.demo)
+**Test Credential**: client@allin.demo / Client123!@#
+**Role in System**: USER (View-Only Access)
+
+**Monitoring & Approval Features**:
+- ✅ **Performance Dashboard** - Monitor social media performance and growth metrics
+- ✅ **Analytics Viewing** - Access to comprehensive reports and insights about their accounts
+- ✅ **Content Approval** - Review and approve content before it gets published
+- ✅ **Account Information** - View connected social media accounts and their status
+- ✅ **Campaign Reports** - View detailed reports on marketing campaigns and performance
+- ✅ **Communication Tools** - Provide feedback on content and communicate with the team
+- ✅ **Calendar Viewing** - See scheduled content and upcoming posts
+- ✅ **Export Reports** - Download analytics reports and performance data
+- ✅ **Real-time Notifications** - Receive alerts about content performance and approvals needed
+
+**Restricted Access**:
+- ❌ **Content Creation** - Cannot create or edit content
+- ❌ **Account Management** - Cannot connect or modify social media accounts
+- ❌ **Team Management** - No access to team management features
+- ❌ **System Settings** - Cannot modify any platform or organization settings
+- ❌ **Advanced Features** - No access to AI tools, scheduling, or workflow management
+
+**Test Scenarios**:
+- Client approval workflow testing
+- Performance monitoring and reporting
+- Communication and feedback systems
+- Read-only access validation
+- Report generation and export
+
+#### 👥 Team Member (team@allin.demo)
+**Test Credential**: team@allin.demo / Team123!@#
+**Role in System**: USER (Limited Collaboration)
+
+**Collaboration Features**:
+- ✅ **Project Participation** - Participate in specific assigned projects and campaigns
+- ✅ **Comment & Feedback** - Provide input and feedback on content and projects
+- ✅ **Assigned Content Viewing** - View content and projects they're specifically assigned to
+- ✅ **Basic Performance Metrics** - View performance of content they've contributed to
+- ✅ **File Sharing** - Share files and collaborate on assigned projects
+- ✅ **Task Management** - View and update status of assigned tasks
+- ✅ **Team Communication** - Participate in team discussions and messaging
+- ✅ **Notification Preferences** - Configure notifications for assigned projects
+
+**Restricted Access**:
+- ❌ **Content Creation** - Cannot independently create new content
+- ❌ **Publishing Rights** - Cannot schedule or publish content
+- ❌ **Account Management** - No access to social media account management
+- ❌ **Team Management** - Cannot manage other team members
+- ❌ **Full Analytics** - Limited to performance of their specific contributions
+- ⚠️ **Project Access** - Only assigned projects are visible
+
+**Test Scenarios**:
+- Limited collaboration workflow testing
+- Task assignment and completion
+- Team communication and feedback
+- Restricted access validation
+- Project-specific permissions testing
+
+### Comprehensive Permission Matrix
+
+| Feature Category | Super Admin<br/>(admin@allin.demo) | Agency Owner<br/>(agency@allin.demo) | Content Manager<br/>(manager@allin.demo) | Content Creator<br/>(creator@allin.demo) | Client Viewer<br/>(client@allin.demo) | Team Member<br/>(team@allin.demo) |
+|------------------|-------------------------------------|--------------------------------------|------------------------------------------|---------------------------------------------|---------------------------------------|-----------------------------------|
+| **CONTENT MANAGEMENT** |
+| Create Content | ✅ Full | ✅ Full | ✅ Full | ✅ Full | ❌ None | ⚠️ Assigned only |
+| Edit Content | ✅ All content | ✅ Client content | ✅ Org content | ✅ Own content | ❌ None | ⚠️ Assigned only |
+| Delete Content | ✅ All content | ✅ Client content | ✅ Org content | ⚠️ Own content | ❌ None | ❌ None |
+| Approve Content | ✅ All | ✅ Client content | ✅ Org content | ❌ None | ✅ Review only | ❌ None |
+| Publish Content | ✅ All | ✅ Client content | ✅ Org content | ⚠️ Approved only | ❌ None | ❌ None |
+| Schedule Content | ✅ All | ✅ Client content | ✅ Org content | ✅ Own content | ❌ None | ⚠️ Assigned only |
+| **SOCIAL MEDIA ACCOUNTS** |
+| Connect Accounts | ✅ All platforms | ✅ Client accounts | ✅ Org accounts | ❌ None | ❌ None | ❌ None |
+| Disconnect Accounts | ✅ All | ✅ Client accounts | ✅ Org accounts | ❌ None | ❌ None | ❌ None |
+| View Account Status | ✅ All | ✅ Client accounts | ✅ Org accounts | ✅ View only | ✅ View only | ⚠️ Assigned only |
+| Manage Account Settings | ✅ All | ✅ Client accounts | ✅ Org accounts | ❌ None | ❌ None | ❌ None |
+| **ANALYTICS & REPORTING** |
+| View Basic Analytics | ✅ All | ✅ Client data | ✅ Org data | ✅ Own content | ✅ View only | ⚠️ Assigned content |
+| Advanced Analytics | ✅ All | ✅ Client data | ✅ Org data | ⚠️ Basic only | ✅ View only | ❌ None |
+| Generate Reports | ✅ All | ✅ Client reports | ✅ Org reports | ⚠️ Basic reports | ✅ View/Export | ❌ None |
+| Export Data | ✅ All | ✅ Client data | ✅ Org data | ⚠️ Own content | ✅ Reports only | ❌ None |
+| Cross-Platform Analytics | ✅ All | ✅ Client accounts | ✅ Org accounts | ⚠️ Basic only | ✅ View only | ❌ None |
+| **TEAM & USER MANAGEMENT** |
+| Create Users | ✅ All | ✅ Client teams | ⚠️ Assign tasks | ❌ None | ❌ None | ❌ None |
+| Delete Users | ✅ All | ✅ Client teams | ❌ None | ❌ None | ❌ None | ❌ None |
+| Assign Roles | ✅ All | ✅ Client teams | ⚠️ Tasks only | ❌ None | ❌ None | ❌ None |
+| Manage Permissions | ✅ All | ✅ Client teams | ❌ None | ❌ None | ❌ None | ❌ None |
+| View Team Activity | ✅ All | ✅ Client teams | ✅ Org team | ⚠️ Collaboration | ❌ None | ⚠️ Own activity |
+| **AI-POWERED FEATURES** |
+| AI Content Generation | ✅ All features | ✅ All features | ✅ All features | ✅ All features | ❌ None | ⚠️ Basic tools |
+| AI Analytics | ✅ All features | ✅ Client data | ✅ Org data | ⚠️ Basic only | ❌ None | ❌ None |
+| AI Optimization | ✅ All features | ✅ All features | ✅ All features | ✅ All features | ❌ None | ⚠️ Assigned content |
+| Performance Prediction | ✅ All | ✅ Client content | ✅ Org content | ✅ Own content | ❌ None | ❌ None |
+| **CALENDAR & SCHEDULING** |
+| View Calendar | ✅ All | ✅ Client calendars | ✅ Org calendar | ✅ Assigned content | ✅ View only | ⚠️ Assigned only |
+| Manage Calendar | ✅ All | ✅ Client calendars | ✅ Org calendar | ⚠️ Own content | ❌ None | ❌ None |
+| Create Campaigns | ✅ All | ✅ Client campaigns | ✅ Org campaigns | ⚠️ Assist only | ❌ None | ❌ None |
+| **BILLING & SUBSCRIPTIONS** |
+| View Billing Info | ✅ All accounts | ✅ Agency billing | ⚠️ View only | ❌ None | ❌ None | ❌ None |
+| Manage Payments | ✅ All accounts | ✅ Agency billing | ❌ None | ❌ None | ❌ None | ❌ None |
+| Upgrade/Downgrade | ✅ All accounts | ✅ Client accounts | ❌ None | ❌ None | ❌ None | ❌ None |
+| **API & INTEGRATIONS** |
+| API Key Management | ✅ All | ✅ Agency keys | ⚠️ View only | ❌ None | ❌ None | ❌ None |
+| Webhook Configuration | ✅ All | ✅ Client webhooks | ⚠️ View only | ❌ None | ❌ None | ❌ None |
+| Third-party Integrations | ✅ All | ✅ Client integrations | ✅ Org integrations | ❌ None | ❌ None | ❌ None |
+| **SYSTEM CONFIGURATION** |
+| Platform Settings | ✅ All | ❌ None | ❌ None | ❌ None | ❌ None | ❌ None |
+| Organization Settings | ✅ All | ✅ Agency settings | ❌ None | ❌ None | ❌ None | ❌ None |
+| Security Settings | ✅ All | ⚠️ Agency level | ❌ None | ❌ None | ❌ None | ❌ None |
+
+**Legend**:
+- ✅ **Full Access** - Complete control over the feature
+- ⚠️ **Limited Access** - Restricted or conditional access
+- ❌ **No Access** - Feature completely unavailable
+
+**Access Level Definitions**:
+- **All** - System-wide access across all organizations
+- **Client data/accounts** - Access limited to agency's client data
+- **Org data/accounts** - Access limited to organization's data
+- **Own content** - Access limited to user's own created content
+- **Assigned only** - Access limited to specifically assigned projects/content
+- **View only** - Read-only access without modification rights
+
+### Priority 2 Enhanced Features Access Matrix
+
+The AllIN platform includes advanced Priority 2 features that provide enhanced capabilities for different user roles. These features include Advanced Dashboard Analytics, Real-time Engagement Monitoring, and Enhanced AI Content Optimization.
+
+| Enhanced Feature | Super Admin<br/>(admin@allin.demo) | Agency Owner<br/>(agency@allin.demo) | Content Manager<br/>(manager@allin.demo) | Content Creator<br/>(creator@allin.demo) | Client Viewer<br/>(client@allin.demo) | Team Member<br/>(team@allin.demo) |
+|------------------|-------------------------------------|--------------------------------------|------------------------------------------|---------------------------------------------|---------------------------------------|-----------------------------------|
+| **ADVANCED DASHBOARD ANALYTICS** |
+| Multi-Platform Performance Insights | ✅ All organizations | ✅ Client accounts | ✅ Organization data | ⚠️ Own content only | ✅ View reports | ❌ No access |
+| Competitive Analysis Tools | ✅ All data | ✅ Client competitors | ✅ Org competitors | ❌ No access | ✅ View reports | ❌ No access |
+| ROI & Revenue Attribution | ✅ All accounts | ✅ Client revenue | ✅ Org revenue | ❌ No access | ✅ View reports | ❌ No access |
+| Custom Analytics Dashboards | ✅ Create/modify all | ✅ Client dashboards | ✅ Org dashboards | ⚠️ View only | ✅ View only | ❌ No access |
+| Advanced Reporting Suite | ✅ All reports | ✅ Client reports | ✅ Org reports | ⚠️ Basic reports | ✅ View/export | ❌ No access |
+| **REAL-TIME ENGAGEMENT MONITORING** |
+| Live Engagement Streaming | ✅ All accounts | ✅ Client accounts | ✅ Org accounts | ✅ Own content | ✅ View only | ⚠️ Assigned content |
+| Custom Alert Configuration | ✅ All accounts | ✅ Client accounts | ✅ Org accounts | ⚠️ Own content | ❌ No access | ❌ No access |
+| Engagement Anomaly Detection | ✅ All accounts | ✅ Client accounts | ✅ Org accounts | ✅ Own content | ✅ View alerts | ❌ No access |
+| Real-time Crisis Management | ✅ All accounts | ✅ Client accounts | ✅ Org accounts | ⚠️ Report issues | ✅ View alerts | ❌ No access |
+| Live Performance Notifications | ✅ All accounts | ✅ Client accounts | ✅ Org accounts | ✅ Own content | ✅ Receive alerts | ⚠️ Assigned content |
+| **ENHANCED AI CONTENT OPTIMIZATION** |
+| Advanced Content Analysis | ✅ All content | ✅ Client content | ✅ Org content | ✅ Own content | ❌ No access | ⚠️ Assigned content |
+| AI Performance Prediction | ✅ All content | ✅ Client content | ✅ Org content | ✅ Own content | ❌ No access | ⚠️ Assigned content |
+| Algorithmic Optimization | ✅ All platforms | ✅ Client platforms | ✅ Org platforms | ✅ All features | ❌ No access | ⚠️ Basic tools |
+| Content Variant Generation | ✅ All content | ✅ Client content | ✅ Org content | ✅ Own content | ❌ No access | ⚠️ Assigned content |
+| A/B Testing Recommendations | ✅ All content | ✅ Client content | ✅ Org content | ✅ Own content | ❌ No access | ❌ No access |
+| Engagement Factor Analysis | ✅ All content | ✅ Client content | ✅ Org content | ✅ Own content | ❌ No access | ❌ No access |
+| Viral Potential Scoring | ✅ All content | ✅ Client content | ✅ Org content | ✅ Own content | ✅ View scores | ❌ No access |
+
+### Feature Testing Scenarios by Role
+
+**🔑 Super Admin Testing**:
+- Test all Priority 2 features across multiple organizations
+- Validate system-wide analytics aggregation
+- Configure global AI optimization settings
+- Monitor platform-wide engagement patterns
+- Test crisis management workflows
+
+**🏢 Agency Owner Testing**:
+- Multi-client dashboard analytics comparison
+- Cross-client engagement monitoring setup
+- Client-specific AI optimization strategies
+- White-label reporting with enhanced features
+- Resource allocation across client campaigns
+
+**📋 Content Manager Testing**:
+- Team performance analytics and insights
+- Content approval workflow with AI recommendations
+- Campaign optimization using AI predictions
+- Real-time engagement monitoring for brand protection
+- Advanced scheduling with performance optimization
+
+**✏️ Content Creator Testing**:
+- AI-assisted content creation with optimization
+- Performance prediction for personal content
+- Real-time engagement feedback on published content
+- Content variant testing and experimentation
+- Personal analytics and improvement suggestions
+
+**👁️ Client Viewer Testing**:
+- Comprehensive performance dashboards viewing
+- Real-time engagement monitoring alerts
+- Export capabilities for enhanced analytics reports
+- Campaign performance insights and trends
+- ROI and attribution reporting access
+
+**👥 Team Member Testing**:
+- Limited access to assigned project analytics
+- Basic AI tools for content collaboration
+- Real-time notifications for assigned content
+- Performance metrics for contributed content
+- Restricted access validation for enhanced features
 
 ---
 

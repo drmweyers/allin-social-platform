@@ -8,4 +8,208 @@ const MASTER_CREDENTIALS = {
   creator: { email: 'creator@allin.demo', password: 'Creator123!@#' },
   client: { email: 'client@allin.demo', password: 'Client123!@#' },
   team: { email: 'team@allin.demo', password: 'Team123!@#' },
-};\n\n// Helper function for authentication\nasync function loginAs(page: Page, role: keyof typeof MASTER_CREDENTIALS) {\n  const credentials = MASTER_CREDENTIALS[role];\n  \n  await page.goto('/auth/login');\n  await page.fill('[data-testid=\"email-input\"]', credentials.email);\n  await page.fill('[data-testid=\"password-input\"]', credentials.password);\n  await page.click('[data-testid=\"login-button\"]');\n  \n  // Wait for successful login\n  await page.waitForSelector('[data-testid=\"dashboard-header\"]', { timeout: 10000 });\n}\n\n// Helper function to wait for chart loading\nasync function waitForChartLoad(page: Page, chartSelector: string) {\n  await page.waitForSelector(chartSelector, { timeout: 15000 });\n  await page.waitForFunction(\n    (selector) => {\n      const chart = document.querySelector(selector);\n      return chart && !chart.classList.contains('loading');\n    },\n    chartSelector,\n    { timeout: 10000 }\n  );\n}\n\n// Helper function to mock API responses\nasync function mockAnalyticsAPI(page: Page) {\n  await page.route('**/api/analytics/**', (route) => {\n    const url = route.request().url();\n    \n    if (url.includes('/dashboard')) {\n      route.fulfill({\n        status: 200,\n        contentType: 'application/json',\n        body: JSON.stringify({\n          success: true,\n          data: {\n            totalEngagement: 12450,\n            engagementGrowth: 15.7,\n            viralContent: [\n              {\n                id: 'viral-post-1',\n                platform: 'instagram',\n                content: 'Viral content example',\n                viralityScore: 0.89,\n                engagement: { likes: 5000, comments: 800, shares: 1200 },\n              },\n            ],\n            realTimeMetrics: {\n              activeUsers: 342,\n              currentEngagementRate: 4.7,\n              postsLastHour: 8,\n            },\n          },\n        }),\n      });\n    } else if (url.includes('/predict-performance')) {\n      route.fulfill({\n        status: 200,\n        contentType: 'application/json',\n        body: JSON.stringify({\n          success: true,\n          data: {\n            expectedEngagement: { likes: 150, comments: 25, shares: 8 },\n            confidence: 0.82,\n            factors: ['hashtags', 'posting time', 'content type'],\n            viralityPotential: 0.34,\n          },\n        }),\n      });\n    } else {\n      route.continue();\n    }\n  });\n}\n\n// Helper function to mock visualization API\nasync function mockVisualizationAPI(page: Page) {\n  await page.route('**/api/visualizations/**', (route) => {\n    const url = route.request().url();\n    \n    if (url.includes('/dashboard-charts')) {\n      route.fulfill({\n        status: 200,\n        contentType: 'application/json',\n        body: JSON.stringify({\n          success: true,\n          data: {\n            engagementTrend: {\n              labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5'],\n              datasets: [{\n                label: 'Total Engagement',\n                data: [245, 389, 567, 423, 678],\n                borderColor: '#3B82F6',\n                backgroundColor: 'rgba(59, 130, 246, 0.1)',\n              }],\n            },\n            platformPerformance: {\n              labels: ['Instagram', 'Facebook', 'Twitter', 'LinkedIn', 'TikTok'],\n              datasets: [{\n                data: [1245, 892, 456, 254, 678],\n                backgroundColor: ['#E1306C', '#1877F2', '#1DA1F2', '#0A66C2', '#000000'],\n              }],\n            },\n          },\n          metadata: {\n            generatedAt: new Date().toISOString(),\n            refreshInterval: 60000,\n          },\n        }),\n      });\n    } else {\n      route.continue();\n    }\n  });\n}\n\ntest.describe('Priority 2 Enhanced Analytics - E2E Workflows', () => {\n  test.beforeEach(async ({ page }) => {\n    // Set up API mocks\n    await mockAnalyticsAPI(page);\n    await mockVisualizationAPI(page);\n  });\n\n  test.describe('Advanced Dashboard Analytics Journey', () => {\n    test('Complete Advanced Analytics Workflow - Admin User', async ({ page }) => {\n      // Login as admin for full access\n      await loginAs(page, 'admin');\n      \n      // Navigate to advanced analytics dashboard\n      await page.click('[data-testid=\"nav-analytics\"]');\n      await page.waitForSelector('[data-testid=\"analytics-dashboard\"]');\n      \n      // Verify comprehensive dashboard metrics display\n      await expect(page.locator('[data-testid=\"dashboard-summary\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"total-engagement\"]')).toContainText('12,450');\n      await expect(page.locator('[data-testid=\"engagement-growth\"]')).toContainText('15.7%');\n      \n      // Check viral content alerts section\n      await expect(page.locator('[data-testid=\"viral-content-alerts\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"viral-post-1\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"virality-score\"]')).toContainText('89%');\n      \n      // Verify real-time metrics section\n      await expect(page.locator('[data-testid=\"real-time-metrics\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"active-users\"]')).toContainText('342');\n      await expect(page.locator('[data-testid=\"current-engagement-rate\"]')).toContainText('4.7%');\n      \n      // Test engagement trend chart\n      await waitForChartLoad(page, '[data-testid=\"engagement-trend-chart\"]');\n      await expect(page.locator('[data-testid=\"engagement-trend-chart\"]')).toBeVisible();\n      \n      // Test platform performance chart\n      await waitForChartLoad(page, '[data-testid=\"platform-performance-chart\"]');\n      await expect(page.locator('[data-testid=\"platform-performance-chart\"]')).toBeVisible();\n      \n      // Test drill-down functionality\n      await page.click('[data-testid=\"engagement-chart-datapoint\"]');\n      await expect(page.locator('[data-testid=\"drill-down-view\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"breadcrumb-navigation\"]')).toBeVisible();\n      \n      // Test export functionality\n      await page.click('[data-testid=\"export-button\"]');\n      await page.selectOption('[data-testid=\"export-format\"]', 'csv');\n      await page.click('[data-testid=\"generate-export\"]');\n      await expect(page.locator('[data-testid=\"download-link\"]')).toBeVisible();\n      \n      // Verify download link is generated\n      const downloadLink = await page.locator('[data-testid=\"download-link\"]').getAttribute('href');\n      expect(downloadLink).toContain('/api/visualizations/download/');\n    });\n\n    test('Performance Prediction Workflow - Manager User', async ({ page }) => {\n      await loginAs(page, 'manager');\n      \n      // Navigate to content performance prediction\n      await page.goto('/analytics/performance-prediction');\n      \n      // Input content for analysis\n      await page.fill('[data-testid=\"content-input\"]', 'Exciting product launch! 🚀 What do you think about this innovation? #innovation #tech');\n      await page.selectOption('[data-testid=\"platform-select\"]', 'instagram');\n      \n      // Trigger performance prediction\n      await page.click('[data-testid=\"predict-performance\"]');\n      \n      // Wait for prediction results\n      await page.waitForSelector('[data-testid=\"prediction-results\"]');\n      \n      // Verify prediction metrics\n      await expect(page.locator('[data-testid=\"expected-likes\"]')).toContainText('150');\n      await expect(page.locator('[data-testid=\"expected-comments\"]')).toContainText('25');\n      await expect(page.locator('[data-testid=\"expected-shares\"]')).toContainText('8');\n      await expect(page.locator('[data-testid=\"confidence-score\"]')).toContainText('82%');\n      \n      // Check contributing factors\n      await expect(page.locator('[data-testid=\"prediction-factors\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"factor-hashtags\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"factor-posting-time\"]')).toBeVisible();\n      \n      // Verify virality potential\n      await expect(page.locator('[data-testid=\"virality-potential\"]')).toContainText('34%');\n      \n      // Test different platforms\n      await page.selectOption('[data-testid=\"platform-select\"]', 'facebook');\n      await page.click('[data-testid=\"predict-performance\"]');\n      await page.waitForSelector('[data-testid=\"prediction-results\"]');\n      \n      // Results should update for different platform\n      await expect(page.locator('[data-testid=\"platform-specific-insights\"]')).toBeVisible();\n    });\n\n    test('Viral Content Detection and Analysis - Agency User', async ({ page }) => {\n      await loginAs(page, 'agency');\n      \n      // Navigate to viral content analysis\n      await page.goto('/analytics/viral-analysis');\n      \n      // Verify viral content detection section\n      await expect(page.locator('[data-testid=\"viral-content-section\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"viral-post-1\"]')).toBeVisible();\n      \n      // Click on viral content for detailed analysis\n      await page.click('[data-testid=\"viral-post-1\"]');\n      \n      // Verify detailed viral analysis modal\n      await expect(page.locator('[data-testid=\"viral-analysis-modal\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"virality-score-detailed\"]')).toContainText('89%');\n      await expect(page.locator('[data-testid=\"engagement-breakdown\"]')).toBeVisible();\n      \n      // Check engagement metrics\n      await expect(page.locator('[data-testid=\"viral-likes\"]')).toContainText('5,000');\n      await expect(page.locator('[data-testid=\"viral-comments\"]')).toContainText('800');\n      await expect(page.locator('[data-testid=\"viral-shares\"]')).toContainText('1,200');\n      \n      // Test viral pattern analysis\n      await expect(page.locator('[data-testid=\"viral-patterns\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"content-analysis\"]')).toBeVisible();\n      \n      // Test similar content suggestions\n      await page.click('[data-testid=\"generate-similar-content\"]');\n      await expect(page.locator('[data-testid=\"similar-content-suggestions\"]')).toBeVisible();\n      \n      // Close modal and test filtering\n      await page.click('[data-testid=\"close-modal\"]');\n      await page.selectOption('[data-testid=\"platform-filter\"]', 'instagram');\n      await expect(page.locator('[data-testid=\"filtered-viral-content\"]')).toBeVisible();\n    });\n\n    test('Real-time Analytics Monitoring - Creator User', async ({ page }) => {\n      await loginAs(page, 'creator');\n      \n      // Navigate to real-time monitoring\n      await page.goto('/analytics/real-time');\n      \n      // Verify real-time dashboard is loaded\n      await expect(page.locator('[data-testid=\"real-time-dashboard\"]')).toBeVisible();\n      \n      // Check live indicators\n      await expect(page.locator('[data-testid=\"live-indicator\"]')).toHaveClass(/connected/);\n      await expect(page.locator('[data-testid=\"last-updated\"]')).toBeVisible();\n      \n      // Verify real-time metrics\n      await expect(page.locator('[data-testid=\"live-engagement-rate\"]')).toContainText('4.7%');\n      await expect(page.locator('[data-testid=\"active-users-count\"]')).toContainText('342');\n      \n      // Test real-time chart updates\n      await waitForChartLoad(page, '[data-testid=\"real-time-engagement-chart\"]');\n      \n      // Wait for chart update (simulated)\n      await page.waitForTimeout(6000);\n      \n      // Check that last updated time changed\n      const updatedTime = await page.locator('[data-testid=\"last-updated\"]').textContent();\n      expect(updatedTime).toContain('seconds ago');\n      \n      // Test alert configuration\n      await page.click('[data-testid=\"alert-settings\"]');\n      await expect(page.locator('[data-testid=\"alert-configuration\"]')).toBeVisible();\n      \n      // Configure engagement spike alert\n      await page.fill('[data-testid=\"spike-threshold\"]', '300');\n      await page.check('[data-testid=\"email-notifications\"]');\n      await page.click('[data-testid=\"save-alert-settings\"]');\n      \n      // Verify alert saved\n      await expect(page.locator('[data-testid=\"alert-saved-confirmation\"]')).toBeVisible();\n      \n      // Test alert simulation\n      await page.click('[data-testid=\"test-alert\"]');\n      await expect(page.locator('[data-testid=\"alert-notification\"]')).toBeVisible();\n    });\n  });\n\n  test.describe('Interactive Visualizations Journey', () => {\n    test('Interactive Charts and Data Exploration - Admin User', async ({ page }) => {\n      await loginAs(page, 'admin');\n      \n      // Navigate to interactive visualizations\n      await page.goto('/analytics/visualizations');\n      \n      // Verify visualization dashboard\n      await expect(page.locator('[data-testid=\"visualization-dashboard\"]')).toBeVisible();\n      \n      // Test chart interactions - hover for tooltips\n      await page.hover('[data-testid=\"engagement-chart-point\"]');\n      await expect(page.locator('[data-testid=\"chart-tooltip\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"tooltip-value\"]')).toContainText('567');\n      \n      // Test platform performance chart interaction\n      await page.click('[data-testid=\"platform-instagram-segment\"]');\n      await expect(page.locator('[data-testid=\"platform-details-modal\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"instagram-detailed-metrics\"]')).toBeVisible();\n      \n      // Test custom chart creation\n      await page.click('[data-testid=\"create-custom-chart\"]');\n      await expect(page.locator('[data-testid=\"chart-builder\"]')).toBeVisible();\n      \n      // Configure custom chart\n      await page.selectOption('[data-testid=\"chart-type\"]', 'line');\n      await page.check('[data-testid=\"metric-engagement\"]');\n      await page.check('[data-testid=\"metric-reach\"]');\n      await page.selectOption('[data-testid=\"timeframe\"]', '30d');\n      \n      // Generate custom chart\n      await page.click('[data-testid=\"generate-chart\"]');\n      await waitForChartLoad(page, '[data-testid=\"custom-chart\"]');\n      await expect(page.locator('[data-testid=\"custom-chart\"]')).toBeVisible();\n      \n      // Test chart export functionality\n      await page.click('[data-testid=\"export-chart\"]');\n      await page.selectOption('[data-testid=\"export-format\"]', 'png');\n      await page.click('[data-testid=\"download-chart\"]');\n      \n      // Verify export initiated\n      await expect(page.locator('[data-testid=\"export-progress\"]')).toBeVisible();\n      \n      // Test drill-down functionality\n      await page.click('[data-testid=\"drill-down-button\"]');\n      await expect(page.locator('[data-testid=\"drill-down-interface\"]')).toBeVisible();\n      \n      // Select data point for drill-down\n      await page.click('[data-testid=\"engagement-spike-point\"]');\n      await expect(page.locator('[data-testid=\"detailed-breakdown\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"contributing-posts\"]')).toBeVisible();\n    });\n\n    test('Comparative Analytics Workflow - Agency User', async ({ page }) => {\n      await loginAs(page, 'agency');\n      \n      // Navigate to comparative analytics\n      await page.goto('/analytics/comparative');\n      \n      // Verify comparative dashboard\n      await expect(page.locator('[data-testid=\"comparative-dashboard\"]')).toBeVisible();\n      \n      // Test client comparison\n      await page.click('[data-testid=\"add-comparison\"]');\n      await page.selectOption('[data-testid=\"client-selector\"]', 'client-2');\n      await page.click('[data-testid=\"add-to-comparison\"]');\n      \n      // Verify comparison chart updated\n      await waitForChartLoad(page, '[data-testid=\"comparison-chart\"]');\n      await expect(page.locator('[data-testid=\"client-1-data\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"client-2-data\"]')).toBeVisible();\n      \n      // Test industry benchmarking\n      await page.click('[data-testid=\"industry-benchmarks\"]');\n      await expect(page.locator('[data-testid=\"benchmark-comparison\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"industry-average\"]')).toBeVisible();\n      \n      // Test performance ranking\n      await page.click('[data-testid=\"performance-ranking\"]');\n      await expect(page.locator('[data-testid=\"client-rankings\"]')).toBeVisible();\n      \n      // Verify ranking metrics\n      await expect(page.locator('[data-testid=\"top-performer\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"improvement-opportunities\"]')).toBeVisible();\n    });\n  });\n\n  test.describe('AI Content Optimization Journey', () => {\n    test('AI-Powered Content Analysis and Optimization - Creator User', async ({ page }) => {\n      await loginAs(page, 'creator');\n      \n      // Navigate to AI content optimization\n      await page.goto('/content/ai-optimization');\n      \n      // Input content for analysis\n      const testContent = 'Check out our new product launch! We\\'re excited to share this innovation with you.';\n      await page.fill('[data-testid=\"content-input\"]', testContent);\n      await page.selectOption('[data-testid=\"platform-select\"]', 'instagram');\n      \n      // Trigger AI analysis\n      await page.click('[data-testid=\"analyze-content\"]');\n      \n      // Wait for analysis results\n      await page.waitForSelector('[data-testid=\"analysis-results\"]');\n      \n      // Verify optimization score\n      await expect(page.locator('[data-testid=\"optimization-score\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"score-value\"]')).toContainText(/\\d+/);\n      \n      // Check engagement prediction\n      await expect(page.locator('[data-testid=\"engagement-prediction\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"predicted-likes\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"predicted-comments\"]')).toBeVisible();\n      \n      // Verify improvement suggestions\n      await expect(page.locator('[data-testid=\"improvement-suggestions\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"suggestions-list\"]')).toBeVisible();\n      \n      // Test variant generation\n      await page.click('[data-testid=\"generate-variants\"]');\n      await page.waitForSelector('[data-testid=\"content-variants\"]');\n      \n      // Verify variants generated\n      await expect(page.locator('[data-testid=\"variant-1\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"variant-2\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"variant-3\"]')).toBeVisible();\n      \n      // Test A/B testing suggestions\n      await page.click('[data-testid=\"ab-test-suggestions\"]');\n      await expect(page.locator('[data-testid=\"test-recommendations\"]')).toBeVisible();\n      \n      // Verify A/B test scenarios\n      await expect(page.locator('[data-testid=\"emoji-test\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"hashtag-test\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"cta-test\"]')).toBeVisible();\n      \n      // Apply optimization\n      await page.click('[data-testid=\"apply-optimization\"]');\n      await expect(page.locator('[data-testid=\"optimized-content\"]')).toBeVisible();\n      \n      // Verify optimized content is different from original\n      const optimizedContent = await page.locator('[data-testid=\"optimized-content\"]').textContent();\n      expect(optimizedContent).not.toBe(testContent);\n    });\n\n    test('Advanced Content Analytics Workflow - Manager User', async ({ page }) => {\n      await loginAs(page, 'manager');\n      \n      // Navigate to content analytics\n      await page.goto('/content/analytics');\n      \n      // Upload content for batch analysis\n      await page.click('[data-testid=\"upload-content\"]');\n      \n      // Simulate multiple content pieces\n      const contentPieces = [\n        'Product announcement with exciting news!',\n        'Behind the scenes look at our team',\n        'Customer testimonial and review',\n      ];\n      \n      for (let i = 0; i < contentPieces.length; i++) {\n        await page.fill(`[data-testid=\"content-${i}\"]`, contentPieces[i]);\n      }\n      \n      // Analyze all content\n      await page.click('[data-testid=\"analyze-all\"]');\n      await page.waitForSelector('[data-testid=\"batch-analysis-results\"]');\n      \n      // Verify comparative analysis\n      await expect(page.locator('[data-testid=\"content-performance-comparison\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"best-performing-content\"]')).toBeVisible();\n      \n      // Test content optimization recommendations\n      await page.click('[data-testid=\"optimization-insights\"]');\n      await expect(page.locator('[data-testid=\"optimization-summary\"]')).toBeVisible();\n      \n      // Verify insights categories\n      await expect(page.locator('[data-testid=\"emotional-triggers\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"visual-elements\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"engagement-factors\"]')).toBeVisible();\n      \n      // Test platform-specific optimization\n      await page.selectOption('[data-testid=\"platform-optimization\"]', 'linkedin');\n      await page.click('[data-testid=\"optimize-for-platform\"]');\n      \n      // Verify platform-specific suggestions\n      await expect(page.locator('[data-testid=\"linkedin-optimization\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"professional-tone-suggestions\"]')).toBeVisible();\n    });\n  });\n\n  test.describe('Cross-Platform Integration Workflows', () => {\n    test('Multi-Platform Analytics Synchronization - Admin User', async ({ page }) => {\n      await loginAs(page, 'admin');\n      \n      // Navigate to cross-platform analytics\n      await page.goto('/analytics/cross-platform');\n      \n      // Verify all platforms are connected\n      await expect(page.locator('[data-testid=\"platform-instagram\"]')).toHaveClass(/connected/);\n      await expect(page.locator('[data-testid=\"platform-facebook\"]')).toHaveClass(/connected/);\n      await expect(page.locator('[data-testid=\"platform-twitter\"]')).toHaveClass(/connected/);\n      await expect(page.locator('[data-testid=\"platform-linkedin\"]')).toHaveClass(/connected/);\n      \n      // Test unified analytics view\n      await page.click('[data-testid=\"unified-view\"]');\n      await expect(page.locator('[data-testid=\"cross-platform-metrics\"]')).toBeVisible();\n      \n      // Verify consolidated engagement metrics\n      await expect(page.locator('[data-testid=\"total-cross-platform-engagement\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"platform-breakdown\"]')).toBeVisible();\n      \n      // Test cross-platform content performance\n      await page.click('[data-testid=\"content-performance-tab\"]');\n      await expect(page.locator('[data-testid=\"cross-platform-content-analysis\"]')).toBeVisible();\n      \n      // Verify content performs differently across platforms\n      await expect(page.locator('[data-testid=\"platform-performance-differences\"]')).toBeVisible();\n      \n      // Test audience overlap analysis\n      await page.click('[data-testid=\"audience-overlap\"]');\n      await expect(page.locator('[data-testid=\"audience-venn-diagram\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"overlap-insights\"]')).toBeVisible();\n    });\n\n    test('Integrated Campaign Analytics - Agency User', async ({ page }) => {\n      await loginAs(page, 'agency');\n      \n      // Navigate to campaign analytics\n      await page.goto('/campaigns/analytics');\n      \n      // Create new campaign for tracking\n      await page.click('[data-testid=\"create-campaign\"]');\n      await page.fill('[data-testid=\"campaign-name\"]', 'Cross-Platform Test Campaign');\n      \n      // Select platforms for campaign\n      await page.check('[data-testid=\"campaign-instagram\"]');\n      await page.check('[data-testid=\"campaign-facebook\"]');\n      await page.check('[data-testid=\"campaign-twitter\"]');\n      \n      await page.click('[data-testid=\"save-campaign\"]');\n      \n      // Verify campaign created\n      await expect(page.locator('[data-testid=\"campaign-created-success\"]')).toBeVisible();\n      \n      // Navigate to campaign dashboard\n      await page.click('[data-testid=\"view-campaign-analytics\"]');\n      \n      // Verify integrated campaign metrics\n      await expect(page.locator('[data-testid=\"campaign-overview\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"cross-platform-reach\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"unified-engagement-rate\"]')).toBeVisible();\n      \n      // Test platform comparison within campaign\n      await page.click('[data-testid=\"platform-comparison\"]');\n      await expect(page.locator('[data-testid=\"platform-performance-chart\"]')).toBeVisible();\n      \n      // Verify performance metrics by platform\n      await expect(page.locator('[data-testid=\"instagram-campaign-metrics\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"facebook-campaign-metrics\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"twitter-campaign-metrics\"]')).toBeVisible();\n      \n      // Test campaign optimization suggestions\n      await page.click('[data-testid=\"optimization-recommendations\"]');\n      await expect(page.locator('[data-testid=\"campaign-optimization-insights\"]')).toBeVisible();\n    });\n  });\n\n  test.describe('Error Handling and Resilience', () => {\n    test('Graceful Error Handling in Analytics Dashboard', async ({ page }) => {\n      await loginAs(page, 'admin');\n      \n      // Simulate API failure\n      await page.route('**/api/analytics/dashboard', (route) => {\n        route.fulfill({\n          status: 500,\n          contentType: 'application/json',\n          body: JSON.stringify({ error: 'Internal server error' }),\n        });\n      });\n      \n      // Navigate to analytics dashboard\n      await page.goto('/analytics/dashboard');\n      \n      // Verify error handling\n      await expect(page.locator('[data-testid=\"error-message\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"retry-button\"]')).toBeVisible();\n      \n      // Test retry functionality\n      await page.route('**/api/analytics/dashboard', (route) => {\n        route.fulfill({\n          status: 200,\n          contentType: 'application/json',\n          body: JSON.stringify({\n            success: true,\n            data: { totalEngagement: 12450 },\n          }),\n        });\n      });\n      \n      await page.click('[data-testid=\"retry-button\"]');\n      await expect(page.locator('[data-testid=\"dashboard-summary\"]')).toBeVisible();\n    });\n\n    test('Network Connectivity Issues Handling', async ({ page }) => {\n      await loginAs(page, 'manager');\n      \n      // Navigate to real-time analytics\n      await page.goto('/analytics/real-time');\n      \n      // Simulate network disconnection\n      await page.setOffline(true);\n      \n      // Verify offline indicator\n      await expect(page.locator('[data-testid=\"offline-indicator\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"cached-data-notice\"]')).toBeVisible();\n      \n      // Restore connection\n      await page.setOffline(false);\n      \n      // Verify reconnection\n      await expect(page.locator('[data-testid=\"online-indicator\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"data-syncing\"]')).toBeVisible();\n    });\n  });\n\n  test.describe('Performance and Accessibility', () => {\n    test('Analytics Dashboard Performance', async ({ page }) => {\n      await loginAs(page, 'admin');\n      \n      const startTime = Date.now();\n      \n      // Navigate to analytics dashboard\n      await page.goto('/analytics/dashboard');\n      \n      // Wait for all charts to load\n      await Promise.all([\n        waitForChartLoad(page, '[data-testid=\"engagement-trend-chart\"]'),\n        waitForChartLoad(page, '[data-testid=\"platform-performance-chart\"]'),\n        waitForChartLoad(page, '[data-testid=\"follower-growth-chart\"]'),\n      ]);\n      \n      const loadTime = Date.now() - startTime;\n      \n      // Verify performance requirements\n      expect(loadTime).toBeLessThan(5000); // Should load within 5 seconds\n      \n      // Test chart interaction performance\n      const interactionStart = Date.now();\n      await page.hover('[data-testid=\"engagement-chart-point\"]');\n      await page.waitForSelector('[data-testid=\"chart-tooltip\"]');\n      const interactionTime = Date.now() - interactionStart;\n      \n      expect(interactionTime).toBeLessThan(500); // Should respond within 500ms\n    });\n\n    test('Accessibility Compliance', async ({ page }) => {\n      await loginAs(page, 'admin');\n      await page.goto('/analytics/dashboard');\n      \n      // Test keyboard navigation\n      await page.keyboard.press('Tab');\n      await expect(page.locator(':focus')).toBeVisible();\n      \n      // Test ARIA labels\n      const chartElements = await page.locator('[role=\"img\"]').all();\n      for (const element of chartElements) {\n        const ariaLabel = await element.getAttribute('aria-label');\n        expect(ariaLabel).toBeTruthy();\n      }\n      \n      // Test color contrast (basic check)\n      await expect(page.locator('[data-testid=\"high-contrast-mode\"]')).toBeVisible();\n      \n      // Test screen reader compatibility\n      await expect(page.locator('[aria-live=\"polite\"]')).toBeVisible();\n    });\n  });\n\n  test.describe('User Role Permissions', () => {\n    test('Client User Limited Access', async ({ page }) => {\n      await loginAs(page, 'client');\n      \n      // Navigate to analytics\n      await page.goto('/analytics/dashboard');\n      \n      // Verify limited access indicators\n      await expect(page.locator('[data-testid=\"limited-access-notice\"]')).toBeVisible();\n      \n      // Verify certain features are hidden\n      await expect(page.locator('[data-testid=\"advanced-analytics\"]')).not.toBeVisible();\n      await expect(page.locator('[data-testid=\"ai-optimization\"]')).not.toBeVisible();\n      \n      // But basic metrics should be visible\n      await expect(page.locator('[data-testid=\"basic-engagement-metrics\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"post-performance\"]')).toBeVisible();\n    });\n\n    test('Team Member Collaborative Access', async ({ page }) => {\n      await loginAs(page, 'team');\n      \n      // Navigate to analytics\n      await page.goto('/analytics/dashboard');\n      \n      // Verify team-level access\n      await expect(page.locator('[data-testid=\"team-analytics-view\"]')).toBeVisible();\n      \n      // Should have access to content analytics but not organizational settings\n      await expect(page.locator('[data-testid=\"content-performance\"]')).toBeVisible();\n      await expect(page.locator('[data-testid=\"organization-settings\"]')).not.toBeVisible();\n      \n      // Test collaboration features\n      await page.click('[data-testid=\"share-insights\"]');\n      await expect(page.locator('[data-testid=\"sharing-options\"]')).toBeVisible();\n    });\n  });\n});
+};
+
+// Helper function for authentication
+async function loginAs(page: Page, role: keyof typeof MASTER_CREDENTIALS) {
+  const credentials = MASTER_CREDENTIALS[role];
+  
+  await page.goto('/auth/login');
+  await page.fill('[data-testid="email-input"]', credentials.email);
+  await page.fill('[data-testid="password-input"]', credentials.password);
+  await page.click('[data-testid="login-button"]');
+  
+  // Wait for successful login
+  await page.waitForSelector('[data-testid="dashboard-header"]', { timeout: 10000 });
+}
+
+// Helper function to wait for chart loading
+async function waitForChartLoad(page: Page, chartSelector: string) {
+  await page.waitForSelector(chartSelector, { timeout: 15000 });
+  await page.waitForFunction(
+    (selector) => {
+      const chart = document.querySelector(selector);
+      return chart && !chart.classList.contains('loading');
+    },
+    chartSelector,
+    { timeout: 10000 }
+  );
+}
+
+// Helper function to mock API responses
+async function mockAnalyticsAPI(page: Page) {
+  await page.route('**/api/analytics/**', (route) => {
+    const url = route.request().url();
+    
+    if (url.includes('/dashboard')) {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: {
+            totalEngagement: 12450,
+            engagementGrowth: 15.7,
+            viralContent: [
+              {
+                id: 'viral-post-1',
+                platform: 'instagram',
+                content: 'Viral content example',
+                viralityScore: 0.89,
+                engagement: { likes: 5000, comments: 800, shares: 1200 },
+              },
+            ],
+            realTimeMetrics: {
+              activeUsers: 342,
+              currentEngagementRate: 4.7,
+              postsLastHour: 8,
+            },
+          },
+        }),
+      });
+    } else {
+      route.continue();
+    }
+  });
+}
+
+test.describe('Enhanced Analytics - E2E Workflows', () => {
+  test.beforeEach(async ({ page }) => {
+    // Set up API mocks
+    await mockAnalyticsAPI(page);
+  });
+
+  test.describe('OAuth Integration Validation', () => {
+    test('Twitter OAuth Flow Validation - Admin User', async ({ page }) => {
+      // Login as admin for full access
+      await loginAs(page, 'admin');
+      
+      // Navigate to social accounts
+      await page.click('[data-testid="nav-social"]');
+      await page.waitForSelector('[data-testid="social-accounts-dashboard"]');
+      
+      // Test Twitter OAuth initiation
+      await page.click('[data-testid="connect-twitter"]');
+      
+      // Verify OAuth URL generation
+      await expect(page.locator('[data-testid="oauth-url-generated"]')).toBeVisible();
+      
+      // Mock OAuth callback
+      await page.route('**/api/social/connect/TWITTER', (route) => {
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            success: true,
+            authUrl: 'https://twitter.com/i/oauth2/authorize?response_type=code&client_id=test',
+          }),
+        });
+      });
+      
+      // Verify Twitter connection successful
+      await expect(page.locator('[data-testid="twitter-connected"]')).toBeVisible();
+    });
+
+    test('Multi-Platform OAuth Status - Manager User', async ({ page }) => {
+      await loginAs(page, 'manager');
+      
+      // Navigate to social accounts
+      await page.goto('/dashboard/social/accounts');
+      
+      // Verify platform connection status
+      await expect(page.locator('[data-testid="platform-status"]')).toBeVisible();
+      
+      // Test platform disconnection
+      await page.click('[data-testid="disconnect-twitter"]');
+      await expect(page.locator('[data-testid="disconnect-confirmation"]')).toBeVisible();
+      
+      // Confirm disconnection
+      await page.click('[data-testid="confirm-disconnect"]');
+      await expect(page.locator('[data-testid="twitter-disconnected"]')).toBeVisible();
+    });
+  });
+
+  test.describe('Analytics Dashboard Journey', () => {
+    test('Complete Analytics Workflow - Admin User', async ({ page }) => {
+      // Login as admin for full access
+      await loginAs(page, 'admin');
+      
+      // Navigate to analytics dashboard
+      await page.click('[data-testid="nav-analytics"]');
+      await page.waitForSelector('[data-testid="analytics-dashboard"]');
+      
+      // Verify dashboard metrics display
+      await expect(page.locator('[data-testid="dashboard-summary"]')).toBeVisible();
+      await expect(page.locator('[data-testid="total-engagement"]')).toContainText('12,450');
+      await expect(page.locator('[data-testid="engagement-growth"]')).toContainText('15.7%');
+      
+      // Test real-time metrics
+      await expect(page.locator('[data-testid="real-time-metrics"]')).toBeVisible();
+      await expect(page.locator('[data-testid="active-users"]')).toContainText('342');
+    });
+
+    test('Performance Prediction Workflow - Manager User', async ({ page }) => {
+      await loginAs(page, 'manager');
+      
+      // Navigate to content performance prediction
+      await page.goto('/analytics/performance-prediction');
+      
+      // Input content for analysis
+      await page.fill('[data-testid="content-input"]', 'Test content for prediction');
+      await page.selectOption('[data-testid="platform-select"]', 'twitter');
+      
+      // Trigger performance prediction
+      await page.click('[data-testid="predict-performance"]');
+      
+      // Wait for prediction results
+      await page.waitForSelector('[data-testid="prediction-results"]');
+      
+      // Verify prediction metrics
+      await expect(page.locator('[data-testid="confidence-score"]')).toBeVisible();
+    });
+  });
+
+  test.describe('Error Handling and Resilience', () => {
+    test('OAuth Error Handling', async ({ page }) => {
+      await loginAs(page, 'admin');
+      
+      // Simulate OAuth failure
+      await page.route('**/api/social/connect/TWITTER', (route) => {
+        route.fulfill({
+          status: 500,
+          contentType: 'application/json',
+          body: JSON.stringify({ error: 'OAuth connection failed' }),
+        });
+      });
+      
+      // Navigate to social accounts
+      await page.goto('/dashboard/social/accounts');
+      
+      // Attempt Twitter connection
+      await page.click('[data-testid="connect-twitter"]');
+      
+      // Verify error handling
+      await expect(page.locator('[data-testid="oauth-error-message"]')).toBeVisible();
+      await expect(page.locator('[data-testid="retry-button"]')).toBeVisible();
+    });
+
+    test('Network Connectivity Issues', async ({ page }) => {
+      await loginAs(page, 'manager');
+      
+      // Navigate to real-time analytics
+      await page.goto('/analytics/real-time');
+      
+      // Simulate network disconnection
+      await page.setOffline(true);
+      
+      // Verify offline indicator
+      await expect(page.locator('[data-testid="offline-indicator"]')).toBeVisible();
+      
+      // Restore connection
+      await page.setOffline(false);
+      
+      // Verify reconnection
+      await expect(page.locator('[data-testid="online-indicator"]')).toBeVisible();
+    });
+  });
+});

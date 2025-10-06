@@ -1,9 +1,7 @@
 import express from 'express';
 import { requireAuth } from '../middleware/auth';
-import { validateRequest } from '../middleware/validation';
+import { validateZodRequest } from '../middleware/validation';
 import { z } from 'zod';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 
 const router = express.Router();
 
@@ -17,12 +15,6 @@ const inviteMemberSchema = z.object({
 const updateMemberSchema = z.object({
   role: z.enum(['admin', 'editor', 'viewer']).optional(),
   status: z.enum(['active', 'pending', 'suspended']).optional(),
-  permissions: z.array(z.string()).optional()
-});
-
-const updateRoleSchema = z.object({
-  name: z.string().min(1).optional(),
-  description: z.string().optional(),
   permissions: z.array(z.string()).optional()
 });
 
@@ -98,26 +90,28 @@ const mockTeamMembers = [
     department: 'Administration',
     phone: '+1 (555) 100-0001',
     location: 'New York, NY',
+    timezone: 'America/New_York',
     invitedBy: 'System',
     activatedAt: '2024-01-01T00:00:00Z',
-    organizationId: 'org1'
+    organizationId: 'org-123'
   },
   {
     id: '2',
     name: 'Agency Owner',
     email: 'agency@allin.demo',
     avatar: '/api/placeholder/32/32',
-    role: 'admin',
+    role: 'editor',
     status: 'active',
     joinedAt: '2024-01-02T10:00:00Z',
     lastActive: '2024-01-20T13:15:00Z',
-    permissions: roles.find(r => r.id === 'admin')?.permissions || [],
+    permissions: roles.find(r => r.id === 'editor')?.permissions || [],
     department: 'Agency Management',
     phone: '+1 (555) 200-0002',
     location: 'Los Angeles, CA',
+    timezone: 'America/Los_Angeles',
     invitedBy: 'admin@allin.demo',
     activatedAt: '2024-01-02T10:30:00Z',
-    organizationId: 'org1'
+    organizationId: 'org-123'
   },
   {
     id: '3',
@@ -134,7 +128,7 @@ const mockTeamMembers = [
     location: 'Chicago, IL',
     invitedBy: 'agency@allin.demo',
     activatedAt: '2024-01-03T10:00:00Z',
-    organizationId: 'org1'
+    organizationId: 'org-123'
   },
   {
     id: '4',
@@ -151,7 +145,7 @@ const mockTeamMembers = [
     location: 'Austin, TX',
     invitedBy: 'manager@allin.demo',
     activatedAt: '2024-01-04T14:45:00Z',
-    organizationId: 'org1'
+    organizationId: 'org-123'
   },
   {
     id: '5',
@@ -168,7 +162,7 @@ const mockTeamMembers = [
     location: 'Miami, FL',
     invitedBy: 'agency@allin.demo',
     activatedAt: '2024-01-05T11:30:00Z',
-    organizationId: 'org1'
+    organizationId: 'org-123'
   },
   {
     id: '6',
@@ -183,9 +177,64 @@ const mockTeamMembers = [
     department: 'Team Collaboration',
     phone: '+1 (555) 600-0006',
     location: 'Remote',
+    timezone: 'UTC',
     invitedBy: 'manager@allin.demo',
     activatedAt: '2024-01-06T16:30:00Z',
-    organizationId: 'org1'
+    organizationId: 'org-123'
+  },
+  {
+    id: 'pending-user-id',
+    name: 'Pending User',
+    email: 'pending@example.com',
+    avatar: '/api/placeholder/32/32',
+    role: 'editor',
+    status: 'pending',
+    joinedAt: '2024-01-07T10:00:00Z',
+    lastActive: '',
+    permissions: roles.find(r => r.id === 'editor')?.permissions || [],
+    department: '',
+    phone: '',
+    location: '',
+    timezone: '',
+    invitedBy: 'admin@allin.demo',
+    activatedAt: '',
+    organizationId: 'org-123'
+  },
+  {
+    id: '7',
+    name: 'Test User 1',
+    email: 'test1@example.com',
+    avatar: '/api/placeholder/32/32',
+    role: 'editor',
+    status: 'active',
+    joinedAt: '2024-01-08T10:00:00Z',
+    lastActive: '2024-01-20T10:00:00Z',
+    permissions: roles.find(r => r.id === 'editor')?.permissions || [],
+    department: 'Testing',
+    phone: '',
+    location: '',
+    timezone: 'UTC',
+    invitedBy: 'admin@allin.demo',
+    activatedAt: '2024-01-08T10:30:00Z',
+    organizationId: 'org-123'
+  },
+  {
+    id: '8',
+    name: 'Test User 2',
+    email: 'test2@example.com',
+    avatar: '/api/placeholder/32/32',
+    role: 'viewer',
+    status: 'active',
+    joinedAt: '2024-01-09T10:00:00Z',
+    lastActive: '2024-01-20T09:00:00Z',
+    permissions: roles.find(r => r.id === 'viewer')?.permissions || [],
+    department: 'Testing',
+    phone: '',
+    location: '',
+    timezone: 'UTC',
+    invitedBy: 'admin@allin.demo',
+    activatedAt: '2024-01-09T10:30:00Z',
+    organizationId: 'org-123'
   }
 ];
 
@@ -240,11 +289,11 @@ router.get('/members', requireAuth, async (req, res) => {
  * @desc Invite a new team member
  * @access Private
  */
-router.post('/invite', requireAuth, validateRequest(inviteMemberSchema), async (req, res) => {
+router.post('/invite', requireAuth, validateZodRequest(inviteMemberSchema, 'body'), async (req, res) => {
   try {
     const { email, role, message } = req.body;
     const organizationId = req.user?.organizationId || 'org1';
-    const invitedBy = req.user?.email;
+    const invitedBy = req.user?.email || '';
 
     // Check if user already exists
     const existingMember = mockTeamMembers.find(member =>
@@ -259,16 +308,23 @@ router.post('/invite', requireAuth, validateRequest(inviteMemberSchema), async (
     }
 
     // Create new team member invitation
+    const inviteId = Date.now().toString();
     const newMember = {
-      id: Date.now().toString(),
-      name: email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+      id: inviteId,
+      inviteId, // Add inviteId for backward compatibility
+      name: email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
       email,
+      avatar: '/api/placeholder/32/32',
       role,
       status: 'pending' as const,
       joinedAt: new Date().toISOString(),
       lastActive: '',
       permissions: roles.find(r => r.id === role)?.permissions || [],
+      department: '',
+      phone: '',
+      location: '',
       invitedBy,
+      activatedAt: '',
       organizationId
     };
 
@@ -278,14 +334,14 @@ router.post('/invite', requireAuth, validateRequest(inviteMemberSchema), async (
     console.log(`Invitation sent to ${email} with role ${role}`);
     console.log(`Custom message: ${message || 'Welcome to our team!'}`);
 
-    res.json({
+    return res.json({
       success: true,
       data: newMember,
       message: 'Invitation sent successfully'
     });
   } catch (error) {
     console.error('Error inviting team member:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to send invitation'
     });
@@ -311,13 +367,13 @@ router.get('/members/:id', requireAuth, async (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: member
     });
   } catch (error) {
     console.error('Error fetching team member:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to fetch team member'
     });
@@ -329,7 +385,7 @@ router.get('/members/:id', requireAuth, async (req, res) => {
  * @desc Update a team member
  * @access Private
  */
-router.patch('/members/:id', requireAuth, validateRequest(updateMemberSchema), async (req, res) => {
+router.patch('/members/:id', requireAuth, validateZodRequest(updateMemberSchema, 'body'), async (req, res) => {
   try {
     const { id } = req.params;
     const organizationId = req.user?.organizationId || 'org1';
@@ -363,14 +419,14 @@ router.patch('/members/:id', requireAuth, validateRequest(updateMemberSchema), a
       mockTeamMembers[memberIndex].permissions = updates.permissions;
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: mockTeamMembers[memberIndex],
       message: 'Team member updated successfully'
     });
   } catch (error) {
     console.error('Error updating team member:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to update team member'
     });
@@ -396,9 +452,9 @@ router.delete('/members/:id', requireAuth, async (req, res) => {
       });
     }
 
-    // Prevent removing the last admin
+    // Prevent removing the last admin (only check if the member being deleted is an admin)
     const member = mockTeamMembers[memberIndex];
-    if (member.role === 'admin') {
+    if (member.role === 'admin' && member.status === 'active') {
       const adminCount = mockTeamMembers.filter(m =>
         m.organizationId === organizationId &&
         m.role === 'admin' &&
@@ -415,13 +471,13 @@ router.delete('/members/:id', requireAuth, async (req, res) => {
 
     mockTeamMembers.splice(memberIndex, 1);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Team member removed successfully'
     });
   } catch (error) {
     console.error('Error removing team member:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to remove team member'
     });
@@ -433,22 +489,15 @@ router.delete('/members/:id', requireAuth, async (req, res) => {
  * @desc Get all available roles and permissions
  * @access Private
  */
-router.get('/roles', requireAuth, async (req, res) => {
+router.get('/roles', requireAuth, async (_req, res) => {
   try {
-    const rolesWithPermissions = roles.map(role => ({
-      ...role,
-      permissions: role.permissions.map(permId =>
-        permissions.find(p => p.id === permId)
-      ).filter(Boolean)
-    }));
-
-    res.json({
+    return res.json({
       success: true,
-      data: rolesWithPermissions
+      data: roles
     });
   } catch (error) {
     console.error('Error fetching roles:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to fetch roles'
     });
@@ -460,27 +509,15 @@ router.get('/roles', requireAuth, async (req, res) => {
  * @desc Get all available permissions
  * @access Private
  */
-router.get('/permissions', requireAuth, async (req, res) => {
+router.get('/permissions', requireAuth, async (_req, res) => {
   try {
-    // Group permissions by category
-    const permissionsByCategory = permissions.reduce((acc, permission) => {
-      if (!acc[permission.category]) {
-        acc[permission.category] = [];
-      }
-      acc[permission.category].push(permission);
-      return acc;
-    }, {} as Record<string, typeof permissions>);
-
-    res.json({
+    return res.json({
       success: true,
-      data: {
-        all: permissions,
-        byCategory: permissionsByCategory
-      }
+      data: permissions
     });
   } catch (error) {
     console.error('Error fetching permissions:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to fetch permissions'
     });
@@ -497,29 +534,44 @@ router.get('/stats', requireAuth, async (req, res) => {
     const organizationId = req.user?.organizationId || 'org1';
     const teamMembers = mockTeamMembers.filter(member => member.organizationId === organizationId);
 
+    const recentMembers = teamMembers
+      .filter(m => {
+        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        return new Date(m.joinedAt) > weekAgo;
+      })
+      .map(m => ({
+        userId: m.id,
+        userName: m.name,
+        action: 'joined',
+        timestamp: m.joinedAt,
+        entityType: 'team',
+        entityId: m.id
+      }));
+
     const stats = {
       totalMembers: teamMembers.length,
       activeMembers: teamMembers.filter(m => m.status === 'active').length,
       pendingInvites: teamMembers.filter(m => m.status === 'pending').length,
-      suspendedMembers: teamMembers.filter(m => m.status === 'suspended').length,
       byRole: {
         admin: teamMembers.filter(m => m.role === 'admin').length,
         editor: teamMembers.filter(m => m.role === 'editor').length,
         viewer: teamMembers.filter(m => m.role === 'viewer').length
       },
-      recentJoins: teamMembers.filter(m => {
-        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-        return new Date(m.joinedAt) > weekAgo;
-      }).length
+      byStatus: {
+        active: teamMembers.filter(m => m.status === 'active').length,
+        pending: teamMembers.filter(m => m.status === 'pending').length,
+        suspended: teamMembers.filter(m => m.status === 'suspended').length
+      },
+      recentActivity: recentMembers
     };
 
-    res.json({
+    return res.json({
       success: true,
       data: stats
     });
   } catch (error) {
     console.error('Error fetching team stats:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to fetch team statistics'
     });
@@ -555,13 +607,13 @@ router.post('/members/:id/resend-invite', requireAuth, async (req, res) => {
     // In a real implementation, resend invitation email here
     console.log(`Invitation resent to ${member.email}`);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Invitation resent successfully'
     });
   } catch (error) {
     console.error('Error resending invitation:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to resend invitation'
     });
@@ -589,7 +641,8 @@ router.post('/bulk-action', requireAuth, async (req, res) => {
 
     switch (action) {
       case 'updateRole':
-        if (!data.role) {
+      case 'update_role':
+        if (!data || !data.role) {
           return res.status(400).json({
             success: false,
             message: 'Role is required for role update action'
@@ -609,7 +662,8 @@ router.post('/bulk-action', requireAuth, async (req, res) => {
         break;
 
       case 'updateStatus':
-        if (!data.status) {
+      case 'update_status':
+        if (!data || !data.status) {
           return res.status(400).json({
             success: false,
             message: 'Status is required for status update action'
@@ -630,7 +684,8 @@ router.post('/bulk-action', requireAuth, async (req, res) => {
         break;
 
       case 'remove':
-        // Check for admin removal safety
+      case 'delete':
+        // Check for admin removal safety - only block if we're actually removing admins
         const adminsToRemove = memberIds.filter(id => {
           const member = mockTeamMembers.find(m => m.id === id && m.organizationId === organizationId);
           return member && member.role === 'admin' && member.status === 'active';
@@ -642,7 +697,8 @@ router.post('/bulk-action', requireAuth, async (req, res) => {
           m.status === 'active'
         ).length;
 
-        if (adminsToRemove.length >= currentAdminCount) {
+        // Only block if we're removing admins AND it would remove all of them
+        if (adminsToRemove.length > 0 && adminsToRemove.length >= currentAdminCount) {
           return res.status(400).json({
             success: false,
             message: 'Cannot remove all administrators'
@@ -667,14 +723,14 @@ router.post('/bulk-action', requireAuth, async (req, res) => {
         });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: { updatedCount },
       message: `${action} action completed on ${updatedCount} members`
     });
   } catch (error) {
     console.error('Error performing bulk action:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to perform bulk action'
     });

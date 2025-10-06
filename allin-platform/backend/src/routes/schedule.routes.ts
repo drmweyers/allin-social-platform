@@ -44,7 +44,7 @@ router.get('/posts', authenticateToken, async (req: AuthRequest, res: Response) 
           select: {
             id: true,
             platform: true,
-            accountHandle: true,
+            username: true,
           },
         },
         queue: true,
@@ -62,8 +62,8 @@ router.get('/posts', authenticateToken, async (req: AuthRequest, res: Response) 
       platform: post.socialAccount?.platform || 'unknown',
       status: post.status,
       socialAccount: {
-        accountHandle: post.socialAccount?.accountHandle || 'Unknown',
-        platform: post.socialAccount?.platform || 'unknown',
+        accountHandle: post.socialAccount?.username || 'Unknown',
+        platform: (post.socialAccount?.platform || 'UNKNOWN') as any,
       },
       isRecurring: post.isRecurring,
       queuePosition: post.queuePosition,
@@ -412,7 +412,7 @@ router.get('/recurring', authenticateToken, async (req: AuthRequest, res: Respon
             post: true,
             socialAccount: {
               select: {
-                handle: true,
+                username: true,
                 platform: true,
               },
             },

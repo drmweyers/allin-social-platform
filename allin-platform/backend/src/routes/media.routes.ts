@@ -3,21 +3,21 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { requireAuth } from '../middleware/auth';
-import { validateRequest } from '../middleware/validation';
+import { validateZodRequest } from '../middleware/validation';
 import { z } from 'zod';
 
 const router = express.Router();
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
+  destination: (_req, _file, cb) => {
     const uploadDir = path.join(process.cwd(), 'uploads', 'media');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
     cb(null, uploadDir);
   },
-  filename: (req, file, cb) => {
+  filename: (_req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, uniqueSuffix + path.extname(file.originalname));
   }
@@ -28,7 +28,7 @@ const upload = multer({
   limits: {
     fileSize: 50 * 1024 * 1024 // 50MB limit
   },
-  fileFilter: (req, file, cb) => {
+  fileFilter: (_req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|gif|svg|mp4|avi|mov|mp3|wav|pdf|doc|docx|psd|ai/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedTypes.test(file.mimetype);
@@ -66,15 +66,15 @@ const createFolderSchema = z.object({
 
 // Mock data for development
 const mockFolders = [
-  { id: 'all', name: 'All Media', itemCount: 24, createdAt: '2024-01-01', userId: 'user1' },
-  { id: 'recent', name: 'Recently Added', itemCount: 8, createdAt: '2024-01-15', userId: 'user1' },
-  { id: 'favorites', name: 'Favorites', itemCount: 6, createdAt: '2024-01-10', userId: 'user1' },
-  { id: 'campaigns', name: 'Campaign Assets', itemCount: 12, createdAt: '2024-01-05', userId: 'user1' },
-  { id: 'logos', name: 'Logos & Branding', itemCount: 4, createdAt: '2024-01-03', userId: 'user1' },
-  { id: 'social-templates', name: 'Social Templates', itemCount: 8, createdAt: '2024-01-08', userId: 'user1' }
+  { id: 'all', name: 'All Media', itemCount: 24, createdAt: '2024-01-01', userId: 'user-123' },
+  { id: 'recent', name: 'Recently Added', itemCount: 8, createdAt: '2024-01-15', userId: 'user-123' },
+  { id: 'favorites', name: 'Favorites', itemCount: 6, createdAt: '2024-01-10', userId: 'user-123' },
+  { id: 'campaigns', name: 'Campaign Assets', itemCount: 12, createdAt: '2024-01-05', userId: 'user-123' },
+  { id: 'logos', name: 'Logos & Branding', itemCount: 4, createdAt: '2024-01-03', userId: 'user-123' },
+  { id: 'social-templates', name: 'Social Templates', itemCount: 8, createdAt: '2024-01-08', userId: 'user-123' }
 ];
 
-const mockMediaFiles = [
+let mockMediaFiles = [
   {
     id: '1',
     name: 'hero-banner-2024.jpg',
@@ -91,7 +91,7 @@ const mockMediaFiles = [
     description: 'Main hero banner for 2024 campaign',
     usageCount: 15,
     lastUsed: '2024-01-19T14:20:00Z',
-    userId: 'user1'
+    userId: 'user-123'
   },
   {
     id: '2',
@@ -109,7 +109,7 @@ const mockMediaFiles = [
     description: 'Product demonstration video for social media',
     usageCount: 8,
     lastUsed: '2024-01-18T09:30:00Z',
-    userId: 'user1'
+    userId: 'user-123'
   },
   {
     id: '3',
@@ -125,7 +125,41 @@ const mockMediaFiles = [
     description: 'Official company logo in SVG format',
     usageCount: 32,
     lastUsed: '2024-01-20T08:15:00Z',
-    userId: 'user1'
+    userId: 'user-123'
+  },
+  {
+    id: '4',
+    name: 'social-post-template.psd',
+    type: 'image',
+    url: '/uploads/media/social-post-template.psd',
+    thumbnail: '/uploads/media/thumbnails/social-post-template_thumb.jpg',
+    size: 5678901,
+    dimensions: { width: 1080, height: 1080 },
+    uploadedAt: '2024-01-17T10:00:00Z',
+    uploadedBy: 'Design Team',
+    tags: ['template', 'social', 'design'],
+    folder: 'social-templates',
+    isFavorite: false,
+    description: 'Instagram post template',
+    usageCount: 20,
+    lastUsed: '2024-01-19T16:00:00Z',
+    userId: 'user-123'
+  },
+  {
+    id: '5',
+    name: 'brand-guidelines.pdf',
+    type: 'document',
+    url: '/uploads/media/brand-guidelines.pdf',
+    size: 2345678,
+    uploadedAt: '2024-01-16T14:30:00Z',
+    uploadedBy: 'Brand Team',
+    tags: ['guidelines', 'brand', 'documentation'],
+    folder: 'logos',
+    isFavorite: true,
+    description: 'Complete brand guidelines document',
+    usageCount: 45,
+    lastUsed: '2024-01-20T09:00:00Z',
+    userId: 'user-123'
   }
 ];
 
@@ -134,7 +168,7 @@ const mockMediaFiles = [
  * @desc Get media files with filtering and pagination
  * @access Private
  */
-router.get('/files', requireAuth, validateRequest(mediaQuerySchema, 'query'), async (req, res) => {
+router.get('/files', requireAuth, validateZodRequest(mediaQuerySchema, 'query'), async (req, res) => {
   try {
     const { type, folder, search, sortBy = 'date', limit = 50, offset = 0 } = req.query;
     const userId = req.user?.id;
@@ -157,7 +191,7 @@ router.get('/files', requireAuth, validateRequest(mediaQuerySchema, 'query'), as
       }
     }
 
-    if (search) {
+    if (search && typeof search === 'string') {
       const searchLower = search.toLowerCase();
       filteredFiles = filteredFiles.filter(file =>
         file.name.toLowerCase().includes(searchLower) ||
@@ -182,23 +216,25 @@ router.get('/files', requireAuth, validateRequest(mediaQuerySchema, 'query'), as
     });
 
     // Apply pagination
-    const paginatedFiles = filteredFiles.slice(offset, offset + limit);
+    const limitNum = typeof limit === 'number' ? limit : 50;
+    const offsetNum = typeof offset === 'number' ? offset : 0;
+    const paginatedFiles = filteredFiles.slice(offsetNum, offsetNum + limitNum);
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         files: paginatedFiles,
         pagination: {
           total: filteredFiles.length,
-          limit,
-          offset,
-          hasMore: offset + limit < filteredFiles.length
+          limit: limitNum,
+          offset: offsetNum,
+          hasMore: offsetNum + limitNum < filteredFiles.length
         }
       }
     });
   } catch (error) {
     console.error('Error fetching media files:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to fetch media files'
     });
@@ -230,12 +266,28 @@ router.post('/upload', requireAuth, upload.array('files', 10), async (req, res) 
                       file.mimetype.startsWith('video/') ? 'video' :
                       file.mimetype.startsWith('audio/') ? 'audio' : 'document';
 
-      const newFile = {
+      const newFile = fileType === 'image' ? {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         name: file.originalname,
         type: fileType,
         url: `/uploads/media/${file.filename}`,
-        thumbnail: fileType === 'image' ? `/uploads/media/${file.filename}` : undefined,
+        thumbnail: `/uploads/media/${file.filename}`,
+        size: file.size,
+        dimensions: { width: 1920, height: 1080 }, // Default dimensions
+        uploadedAt: new Date().toISOString(),
+        uploadedBy: req.user?.name || 'Unknown',
+        tags: JSON.parse(tags),
+        folder,
+        isFavorite: false,
+        description,
+        usageCount: 0,
+        lastUsed: new Date().toISOString(),
+        userId: userId || ''
+      } : {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        name: file.originalname,
+        type: fileType,
+        url: `/uploads/media/${file.filename}`,
         size: file.size,
         uploadedAt: new Date().toISOString(),
         uploadedBy: req.user?.name || 'Unknown',
@@ -244,7 +296,8 @@ router.post('/upload', requireAuth, upload.array('files', 10), async (req, res) 
         isFavorite: false,
         description,
         usageCount: 0,
-        userId
+        lastUsed: new Date().toISOString(),
+        userId: userId || ''
       };
 
       // Add to mock data
@@ -252,14 +305,14 @@ router.post('/upload', requireAuth, upload.array('files', 10), async (req, res) 
       uploadedFiles.push(newFile);
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: uploadedFiles,
       message: `${uploadedFiles.length} file(s) uploaded successfully`
     });
   } catch (error) {
     console.error('Error uploading files:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to upload files'
     });
@@ -285,13 +338,13 @@ router.get('/files/:id', requireAuth, async (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: file
     });
   } catch (error) {
     console.error('Error fetching file:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to fetch file'
     });
@@ -303,7 +356,7 @@ router.get('/files/:id', requireAuth, async (req, res) => {
  * @desc Update media file metadata
  * @access Private
  */
-router.patch('/files/:id', requireAuth, validateRequest(updateMediaSchema), async (req, res) => {
+router.patch('/files/:id', requireAuth, validateZodRequest(updateMediaSchema, 'body'), async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user?.id;
@@ -321,18 +374,18 @@ router.patch('/files/:id', requireAuth, validateRequest(updateMediaSchema), asyn
     // Update file properties
     Object.keys(updates).forEach(key => {
       if (updates[key] !== undefined) {
-        mockMediaFiles[fileIndex][key] = updates[key];
+        (mockMediaFiles[fileIndex] as any)[key] = updates[key];
       }
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: mockMediaFiles[fileIndex],
       message: 'File updated successfully'
     });
   } catch (error) {
     console.error('Error updating file:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to update file'
     });
@@ -373,13 +426,13 @@ router.delete('/files/:id', requireAuth, async (req, res) => {
     // Remove from mock data
     mockMediaFiles.splice(fileIndex, 1);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'File deleted successfully'
     });
   } catch (error) {
     console.error('Error deleting file:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to delete file'
     });
@@ -414,13 +467,13 @@ router.get('/folders', requireAuth, async (req, res) => {
       return { ...folder, itemCount };
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: foldersWithCounts
     });
   } catch (error) {
     console.error('Error fetching folders:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to fetch folders'
     });
@@ -432,7 +485,7 @@ router.get('/folders', requireAuth, async (req, res) => {
  * @desc Create a new folder
  * @access Private
  */
-router.post('/folders', requireAuth, validateRequest(createFolderSchema), async (req, res) => {
+router.post('/folders', requireAuth, validateZodRequest(createFolderSchema, 'body'), async (req, res) => {
   try {
     const { name } = req.body;
     const userId = req.user?.id;
@@ -442,19 +495,19 @@ router.post('/folders', requireAuth, validateRequest(createFolderSchema), async 
       name,
       itemCount: 0,
       createdAt: new Date().toISOString(),
-      userId
+      userId: userId || ''
     };
 
     mockFolders.push(newFolder);
 
-    res.json({
+    return res.json({
       success: true,
       data: newFolder,
       message: 'Folder created successfully'
     });
   } catch (error) {
     console.error('Error creating folder:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to create folder'
     });
@@ -487,13 +540,13 @@ router.get('/stats', requireAuth, async (req, res) => {
       }).length
     };
 
-    res.json({
+    return res.json({
       success: true,
       data: stats
     });
   } catch (error) {
     console.error('Error fetching media stats:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to fetch media statistics'
     });
@@ -531,7 +584,7 @@ router.post('/files/bulk-action', requireAuth, async (req, res) => {
         break;
 
       case 'move':
-        if (!data.folder) {
+        if (!data || !data.folder) {
           return res.status(400).json({
             success: false,
             message: 'Target folder is required for move action'
@@ -563,14 +616,14 @@ router.post('/files/bulk-action', requireAuth, async (req, res) => {
         });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: { updatedCount },
       message: `${action} action completed on ${updatedCount} files`
     });
   } catch (error) {
     console.error('Error performing bulk action:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to perform bulk action'
     });

@@ -1,6 +1,22 @@
 import request from 'supertest';
 import express from 'express';
 import { mockPrismaClient } from '../../setup/jest.setup';
+
+// Mock auth middleware BEFORE importing routes
+jest.mock('../../../src/middleware/auth', () => ({
+  authenticateToken: (req: any, _res: any, next: any) => {
+    req.user = {
+      id: 'user-id-123',
+      email: 'test@example.com',
+      name: 'Test User',
+      organizationId: 'org-id-123',
+      role: 'user'
+    };
+    next();
+  },
+  AuthRequest: {} as any,
+}));
+
 import socialRoutes from '../../../src/routes/social.routes';
 
 // Test data
@@ -51,13 +67,6 @@ const mockSocialAccountWithScope = {
 // Create Express app for testing
 const app = express();
 app.use(express.json());
-
-// Mock auth middleware - inject user into request
-app.use((req: any, _res, next) => {
-  req.user = mockUser;
-  next();
-});
-
 app.use('/api/social', socialRoutes);
 
 describe('Social Routes', () => {
@@ -198,7 +207,7 @@ describe('Social Routes', () => {
     });
 
     it('should return 400 for invalid account ID format', async () => {
-      const response = await request(app)
+      await request(app)
         .get('/api/social/accounts/') // Empty ID
         .expect(404); // Express returns 404 for missing route parameter
     });
@@ -222,7 +231,7 @@ describe('Social Routes', () => {
     it('should not return account belonging to another user', async () => {
       mockPrismaClient.socialAccount.findFirst.mockResolvedValue(null);
 
-      const _response = await request(app)
+      await request(app)
         .get('/api/social/accounts/other-user-account')
         .expect(404);
 
@@ -444,7 +453,7 @@ describe('Social Routes', () => {
     });
 
     it('should include Facebook platform', async () => {
-      const _response = await request(app)
+      const response = await request(app)
         .get('/api/social/platforms')
         .expect(200);
 
@@ -459,7 +468,7 @@ describe('Social Routes', () => {
     });
 
     it('should include Instagram platform', async () => {
-      const _response = await request(app)
+      const response = await request(app)
         .get('/api/social/platforms')
         .expect(200);
 
@@ -474,7 +483,7 @@ describe('Social Routes', () => {
     });
 
     it('should include Twitter platform', async () => {
-      const _response = await request(app)
+      const response = await request(app)
         .get('/api/social/platforms')
         .expect(200);
 
@@ -488,7 +497,7 @@ describe('Social Routes', () => {
     });
 
     it('should include LinkedIn platform', async () => {
-      const _response = await request(app)
+      const response = await request(app)
         .get('/api/social/platforms')
         .expect(200);
 
@@ -502,7 +511,7 @@ describe('Social Routes', () => {
     });
 
     it('should include TikTok platform', async () => {
-      const _response = await request(app)
+      const response = await request(app)
         .get('/api/social/platforms')
         .expect(200);
 

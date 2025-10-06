@@ -631,14 +631,14 @@ router.post('/social-accounts/:id/sync', requireAuth, async (req, res) => {
     // In a real implementation, sync data from the platform's API
     mockSocialAccounts[accountIndex].lastSync = new Date().toISOString();
 
-    res.json({
+    return res.json({
       success: true,
       data: mockSocialAccounts[accountIndex],
       message: 'Account synced successfully'
     });
   } catch (error) {
     console.error('Error syncing social account:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to sync social account'
     });
@@ -650,10 +650,8 @@ router.post('/social-accounts/:id/sync', requireAuth, async (req, res) => {
  * @desc Get security settings
  * @access Private
  */
-router.get('/security', requireAuth, async (req, res) => {
+router.get('/security', requireAuth, async (_req, res) => {
   try {
-    const userId = req.user?.id;
-
     // Mock security settings
     const securitySettings = {
       twoFactorEnabled: false,
@@ -675,16 +673,24 @@ router.get('/security', requireAuth, async (req, res) => {
           lastActive: '2024-01-20T09:30:00Z',
           isCurrent: false
         }
+      ],
+      loginHistory: [
+        {
+          timestamp: '2024-01-20T10:00:00Z',
+          device: 'Chrome on Windows',
+          location: 'New York, NY',
+          status: 'success'
+        }
       ]
     };
 
-    res.json({
+    return res.json({
       success: true,
       data: securitySettings
     });
   } catch (error) {
     console.error('Error fetching security settings:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to fetch security settings'
     });
@@ -710,13 +716,13 @@ router.post('/security/revoke-session', requireAuth, async (req, res) => {
     // In a real implementation, revoke the session from the database
     console.log(`Session ${sessionId} revoked for user ${req.user?.id}`);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Session revoked successfully'
     });
   } catch (error) {
     console.error('Error revoking session:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to revoke session'
     });
@@ -728,10 +734,8 @@ router.post('/security/revoke-session', requireAuth, async (req, res) => {
  * @desc Get billing information
  * @access Private
  */
-router.get('/billing', requireAuth, async (req, res) => {
+router.get('/billing', requireAuth, async (_req, res) => {
   try {
-    const organizationId = req.user?.organizationId || 'org1';
-
     // Mock billing information
     const billingInfo = {
       plan: {

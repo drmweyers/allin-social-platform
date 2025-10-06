@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { workflowService } from '../services/workflow.service';
 import { authenticateToken } from '../middleware/auth';
-import { body, param, query, validationResult } from 'express-validator';
+import { body, param, validationResult } from 'express-validator';
 
 const router = Router();
 

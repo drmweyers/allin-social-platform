@@ -28,13 +28,13 @@ router.post('/command', authMiddleware, async (req, res) => {
 
     const result = await claudeService.processNaturalLanguageCommand(command, context);
 
-    res.json(result);
+    return res.json(result);
   } catch (error) {
     logger.error('Error processing MCP command:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to process command',
-      details: error.message,
+      details: (error as Error).message,
     });
   }
 });
@@ -59,13 +59,13 @@ router.post('/tool', authMiddleware, async (req, res) => {
 
     const result = await orchestrator.executeTool(tool, parameters || {});
 
-    res.json(result);
+    return res.json(result);
   } catch (error) {
     logger.error('Error executing MCP tool:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to execute tool',
-      details: error.message,
+      details: (error as Error).message,
     });
   }
 });
@@ -95,13 +95,13 @@ router.post('/generate', authMiddleware, async (req, res) => {
       useAI,
     });
 
-    res.json(result);
+    return res.json(result);
   } catch (error) {
     logger.error('Error generating content:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to generate content',
-      details: error.message,
+      details: (error as Error).message,
     });
   }
 });
@@ -129,13 +129,13 @@ router.post('/analyze', authMiddleware, async (req, res) => {
       analysisType || 'sentiment'
     );
 
-    res.json(result);
+    return res.json(result);
   } catch (error) {
     logger.error('Error analyzing text:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to analyze text',
-      details: error.message,
+      details: (error as Error).message,
     });
   }
 });
@@ -160,13 +160,13 @@ router.post('/automation', authMiddleware, async (req, res) => {
 
     const result = await claudeService.executeAutomation(trigger, context || {});
 
-    res.json(result);
+    return res.json(result);
   } catch (error) {
     logger.error('Error executing automation:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to execute automation',
-      details: error.message,
+      details: (error as Error).message,
     });
   }
 });
@@ -176,20 +176,20 @@ router.post('/automation', authMiddleware, async (req, res) => {
  * @desc Get available AI agent capabilities
  * @access Private
  */
-router.get('/capabilities', authMiddleware, async (req, res) => {
+router.get('/capabilities', authMiddleware, async (_req, res) => {
   try {
     const capabilities = await claudeService.getAgentCapabilities();
 
-    res.json({
+    return res.json({
       success: true,
       capabilities,
     });
   } catch (error) {
     logger.error('Error getting capabilities:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to get capabilities',
-      details: error.message,
+      details: (error as Error).message,
     });
   }
 });
@@ -199,7 +199,7 @@ router.get('/capabilities', authMiddleware, async (req, res) => {
  * @desc List available MCP tools
  * @access Private
  */
-router.get('/tools', authMiddleware, async (req, res) => {
+router.get('/tools', authMiddleware, async (_req, res) => {
   try {
     const tools = [
       {
@@ -234,16 +234,16 @@ router.get('/tools', authMiddleware, async (req, res) => {
       },
     ];
 
-    res.json({
+    return res.json({
       success: true,
       tools,
     });
   } catch (error) {
     logger.error('Error listing tools:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to list tools',
-      details: error.message,
+      details: (error as Error).message,
     });
   }
 });
@@ -253,20 +253,20 @@ router.get('/tools', authMiddleware, async (req, res) => {
  * @desc Get analytics overview via MCP
  * @access Private
  */
-router.get('/analytics', authMiddleware, async (req, res) => {
+router.get('/analytics', authMiddleware, async (_req, res) => {
   try {
     const overview = await orchestrator.getAnalyticsOverview();
 
-    res.json({
+    return res.json({
       success: true,
       data: overview,
     });
   } catch (error) {
     logger.error('Error getting analytics:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to get analytics',
-      details: error.message,
+      details: (error as Error).message,
     });
   }
 });
@@ -276,20 +276,20 @@ router.get('/analytics', authMiddleware, async (req, res) => {
  * @desc Get active campaigns via MCP
  * @access Private
  */
-router.get('/campaigns', authMiddleware, async (req, res) => {
+router.get('/campaigns', authMiddleware, async (_req, res) => {
   try {
     const campaigns = await orchestrator.getActiveCampaigns();
 
-    res.json({
+    return res.json({
       success: true,
       data: campaigns,
     });
   } catch (error) {
     logger.error('Error getting campaigns:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to get campaigns',
-      details: error.message,
+      details: (error as Error).message,
     });
   }
 });
@@ -301,7 +301,7 @@ router.get('/campaigns', authMiddleware, async (req, res) => {
  */
 router.post('/webhook', async (req, res) => {
   try {
-    const { event, data, signature } = req.body;
+    const { event, data, signature: _signature } = req.body;
 
     // TODO: Verify webhook signature
     logger.info('MCP webhook received:', { event });
@@ -323,13 +323,13 @@ router.post('/webhook', async (req, res) => {
         result = { success: false, error: 'Unknown event type' };
     }
 
-    res.json(result);
+    return res.json(result);
   } catch (error) {
     logger.error('Error processing webhook:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to process webhook',
-      details: error.message,
+      details: (error as Error).message,
     });
   }
 });
