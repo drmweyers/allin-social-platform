@@ -1,0 +1,97 @@
+{
+  "endpoints": [
+    {
+      "name": "Health Check",
+      "method": "GET",
+      "path": "/api/health",
+      "iterations": 10,
+      "successCount": 10,
+      "errorCount": 0,
+      "stats": {
+        "min": 1,
+        "max": 25,
+        "avg": 4,
+        "p50": 2,
+        "p95": 25,
+        "p99": 25
+      },
+      "passesBenchmark": true
+    },
+    {
+      "name": "Root Health Check",
+      "method": "GET",
+      "path": "/health",
+      "iterations": 10,
+      "successCount": 10,
+      "errorCount": 0,
+      "stats": {
+        "min": 1,
+        "max": 2,
+        "avg": 2,
+        "p50": 2,
+        "p95": 2,
+        "p99": 2
+      },
+      "passesBenchmark": true
+    },
+    {
+      "name": "Database Health Check",
+      "method": "GET",
+      "path": "/api/health/database",
+      "iterations": 10,
+      "successCount": 10,
+      "errorCount": 0,
+      "stats": {
+        "min": 8,
+        "max": 2283,
+        "avg": 404,
+        "p50": 192,
+        "p95": 2283,
+        "p99": 2283
+      },
+      "passesBenchmark": false
+    },
+    {
+      "name": "Redis Health Check",
+      "method": "GET",
+      "path": "/api/health/redis",
+      "iterations": 10,
+      "successCount": 10,
+      "errorCount": 0,
+      "stats": {
+        "min": 4,
+        "max": 10,
+        "avg": 7,
+        "p50": 7,
+        "p95": 10,
+        "p99": 10
+      },
+      "passesBenchmark": true
+    },
+    {
+      "name": "Login Authentication",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "iterations": 10,
+      "successCount": 0,
+      "errorCount": 10,
+      "stats": {
+        "min": 2,
+        "max": 61,
+        "avg": 10,
+        "p50": 6,
+        "p95": 61,
+        "p99": 61
+      },
+      "passesBenchmark": true
+    }
+  ],
+  "summary": {
+    "totalTests": 50,
+    "passedTests": 40,
+    "failedTests": 10,
+    "averageResponseTime": 85,
+    "p95ResponseTime": 404,
+    "p99ResponseTime": 404
+  }
+}
