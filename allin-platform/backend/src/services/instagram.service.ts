@@ -141,8 +141,8 @@ export class InstagramService {
         body: body.toString()
       });
 
-      const data = await response.json();
-      
+      const data = await response.json() as any;
+
       if (!response.ok) {
         throw new Error(`Token exchange failed: ${data.error_description || data.error || 'Unknown error'}`);
       }
@@ -173,8 +173,8 @@ export class InstagramService {
         method: 'GET'
       });
 
-      const data = await response.json();
-      
+      const data = await response.json() as any;
+
       if (!response.ok) {
         throw new Error(`Long-lived token exchange failed: ${data.error?.message || 'Unknown error'}`);
       }
@@ -210,7 +210,7 @@ export class InstagramService {
         method: 'GET'
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Token refresh failed: ${data.error?.message || 'Unknown error'}`);
@@ -258,7 +258,7 @@ export class InstagramService {
         method: 'GET'
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to get business account: ${data.error?.message || 'Unknown error'}`);
@@ -340,7 +340,7 @@ export class InstagramService {
         method: 'GET'
       });
 
-      const result = await response.json();
+      const result = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to get user media: ${result.error?.message || 'Unknown error'}`);
@@ -390,7 +390,7 @@ export class InstagramService {
         body: body.toString()
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to create media container: ${data.error?.message || 'Unknown error'}`);
@@ -430,7 +430,7 @@ export class InstagramService {
         body: body.toString()
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to publish media: ${data.error?.message || 'Unknown error'}`);
@@ -465,7 +465,7 @@ export class InstagramService {
         method: 'GET'
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to get media details: ${data.error?.message || 'Unknown error'}`);
@@ -521,7 +521,7 @@ export class InstagramService {
         method: 'GET'
       });
 
-      const result = await response.json();
+      const result = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to get account insights: ${result.error?.message || 'Unknown error'}`);
@@ -586,7 +586,7 @@ export class InstagramService {
         method: 'GET'
       });
 
-      const result = await response.json();
+      const result = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to get media insights: ${result.error?.message || 'Unknown error'}`);
@@ -647,7 +647,7 @@ export class InstagramService {
         method: 'GET'
       });
 
-      const result = await response.json();
+      const result = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to get media comments: ${result.error?.message || 'Unknown error'}`);
@@ -692,7 +692,7 @@ export class InstagramService {
         body: body.toString()
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to reply to comment: ${data.error?.message || 'Unknown error'}`);
@@ -726,7 +726,7 @@ export class InstagramService {
         method: 'DELETE'
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to delete comment: ${data.error?.message || 'Unknown error'}`);
@@ -762,7 +762,7 @@ export class InstagramService {
         method: 'GET'
       });
 
-      const result = await response.json();
+      const result = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to search hashtags: ${result.error?.message || 'Unknown error'}`);
@@ -799,7 +799,7 @@ export class InstagramService {
         method: 'GET'
       });
 
-      const result = await response.json();
+      const result = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to get hashtag insights: ${result.error?.message || 'Unknown error'}`);

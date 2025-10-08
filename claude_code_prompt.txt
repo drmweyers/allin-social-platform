@@ -1,0 +1,97 @@
+I need you to implement two critical improvements to my web application:
+
+## 1. PERSISTENT DEV LOGIN CREDENTIALS
+
+**Problem:** Every time you make changes to the web app, the login credentials are either changed, deleted, or the authentication system breaks, forcing me to spend 15+ minutes rebuilding the dev environment just to log in again.
+
+**Required Solution:**
+- Create a dedicated `dev-seed-data.js` or `dev-seed-data.json` file that contains FIXED, PERMANENT development credentials
+- These credentials should be:
+  * Email: dev@example.com
+  * Password: DevPassword123!
+  * (Or whatever makes sense for the current auth system)
+- Implement an automated database seeding script that ALWAYS runs on application startup in development mode
+- The seeding script must be idempotent (safe to run multiple times without creating duplicates)
+- Add clear documentation in a `DEV_LOGIN.md` file at the root with the permanent dev credentials
+- Ensure the seeding happens BEFORE the server starts accepting requests
+- Add console logging that clearly displays: "✓ DEV USER SEEDED - Email: dev@example.com | Password: DevPassword123!"
+- Make sure this seed data is NEVER committed to production and is clearly marked as development-only
+- Test that after ANY code changes, I can immediately log in with these same credentials without any manual intervention
+
+**Acceptance Criteria:**
+- [ ] I can make ANY code change to the application
+- [ ] After restarting the dev server, the login page always works
+- [ ] I can always log in with the documented dev credentials
+- [ ] No manual database resets or migrations needed between code changes
+- [ ] The dev credentials are prominently displayed in terminal output on startup
+
+
+## 2. COMPREHENSIVE MOCK DATA FOR CLIENT DEMOS
+
+**Problem:** The application needs realistic, interconnected mock data that demonstrates all features effectively during client demonstrations.
+
+**Required Solution:**
+- Create a comprehensive mock data seeding system with realistic, production-quality data
+- The mock data must include:
+
+**User Data:**
+  * 10-15 diverse user profiles with realistic names, photos (use placeholder image services), bios, locations
+  * Different user types/roles if applicable
+  * Varied activity levels (active users, moderate users, new users)
+
+**Content/Posts/Activities:**
+  * 50-100 pieces of content distributed across users
+  * Realistic timestamps (spanning last 3 months)
+  * Various content types (text, images, videos if applicable)
+  * Different engagement levels (views, likes, comments, shares)
+
+**Relationships/Connections:**
+  * Friend connections, followers, or whatever social relationships exist in the app
+  * Show different network densities (popular users, isolated users, moderate connections)
+
+**Interactions:**
+  * Comments and replies between users (realistic conversations)
+  * Reactions/likes distributed realistically
+  * Notifications based on these interactions
+
+**Transactional Data (if applicable):**
+  * Purchase history, subscriptions, or any monetary transactions
+  * Activity logs, achievements, or progress tracking
+
+**Requirements:**
+- All data must be INTERCONNECTED - users interact with each other's content naturally
+- Use realistic names (consider using faker.js or similar library)
+- Timestamps should create a realistic timeline of activity
+- Include edge cases: new users with minimal data, power users with lots of activity
+- Data should showcase ALL major features of the application
+- Make it tell a story - users should have realistic behavior patterns
+- Add variety in data quality (some users with complete profiles, others partial)
+- Include both positive interactions and realistic scenarios (unanswered messages, declined requests, etc.)
+
+**Technical Implementation:**
+- Create a `mock-data-seed.js` file separate from dev login seed
+- Add a command to package.json: `npm run seed:demo` that populates full mock data
+- Make it optional (separate from the dev user seed that runs automatically)
+- Add a `npm run seed:reset` command that clears and reseeds everything
+- Document the mock data structure in `MOCK_DATA.md`
+- Include instructions for customizing the mock data
+
+**Acceptance Criteria:**
+- [ ] Running `npm run seed:demo` creates a fully populated demo environment
+- [ ] Every major feature has supporting mock data to demonstrate it
+- [ ] Data relationships are logical and realistic
+- [ ] Client demos can show realistic user interactions and scenarios
+- [ ] Mock data includes enough variety to answer "what if" questions
+- [ ] The data tells a coherent story and feels like a real, active platform
+
+
+## IMPLEMENTATION NOTES:
+- Keep dev login seeding (issue #1) and demo data seeding (issue #2) as SEPARATE systems
+- Dev login should be automatic and minimal
+- Demo data should be optional and comprehensive
+- Both should be clearly documented
+- Ensure all seed scripts work on Windows PowerShell environment
+- Add error handling and clear success/failure messages
+- Make sure no sensitive or production data is affected
+
+Please implement both solutions, test them thoroughly, and provide me with clear documentation on how to use them.

@@ -3,6 +3,9 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
 
+  // Standalone output for Docker production builds
+  output: 'standalone',
+
   // Performance optimizations
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',

@@ -100,7 +100,7 @@ export class TwitterOAuthService extends OAuthService {
         throw new AppError(`Twitter token exchange failed: ${errorText}`, response.status);
       }
 
-      const data: TwitterTokenResponse = await response.json();
+      const data = await response.json() as TwitterTokenResponse;
 
       return {
         accessToken: data.access_token,
@@ -137,7 +137,7 @@ export class TwitterOAuthService extends OAuthService {
         throw new AppError(`Twitter token refresh failed: ${errorText}`, response.status);
       }
 
-      const data: TwitterTokenResponse = await response.json();
+      const data = await response.json() as TwitterTokenResponse;
 
       return {
         accessToken: data.access_token,
@@ -166,7 +166,7 @@ export class TwitterOAuthService extends OAuthService {
         throw new AppError(`Twitter profile fetch failed: ${errorText}`, response.status);
       }
 
-      const data: TwitterUserResponse = await response.json();
+      const data = await response.json() as TwitterUserResponse;
       const user = data.data;
 
       return {

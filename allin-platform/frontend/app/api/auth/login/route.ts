@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { API_URL } from '@/lib/api-config';
 
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:5000';
+const API_BASE_URL = API_URL;
 
 export async function POST(request: NextRequest) {
   try {

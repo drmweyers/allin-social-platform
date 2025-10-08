@@ -18,12 +18,17 @@ build/
 out/
 
 # Environment files
+# IMPORTANT: Only use root-level .env file
+# Backend loads from root via: dotenv.config({ path: path.resolve(__dirname, '../../.env') })
+# DO NOT create backend/.env - it will cause database connection issues
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 *.env
+backend/.env
+allin-platform/backend/.env
 
 # Logs
 npm-debug.log*

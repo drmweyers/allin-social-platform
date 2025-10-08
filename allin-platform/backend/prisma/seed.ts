@@ -7,7 +7,7 @@ async function main() {
   console.log('🌱 Starting database seeding...');
 
   // Create super admin user
-  const adminPassword = await bcrypt.hash('Admin123!@#', 10);
+  const adminPassword = await bcrypt.hash('AdminPass123', 10);
 
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@allin.demo' },
@@ -31,11 +31,11 @@ async function main() {
 
   // Create additional test accounts
   const testAccounts = [
-    { email: 'agency@allin.demo', password: 'Agency123!@#', name: 'Agency Owner', role: 'ADMIN' },
-    { email: 'manager@allin.demo', password: 'Manager123!@#', name: 'Content Manager', role: 'ADMIN' },
-    { email: 'creator@allin.demo', password: 'Creator123!@#', name: 'Content Creator', role: 'USER' },
-    { email: 'client@allin.demo', password: 'Client123!@#', name: 'Client Viewer', role: 'USER' },
-    { email: 'team@allin.demo', password: 'Team123!@#', name: 'Team Member', role: 'USER' },
+    { email: 'agency@allin.demo', password: 'AgencyPass123', name: 'Agency Owner', role: 'ADMIN' },
+    { email: 'manager@allin.demo', password: 'ManagerPass123', name: 'Content Manager', role: 'ADMIN' },
+    { email: 'creator@allin.demo', password: 'CreatorPass123', name: 'Content Creator', role: 'USER' },
+    { email: 'client@allin.demo', password: 'ClientPass123', name: 'Client Viewer', role: 'USER' },
+    { email: 'team@allin.demo', password: 'TeamPass123', name: 'Team Member', role: 'USER' },
   ];
 
   for (const account of testAccounts) {

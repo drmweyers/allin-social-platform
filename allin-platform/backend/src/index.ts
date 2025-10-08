@@ -1,4 +1,8 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Load .env from root directory (one level up from backend)
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 import express from 'express';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
@@ -18,8 +22,8 @@ const io = new Server(httpServer, {
   cors: corsOptions,
 });
 
-// Force port 5000 for now
-const PORT = 3010;
+// Use environment variable or default to 5000
+const PORT = parseInt(process.env.API_PORT || '5000', 10);
 console.log('Starting server on PORT:', PORT);
 
 // Security middleware (comprehensive setup)
@@ -72,7 +76,7 @@ async function startServer() {
   try {
     // Initialize Redis
     await initializeRedis();
-    
+
     // Check database connection (with graceful fallback)
     try {
       await checkDatabaseConnection();
@@ -80,7 +84,17 @@ async function startServer() {
     } catch (dbError) {
       logger.warn(`⚠️  Database connection failed - some features may be limited:`, (dbError as Error).message);
     }
-    
+
+    // Auto-seed dev user in development mode (BEFORE server starts accepting requests)
+    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV !== 'production') {
+      try {
+        const { seedDevUser } = await import('../prisma/dev-seed');
+        await seedDevUser();
+      } catch (seedError) {
+        logger.warn(`⚠️  Dev user seeding failed (non-critical):`, (seedError as Error).message);
+      }
+    }
+
     httpServer.listen(PORT, () => {
       logger.info(`🚀 Server running on http://localhost:${PORT}`);
       logger.info(`📄 API Documentation: http://localhost:${PORT}/api-docs`);
@@ -104,3 +118,6 @@ process.on('SIGTERM', () => {
 });
 
 export { app, io };
+// Trigger restart
+
+

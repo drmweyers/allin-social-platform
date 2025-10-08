@@ -5,9 +5,9 @@
  * Provides RAG-powered document retrieval and intelligent Q&A capabilities.
  */
 
-import { Router } from 'express'
+import { Router, Request, Response, NextFunction } from 'express'
 import { body, query, validationResult } from 'express-validator'
-import { ragService, RetrieveRequestSchema, AnswerRequestSchema } from '../services/rag.service'
+import { ragService } from '../services/rag.service'
 import { authenticate, authorize } from '../middleware/auth'
 import { rateLimiter } from '../middleware/rateLimiter'
 import { ResponseHandler } from '../utils/response'
@@ -33,7 +33,7 @@ const handleValidationErrors = (req: any, res: any, next: any) => {
 
 // Mock user tools for RAG service (replace with real implementations)
 const mockUserTools = {
-  async getUserPlan(userId: string) {
+  async getUserPlan(_userId: string) {
     // TODO: Implement real user plan lookup
     return {
       planTier: 'professional',
@@ -42,12 +42,12 @@ const mockUserTools = {
     }
   },
 
-  async getFeatureFlag(flag: string, userId: string) {
+  async getFeatureFlag(_flag: string, _userId: string) {
     // TODO: Implement real feature flag system
     return true
   },
 
-  async openTicket(params: { userId: string; summary: string; context: string }) {
+  async openTicket(_params: { userId: string; summary: string; context: string }) {
     // TODO: Implement real ticketing system
     return {
       ticketId: `TICKET-${Date.now()}`
@@ -77,7 +77,7 @@ router.post('/retrieve', [
     .optional()
     .isFloat({ min: 0, max: 1 })
     .withMessage('minScore must be between 0 and 1')
-], handleValidationErrors, async (req, res, next) => {
+], handleValidationErrors, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { query, k = 5, category, minScore = 0.7 } = req.body
 
@@ -88,14 +88,14 @@ router.post('/retrieve', [
       minScore
     })
 
-    ResponseHandler.success(res, {
+    return ResponseHandler.success(res, {
       results,
       query,
       count: results.length
     }, 'Document retrieval successful')
 
   } catch (error) {
-    next(error)
+    return next(error)
   }
 })
 
@@ -128,7 +128,7 @@ router.post('/answer', [
     .optional()
     .isString()
     .withMessage('featureContext must be a string')
-], handleValidationErrors, rateLimiter, async (req, res, next) => {
+], handleValidationErrors, rateLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const requestData = {
       query: req.body.query,
@@ -141,10 +141,10 @@ router.post('/answer', [
 
     const answer = await ragService.answer(requestData, mockUserTools)
 
-    ResponseHandler.success(res, answer, 'Answer generated successfully')
+    return ResponseHandler.success(res, answer, 'Answer generated successfully')
 
   } catch (error) {
-    next(error)
+    return next(error)
   }
 })
 
@@ -157,16 +157,16 @@ router.post('/analyze-query', [
     .isString()
     .isLength({ min: 1, max: 1000 })
     .withMessage('Query must be between 1 and 1000 characters')
-], handleValidationErrors, async (req, res, next) => {
+], handleValidationErrors, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { query } = req.body
 
     const analysis = await ragService.analyzeQuery(query)
 
-    ResponseHandler.success(res, analysis, 'Query analysis completed')
+    return ResponseHandler.success(res, analysis, 'Query analysis completed')
 
   } catch (error) {
-    next(error)
+    return next(error)
   }
 })
 
@@ -179,16 +179,16 @@ router.get('/analytics', [
     .optional()
     .isIn(['day', 'week', 'month'])
     .withMessage('Timeframe must be day, week, or month')
-], authenticate, authorize('ADMIN', 'SUPER_ADMIN'), handleValidationErrors, async (req, res, next) => {
+], authenticate, authorize('ADMIN', 'SUPER_ADMIN'), handleValidationErrors, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const timeframe = req.query.timeframe as 'day' | 'week' | 'month' || 'week'
 
     const analytics = await ragService.getAnalytics(timeframe)
 
-    ResponseHandler.success(res, analytics, 'Analytics retrieved successfully')
+    return ResponseHandler.success(res, analytics, 'Analytics retrieved successfully')
 
   } catch (error) {
-    next(error)
+    return next(error)
   }
 })
 
@@ -208,13 +208,12 @@ router.post('/feedback', [
     .isString()
     .isLength({ max: 1000 })
     .withMessage('Feedback must be less than 1000 characters')
-], handleValidationErrors, async (req, res, next) => {
+], handleValidationErrors, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { queryId, helpful, feedback } = req.body
-    const userId = req.user?.id
+    const { queryId, helpful, feedback: _feedback } = req.body
 
     // Update the support query with feedback
-    await req.prisma.supportQuery.update({
+    await (req as any).prisma.supportQuery.update({
       where: { id: queryId },
       data: {
         wasHelpful: helpful,
@@ -222,10 +221,10 @@ router.post('/feedback', [
       }
     })
 
-    ResponseHandler.success(res, null, 'Feedback submitted successfully')
+    return ResponseHandler.success(res, null, 'Feedback submitted successfully')
 
   } catch (error) {
-    next(error)
+    return next(error)
   }
 })
 
@@ -245,13 +244,13 @@ router.post('/escalate', [
     .optional()
     .isIn(['low', 'medium', 'high'])
     .withMessage('Urgency must be low, medium, or high')
-], handleValidationErrors, async (req, res, next) => {
+], handleValidationErrors, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { queryId, reason, urgency = 'medium' } = req.body
     const userId = req.user?.id || 'anonymous'
 
     // Get the original query
-    const originalQuery = await req.prisma.supportQuery.findUnique({
+    const originalQuery = await (req as any).prisma.supportQuery.findUnique({
       where: { id: queryId }
     })
 
@@ -267,7 +266,7 @@ router.post('/escalate', [
     })
 
     // Update the query record
-    await req.prisma.supportQuery.update({
+    await (req as any).prisma.supportQuery.update({
       where: { id: queryId },
       data: {
         escalatedToHuman: true,
@@ -275,13 +274,13 @@ router.post('/escalate', [
       }
     })
 
-    ResponseHandler.success(res, {
+    return ResponseHandler.success(res, {
       ticketId: ticket.ticketId,
       message: 'Query escalated to human support successfully'
     })
 
   } catch (error) {
-    next(error)
+    return next(error)
   }
 })
 
@@ -289,9 +288,9 @@ router.post('/escalate', [
  * GET /api/ai/knowledge-stats
  * Get knowledgebase statistics
  */
-router.get('/knowledge-stats', authenticate, async (req, res, next) => {
+router.get('/knowledge-stats', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const stats = await req.prisma.knowledgebaseStats.findFirst({
+    const stats = await (req as any).prisma.knowledgebaseStats.findFirst({
       where: { id: 'singleton' }
     })
 
@@ -304,7 +303,7 @@ router.get('/knowledge-stats', authenticate, async (req, res, next) => {
       }, 'No knowledgebase statistics available')
     }
 
-    ResponseHandler.success(res, {
+    return ResponseHandler.success(res, {
       totalDocuments: stats.totalDocuments,
       totalChunks: stats.totalChunks,
       totalTokens: Number(stats.totalTokens), // Convert BigInt to number
@@ -317,7 +316,7 @@ router.get('/knowledge-stats', authenticate, async (req, res, next) => {
     }, 'Knowledgebase statistics retrieved successfully')
 
   } catch (error) {
-    next(error)
+    return next(error)
   }
 })
 
@@ -330,12 +329,12 @@ router.post('/search-suggestions', [
     .isString()
     .isLength({ min: 2, max: 100 })
     .withMessage('Partial query must be between 2 and 100 characters')
-], handleValidationErrors, async (req, res, next) => {
+], handleValidationErrors, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { partial } = req.body
 
     // Get common queries that start with the partial text
-    const suggestions = await req.prisma.supportQuery.findMany({
+    const suggestions = await (req as any).prisma.supportQuery.findMany({
       where: {
         query: {
           contains: partial,
@@ -352,15 +351,15 @@ router.post('/search-suggestions', [
       distinct: ['query']
     })
 
-    const uniqueSuggestions = suggestions.map(s => s.query)
+    const uniqueSuggestions = suggestions.map((s: any) => s.query)
 
-    ResponseHandler.success(res, {
+    return ResponseHandler.success(res, {
       suggestions: uniqueSuggestions,
       count: uniqueSuggestions.length
     }, 'Search suggestions retrieved successfully')
 
   } catch (error) {
-    next(error)
+    return next(error)
   }
 })
 

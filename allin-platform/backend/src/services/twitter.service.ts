@@ -226,7 +226,7 @@ export class TwitterService {
         body: body.toString()
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Token exchange failed: ${data.error_description || data.error || 'Unknown error'}`);
@@ -264,7 +264,7 @@ export class TwitterService {
         body: body.toString()
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Token refresh failed: ${data.error_description || data.error || 'Unknown error'}`);
@@ -299,7 +299,7 @@ export class TwitterService {
         }
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to get user: ${data.detail || data.title || 'Unknown error'}`);
@@ -353,7 +353,7 @@ export class TwitterService {
         }
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to get tweets: ${data.detail || data.title || 'Unknown error'}`);
@@ -425,7 +425,7 @@ export class TwitterService {
         body: JSON.stringify(tweetData)
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to create tweet: ${data.detail || data.title || 'Unknown error'}`);
@@ -460,7 +460,7 @@ export class TwitterService {
         }
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to delete tweet: ${data.detail || data.title || 'Unknown error'}`);
@@ -496,7 +496,7 @@ export class TwitterService {
         }
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to get tweet: ${data.detail || data.title || 'Unknown error'}`);
@@ -564,7 +564,7 @@ export class TwitterService {
         }
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to search tweets: ${data.detail || data.title || 'Unknown error'}`);
@@ -611,7 +611,7 @@ export class TwitterService {
         }
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to get followers: ${data.detail || data.title || 'Unknown error'}`);
@@ -662,7 +662,7 @@ export class TwitterService {
         }
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to get following: ${data.detail || data.title || 'Unknown error'}`);
@@ -709,7 +709,7 @@ export class TwitterService {
         })
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to follow user: ${data.detail || data.title || 'Unknown error'}`);
@@ -739,7 +739,7 @@ export class TwitterService {
         }
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to unfollow user: ${data.detail || data.title || 'Unknown error'}`);
@@ -772,7 +772,7 @@ export class TwitterService {
         })
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to like tweet: ${data.detail || data.title || 'Unknown error'}`);
@@ -802,7 +802,7 @@ export class TwitterService {
         }
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to unlike tweet: ${data.detail || data.title || 'Unknown error'}`);
@@ -835,7 +835,7 @@ export class TwitterService {
         })
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to retweet: ${data.detail || data.title || 'Unknown error'}`);
@@ -865,7 +865,7 @@ export class TwitterService {
         }
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
       
       if (!response.ok) {
         throw new Error(`Failed to unretweet: ${data.detail || data.title || 'Unknown error'}`);

@@ -111,12 +111,12 @@ export const socialService = {
   /**
    * Publish to Facebook
    */
-  async publishToFacebook(socialAccount: SocialAccount, post: Post): Promise<PublishResult> {
+  async publishToFacebook(_socialAccount: SocialAccount, post: Post): Promise<PublishResult> {
     try {
       // TODO: Implement Facebook publishing
       // For now, return mock success
       console.log('Publishing to Facebook:', post.content);
-      
+
       return {
         platformPostId: 'facebook_' + Date.now(),
         success: true
@@ -129,12 +129,12 @@ export const socialService = {
   /**
    * Publish to LinkedIn
    */
-  async publishToLinkedIn(socialAccount: SocialAccount, post: Post): Promise<PublishResult> {
+  async publishToLinkedIn(_socialAccount: SocialAccount, post: Post): Promise<PublishResult> {
     try {
       // TODO: Implement LinkedIn publishing
       // For now, return mock success
       console.log('Publishing to LinkedIn:', post.content);
-      
+
       return {
         platformPostId: 'linkedin_' + Date.now(),
         success: true
@@ -147,7 +147,7 @@ export const socialService = {
   /**
    * Publish to TikTok
    */
-  async publishToTikTok(socialAccount: SocialAccount, post: Post): Promise<PublishResult> {
+  async publishToTikTok(_socialAccount: SocialAccount, post: Post): Promise<PublishResult> {
     try {
       // TODO: Implement TikTok publishing
       // For now, return mock success
@@ -246,6 +246,36 @@ export const socialService = {
         maxTextLength: 300,
         supportedMediaTypes: ['video'],
         maxMediaCount: 1
+      },
+      [SocialPlatform.YOUTUBE]: {
+        requiresMedia: true,
+        maxTextLength: 5000,
+        supportedMediaTypes: ['video'],
+        maxMediaCount: 1
+      },
+      [SocialPlatform.PINTEREST]: {
+        requiresMedia: true,
+        maxTextLength: 500,
+        supportedMediaTypes: ['image'],
+        maxMediaCount: 1
+      },
+      [SocialPlatform.SNAPCHAT]: {
+        requiresMedia: true,
+        maxTextLength: 250,
+        supportedMediaTypes: ['image', 'video'],
+        maxMediaCount: 1
+      },
+      [SocialPlatform.REDDIT]: {
+        requiresMedia: false,
+        maxTextLength: 40000,
+        supportedMediaTypes: ['image', 'video', 'gif'],
+        maxMediaCount: 20
+      },
+      [SocialPlatform.THREADS]: {
+        requiresMedia: false,
+        maxTextLength: 500,
+        supportedMediaTypes: ['image', 'video'],
+        maxMediaCount: 10
       }
     };
 

@@ -1,8 +1,8 @@
 import express from 'express';
 import { requireAuth } from '../middleware/auth';
-import { validateRequest } from '../middleware/validation';
+import { validateZodRequest } from '../middleware/validation';
 import { z } from 'zod';
-import bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcryptjs';
 
 const router = express.Router();
 
@@ -192,13 +192,13 @@ router.get('/profile', requireAuth, async (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: user
     });
   } catch (error) {
     console.error('Error fetching profile:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to fetch profile'
     });
@@ -210,7 +210,7 @@ router.get('/profile', requireAuth, async (req, res) => {
  * @desc Update user profile
  * @access Private
  */
-router.patch('/profile', requireAuth, validateRequest(updateProfileSchema), async (req, res) => {
+router.patch('/profile', requireAuth, validateZodRequest(updateProfileSchema, 'body'), async (req, res) => {
   try {
     const userId = req.user?.id;
     const updates = req.body;
@@ -227,18 +227,18 @@ router.patch('/profile', requireAuth, validateRequest(updateProfileSchema), asyn
     // Update user properties
     Object.keys(updates).forEach(key => {
       if (updates[key] !== undefined) {
-        mockUsers[userIndex][key] = updates[key];
+        (mockUsers[userIndex] as any)[key] = updates[key];
       }
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: mockUsers[userIndex],
       message: 'Profile updated successfully'
     });
   } catch (error) {
     console.error('Error updating profile:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to update profile'
     });
@@ -262,13 +262,13 @@ router.get('/organization', requireAuth, async (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: organization
     });
   } catch (error) {
     console.error('Error fetching organization:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to fetch organization settings'
     });
@@ -280,7 +280,7 @@ router.get('/organization', requireAuth, async (req, res) => {
  * @desc Update organization settings
  * @access Private
  */
-router.patch('/organization', requireAuth, validateRequest(updateOrganizationSchema), async (req, res) => {
+router.patch('/organization', requireAuth, validateZodRequest(updateOrganizationSchema, 'body'), async (req, res) => {
   try {
     const organizationId = req.user?.organizationId || 'org1';
     const updates = req.body;
@@ -297,18 +297,18 @@ router.patch('/organization', requireAuth, validateRequest(updateOrganizationSch
     // Update organization properties
     Object.keys(updates).forEach(key => {
       if (updates[key] !== undefined) {
-        mockOrganizations[orgIndex][key] = updates[key];
+        (mockOrganizations[orgIndex] as any)[key] = updates[key];
       }
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: mockOrganizations[orgIndex],
       message: 'Organization settings updated successfully'
     });
   } catch (error) {
     console.error('Error updating organization:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to update organization settings'
     });
@@ -320,9 +320,9 @@ router.patch('/organization', requireAuth, validateRequest(updateOrganizationSch
  * @desc Update user password
  * @access Private
  */
-router.post('/password', requireAuth, validateRequest(updatePasswordSchema), async (req, res) => {
+router.post('/password', requireAuth, validateZodRequest(updatePasswordSchema, 'body'), async (req, res) => {
   try {
-    const { currentPassword, newPassword } = req.body;
+    const { currentPassword: _currentPassword, newPassword } = req.body;
     const userId = req.user?.id;
 
     // In a real implementation, verify the current password against the stored hash
@@ -341,13 +341,13 @@ router.post('/password', requireAuth, validateRequest(updatePasswordSchema), asy
     // In a real implementation, update the password in the database
     console.log(`Password updated for user ${userId}: ${hashedPassword}`);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Password updated successfully'
     });
   } catch (error) {
     console.error('Error updating password:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to update password'
     });
@@ -367,7 +367,7 @@ router.get('/notifications', requireAuth, async (req, res) => {
     if (!settings) {
       // Return default settings
       const defaultSettings = {
-        userId,
+        userId: userId || 'user1',
         emailNotifications: {
           posts: true,
           mentions: true,
@@ -391,13 +391,13 @@ router.get('/notifications', requireAuth, async (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: settings
     });
   } catch (error) {
     console.error('Error fetching notifications:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to fetch notification settings'
     });
@@ -409,7 +409,7 @@ router.get('/notifications', requireAuth, async (req, res) => {
  * @desc Update notification preferences
  * @access Private
  */
-router.patch('/notifications', requireAuth, validateRequest(updateNotificationsSchema), async (req, res) => {
+router.patch('/notifications', requireAuth, validateZodRequest(updateNotificationsSchema, 'body'), async (req, res) => {
   try {
     const userId = req.user?.id;
     const updates = req.body;
@@ -468,14 +468,14 @@ router.patch('/notifications', requireAuth, validateRequest(updateNotificationsS
       mockNotificationSettings[settingsIndex].monthlyReports = updates.monthlyReports;
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: mockNotificationSettings[settingsIndex],
       message: 'Notification settings updated successfully'
     });
   } catch (error) {
     console.error('Error updating notifications:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to update notification settings'
     });
@@ -510,9 +510,9 @@ router.get('/social-accounts', requireAuth, async (req, res) => {
  * @desc Connect a social media account
  * @access Private
  */
-router.post('/social-accounts/connect', requireAuth, validateRequest(connectSocialAccountSchema), async (req, res) => {
+router.post('/social-accounts/connect', requireAuth, validateZodRequest(connectSocialAccountSchema, 'body'), async (req, res) => {
   try {
-    const { platform, accessToken, accountId, accountName } = req.body;
+    const { platform, accessToken: _accessToken, accountId: _accountId, accountName } = req.body;
     const userId = req.user?.id;
 
     // Find existing account
@@ -531,24 +531,24 @@ router.post('/social-accounts/connect', requireAuth, validateRequest(connectSoci
     // and fetch account details
 
     // Update account as connected
-    mockSocialAccounts[accountIndex] = {
+    const updatedAccount = {
       ...mockSocialAccounts[accountIndex],
       isConnected: true,
       connectedAt: new Date().toISOString(),
       lastSync: new Date().toISOString(),
-      accountName: accountName || mockSocialAccounts[accountIndex].accountName,
-      // In real implementation, store encrypted access token
-      accessToken: 'encrypted_token_placeholder'
+      accountName: accountName || mockSocialAccounts[accountIndex].accountName
     };
+    mockSocialAccounts[accountIndex] = updatedAccount as any;
+    // In real implementation, store encrypted access token securely
 
-    res.json({
+    return res.json({
       success: true,
       data: mockSocialAccounts[accountIndex],
       message: `${platform} account connected successfully`
     });
   } catch (error) {
     console.error('Error connecting social account:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to connect social account'
     });
@@ -577,23 +577,23 @@ router.post('/social-accounts/:id/disconnect', requireAuth, async (req, res) => 
     }
 
     // Update account as disconnected
-    mockSocialAccounts[accountIndex] = {
+    const disconnectedAccount = {
       ...mockSocialAccounts[accountIndex],
       isConnected: false,
-      connectedAt: undefined,
-      lastSync: undefined,
-      accessToken: undefined,
       followers: 0
     };
+    delete (disconnectedAccount as any).connectedAt;
+    delete (disconnectedAccount as any).lastSync;
+    mockSocialAccounts[accountIndex] = disconnectedAccount as any;
 
-    res.json({
+    return res.json({
       success: true,
       data: mockSocialAccounts[accountIndex],
       message: 'Account disconnected successfully'
     });
   } catch (error) {
     console.error('Error disconnecting social account:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to disconnect social account'
     });
