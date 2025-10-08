@@ -25,11 +25,46 @@ interface TokenPayload {
 }
 
 class AuthService {
-  private readonly JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret';
-  private readonly JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret';
+  private readonly JWT_SECRET: string;
+  private readonly JWT_REFRESH_SECRET: string;
   private readonly JWT_EXPIRES_IN = '15m';
   private readonly REFRESH_EXPIRES_IN = '7d';
   private readonly REFRESH_EXPIRES_IN_LONG = '30d';
+
+  constructor() {
+    // Validate required JWT secrets at instantiation
+    if (!process.env.JWT_SECRET) {
+      throw new Error(
+        'CRITICAL SECURITY ERROR: JWT_SECRET environment variable is required. ' +
+        'Generate a secure secret using: node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"'
+      );
+    }
+
+    if (!process.env.JWT_REFRESH_SECRET) {
+      throw new Error(
+        'CRITICAL SECURITY ERROR: JWT_REFRESH_SECRET environment variable is required. ' +
+        'Generate a secure secret using: node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"'
+      );
+    }
+
+    // Validate secret strength (minimum 32 bytes / 64 hex characters)
+    if (process.env.JWT_SECRET.length < 64) {
+      throw new Error(
+        'CRITICAL SECURITY ERROR: JWT_SECRET must be at least 64 characters long (32 bytes in hex). ' +
+        'Current length: ' + process.env.JWT_SECRET.length
+      );
+    }
+
+    if (process.env.JWT_REFRESH_SECRET.length < 64) {
+      throw new Error(
+        'CRITICAL SECURITY ERROR: JWT_REFRESH_SECRET must be at least 64 characters long (32 bytes in hex). ' +
+        'Current length: ' + process.env.JWT_REFRESH_SECRET.length
+      );
+    }
+
+    this.JWT_SECRET = process.env.JWT_SECRET;
+    this.JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
+  }
 
   async register(data: RegisterData) {
     const { email, password, name } = data;

@@ -27,9 +27,6 @@ interface TwitterUserResponse {
 }
 
 export class TwitterOAuthService extends OAuthService {
-  private codeVerifier: string = '';
-  private codeChallenge: string = '';
-
   constructor() {
     const config: OAuthConfig = {
       clientId: process.env.TWITTER_CLIENT_ID || '',
@@ -44,30 +41,58 @@ export class TwitterOAuthService extends OAuthService {
   /**
    * Generate PKCE challenge for OAuth 2.0 with PKCE
    */
-  private generatePKCE() {
-    this.codeVerifier = crypto.randomBytes(32).toString('base64url');
-    const challenge = crypto.createHash('sha256').update(this.codeVerifier).digest('base64url');
-    this.codeChallenge = challenge;
-    return { codeVerifier: this.codeVerifier, codeChallenge: this.codeChallenge };
+  private generatePKCE(): { codeVerifier: string; codeChallenge: string } {
+    const codeVerifier = crypto.randomBytes(32).toString('base64url');
+    const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
+    return { codeVerifier, codeChallenge };
+  }
+
+  /**
+   * Override state generation to include PKCE code verifier
+   * Returns both state and code verifier for immediate URL generation
+   * @param userId - User ID initiating OAuth
+   * @param organizationId - Optional organization ID
+   * @returns Promise<{ state: string, codeVerifier: string, codeChallenge: string }>
+   */
+  async generateStateWithPKCE(userId: string, organizationId?: string): Promise<{
+    state: string;
+    codeVerifier: string;
+    codeChallenge: string;
+  }> {
+    // Generate PKCE for Twitter OAuth 2.0
+    const { codeVerifier, codeChallenge } = this.generatePKCE();
+
+    // Store state with code verifier in Redis
+    const state = await this.oauthStateService.generateAuthorizationState(
+      userId,
+      this.platform,
+      organizationId,
+      codeVerifier // Store code verifier for callback
+    );
+
+    return { state, codeVerifier, codeChallenge };
   }
 
   /**
    * Generate OAuth authorization URL with PKCE
+   * For Twitter, use the version that accepts state and code challenge
    */
-  getAuthorizationUrl(state: string): string {
+  getAuthorizationUrl(state: string, codeChallenge?: string): string {
     if (!this.config.clientId) {
       throw new AppError('Twitter Client ID not configured', 500);
     }
 
-    const pkce = this.generatePKCE();
-    
+    if (!codeChallenge) {
+      throw new AppError('Twitter OAuth requires PKCE code challenge', 400);
+    }
+
     const params = new URLSearchParams({
       response_type: 'code',
       client_id: this.config.clientId,
       redirect_uri: this.config.redirectUri,
       scope: this.config.scope.join(' '),
       state,
-      code_challenge: pkce.codeChallenge,
+      code_challenge: codeChallenge,
       code_challenge_method: 'S256'
     });
 
@@ -76,11 +101,28 @@ export class TwitterOAuthService extends OAuthService {
 
   /**
    * Exchange authorization code for access tokens
+   * Override to handle PKCE code verifier from state
    */
-  async exchangeCodeForTokens(code: string, codeVerifier?: string): Promise<OAuthTokens> {
+  async exchangeCodeForTokens(code: string): Promise<OAuthTokens> {
+    try {
+      // Note: Code verifier should be passed via connectAccount method
+      // which retrieves it from the validated state
+      throw new AppError('Use connectAccountWithState for Twitter OAuth', 500);
+    } catch (error) {
+      console.error('Twitter token exchange error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Exchange authorization code for access tokens with PKCE
+   * @param code - Authorization code from OAuth callback
+   * @param codeVerifier - PKCE code verifier from state
+   */
+  async exchangeCodeForTokensWithPKCE(code: string, codeVerifier: string): Promise<OAuthTokens> {
     try {
       const tokenUrl = 'https://api.twitter.com/2/oauth2/token';
-      
+
       const response = await fetch(tokenUrl, {
         method: 'POST',
         headers: {
@@ -91,7 +133,7 @@ export class TwitterOAuthService extends OAuthService {
           grant_type: 'authorization_code',
           code,
           redirect_uri: this.config.redirectUri,
-          code_verifier: codeVerifier || this.codeVerifier
+          code_verifier: codeVerifier
         })
       });
 
@@ -110,6 +152,91 @@ export class TwitterOAuthService extends OAuthService {
     } catch (error) {
       console.error('Twitter token exchange error:', error);
       throw new AppError('Failed to exchange Twitter authorization code', 500);
+    }
+  }
+
+  /**
+   * Connect a social account using validated state data (includes PKCE)
+   * @param userId - User ID
+   * @param code - Authorization code
+   * @param organizationId - Optional organization ID
+   * @param codeVerifier - PKCE code verifier from validated state
+   */
+  async connectAccountWithPKCE(
+    userId: string,
+    code: string,
+    organizationId: string | undefined,
+    codeVerifier: string
+  ) {
+    try {
+      // Exchange code for tokens using PKCE
+      const tokens = await this.exchangeCodeForTokensWithPKCE(code, codeVerifier);
+
+      // Get user profile from platform
+      const profile = await this.getUserProfile(tokens.accessToken);
+
+      // Use parent class logic to store account
+      const prisma = new (await import('@prisma/client')).PrismaClient();
+
+      // Check if account already exists
+      const existingAccount = await prisma.socialAccount.findUnique({
+        where: {
+          userId_platform_platformId: {
+            userId,
+            platform: this.platform,
+            platformId: profile.id,
+          },
+        },
+      });
+
+      if (existingAccount) {
+        // Update existing account
+        return await prisma.socialAccount.update({
+          where: { id: existingAccount.id },
+          data: {
+            accessToken: this.encryptToken(tokens.accessToken),
+            refreshToken: tokens.refreshToken ? this.encryptToken(tokens.refreshToken) : null,
+            tokenExpiry: tokens.expiresIn
+              ? new Date(Date.now() + tokens.expiresIn * 1000)
+              : null,
+            username: profile.username,
+            displayName: profile.displayName,
+            profileImage: profile.profileImage,
+            profileUrl: profile.profileUrl,
+            followersCount: profile.followersCount || 0,
+            followingCount: profile.followingCount || 0,
+            status: 'ACTIVE' as const,
+            lastSyncAt: new Date(),
+          },
+        });
+      } else {
+        // Create new account
+        return await prisma.socialAccount.create({
+          data: {
+            userId,
+            organizationId,
+            platform: this.platform,
+            platformId: profile.id,
+            username: profile.username,
+            displayName: profile.displayName,
+            profileImage: profile.profileImage,
+            profileUrl: profile.profileUrl,
+            accessToken: this.encryptToken(tokens.accessToken),
+            refreshToken: tokens.refreshToken ? this.encryptToken(tokens.refreshToken) : null,
+            tokenExpiry: tokens.expiresIn
+              ? new Date(Date.now() + tokens.expiresIn * 1000)
+              : null,
+            scope: this.config.scope,
+            followersCount: profile.followersCount || 0,
+            followingCount: profile.followingCount || 0,
+            status: 'ACTIVE' as const,
+            lastSyncAt: new Date(),
+          },
+        });
+      }
+    } catch (error) {
+      console.error(`Error connecting ${this.platform} account:`, error);
+      throw new AppError(`Failed to connect ${this.platform} account`, 500);
     }
   }
 

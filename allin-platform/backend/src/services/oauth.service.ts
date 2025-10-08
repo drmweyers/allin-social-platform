@@ -1,6 +1,7 @@
 import { PrismaClient, SocialPlatform, AccountStatus } from '@prisma/client';
-import crypto from 'crypto';
 import { AppError } from '../utils/errors';
+import { getOAuthStateService, OAuthStateData } from './oauth-state.service';
+import { encryptOAuthToken, decryptOAuthToken } from '../utils/crypto';
 
 const prisma = new PrismaClient();
 
@@ -31,6 +32,7 @@ export interface OAuthConfig {
 export abstract class OAuthService {
   protected platform: SocialPlatform;
   protected config: OAuthConfig;
+  protected oauthStateService = getOAuthStateService();
 
   constructor(platform: SocialPlatform, config: OAuthConfig) {
     this.platform = platform;
@@ -65,47 +67,50 @@ export abstract class OAuthService {
 
   /**
    * Generate a secure state parameter for OAuth flow
+   * @deprecated Use generateStateWithStorage() instead for CSRF protection
    */
   generateState(): string {
     return crypto.randomBytes(32).toString('hex');
   }
 
   /**
+   * Generate and store OAuth state with CSRF protection
+   * @param userId - User ID initiating OAuth
+   * @param organizationId - Optional organization ID
+   * @returns Promise<string> - Generated state parameter
+   */
+  async generateStateWithStorage(userId: string, organizationId?: string): Promise<string> {
+    return await this.oauthStateService.generateAuthorizationState(
+      userId,
+      this.platform,
+      organizationId
+    );
+  }
+
+  /**
+   * Validate OAuth state parameter and retrieve stored data
+   * @param state - State parameter from OAuth callback
+   * @returns Promise<OAuthStateData> - Stored state data
+   * @throws AppError if state is invalid or expired
+   */
+  async validateState(state: string): Promise<OAuthStateData> {
+    return await this.oauthStateService.validateAndRetrieveState(state, this.platform);
+  }
+
+  /**
    * Encrypt sensitive data (tokens) before storing
+   * Uses centralized crypto utility with proper validation
    */
   protected encryptToken(token: string): string {
-    const algorithm = 'aes-256-gcm';
-    const key = Buffer.from(process.env.ENCRYPTION_KEY || 'your-32-byte-encryption-key-here', 'hex');
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv(algorithm, key, iv);
-
-    let encrypted = cipher.update(token, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-
-    const authTag = cipher.getAuthTag();
-
-    return iv.toString('hex') + ':' + authTag.toString('hex') + ':' + encrypted;
+    return encryptOAuthToken(token);
   }
 
   /**
    * Decrypt tokens when retrieving from database
+   * Uses centralized crypto utility with proper validation
    */
   protected decryptToken(encryptedToken: string): string {
-    const algorithm = 'aes-256-gcm';
-    const key = Buffer.from(process.env.ENCRYPTION_KEY || 'your-32-byte-encryption-key-here', 'hex');
-
-    const parts = encryptedToken.split(':');
-    const iv = Buffer.from(parts[0], 'hex');
-    const authTag = Buffer.from(parts[1], 'hex');
-    const encrypted = parts[2];
-
-    const decipher = crypto.createDecipheriv(algorithm, key, iv);
-    decipher.setAuthTag(authTag);
-
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-
-    return decrypted;
+    return decryptOAuthToken(encryptedToken);
   }
 
   /**

@@ -3,6 +3,12 @@ import path from 'path';
 
 // Load .env from root directory (one level up from backend)
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
+// CRITICAL: Validate environment variables BEFORE importing any services
+// This ensures security-critical variables (JWT secrets, encryption keys) are present
+import { validateEnvironmentOrExit } from './utils/env-validator';
+validateEnvironmentOrExit();
+
 import express from 'express';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
