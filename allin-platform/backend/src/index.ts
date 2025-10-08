@@ -42,7 +42,14 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(morgan('combined', { stream: { write: (message) => logger.info(message.trim()) } }));
 
 // Rate limiting
-app.use('/api/', rateLimiter);
+// LOAD TESTING: Can be disabled via DISABLE_RATE_LIMITING=true environment variable
+// IMPORTANT: Always enable for production (security requirement)
+if (process.env.DISABLE_RATE_LIMITING !== 'true') {
+  app.use('/api/', rateLimiter);
+  logger.info('✅ Rate limiting enabled');
+} else {
+  logger.warn('⚠️  Rate limiting DISABLED (for load testing only - DO NOT use in production)');
+}
 
 // Enhanced health check with security status
 app.get('/health', (_req, res) => {
