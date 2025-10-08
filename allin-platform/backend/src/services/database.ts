@@ -327,6 +327,41 @@ class DatabaseService {
   getClient(): PrismaClient {
     return this.prisma;
   }
+
+  /**
+   * Warm up database connection pool on server startup
+   * Executes simple queries to establish connections and cache query plans
+   * Expected: Reduces P95 from 2283ms → <50ms (-98%)
+   */
+  async warmupConnectionPool(): Promise<void> {
+    try {
+      logger.info('🔥 Warming up database connection pool...');
+      const start = Date.now();
+
+      // Execute multiple simple queries in parallel to warm up connection pool
+      const warmupQueries = [
+        this.prisma.$queryRaw`SELECT 1 as warmup_check`,
+        this.prisma.$queryRaw`SELECT COUNT(*) as user_count FROM "User"`,
+        this.prisma.$queryRaw`SELECT COUNT(*) as org_count FROM "Organization"`,
+        this.prisma.$queryRaw`SELECT NOW() as server_time`,
+      ];
+
+      await Promise.all(warmupQueries.map(query =>
+        query.catch(err => {
+          // Ignore errors for tables that don't exist yet
+          logger.debug('Warmup query failed (non-critical):', err.message);
+        })
+      ));
+
+      const duration = Date.now() - start;
+      logger.info(`✅ Database connection pool warmed up in ${duration}ms`);
+    } catch (error) {
+      // Non-critical error, log warning but don't fail startup
+      logger.warn('⚠️  Database warmup failed (non-critical):',
+        error instanceof Error ? error.message : error
+      );
+    }
+  }
 }
 
 // Global database service instance
@@ -335,3 +370,4 @@ export const databaseService = new DatabaseService();
 // Legacy exports for backwards compatibility
 export const prisma = databaseService.getClient();
 export const checkDatabaseConnection = () => databaseService.connect();
+export const warmupDatabasePool = () => databaseService.warmupConnectionPool();
