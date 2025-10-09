@@ -21,6 +21,7 @@ import routes from './routes';
 import { logger } from './utils/logger';
 import { initializeRedis } from './services/redis';
 import { checkDatabaseConnection, warmupDatabasePool } from './services/database';
+import { metricsMiddleware, getMetrics } from './services/metrics.service';
 
 const app = express();
 const httpServer = createServer(app);
@@ -41,6 +42,9 @@ app.use(express.json({ limit: '10mb' })); // Set reasonable limits
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(morgan('combined', { stream: { write: (message) => logger.info(message.trim()) } }));
 
+// Prometheus metrics middleware (track all HTTP requests)
+app.use(metricsMiddleware);
+
 // Rate limiting
 // LOAD TESTING: Can be disabled via DISABLE_RATE_LIMITING=true environment variable
 // IMPORTANT: Always enable for production (security requirement)
@@ -50,6 +54,9 @@ if (process.env.DISABLE_RATE_LIMITING !== 'true') {
 } else {
   logger.warn('⚠️  Rate limiting DISABLED (for load testing only - DO NOT use in production)');
 }
+
+// Prometheus metrics endpoint (BEFORE other routes to avoid rate limiting)
+app.get('/metrics', getMetrics);
 
 // Enhanced health check with security status
 app.get('/health', (_req, res) => {
