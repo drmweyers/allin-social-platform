@@ -103,7 +103,7 @@ export class TwitterOAuthService extends OAuthService {
    * Exchange authorization code for access tokens
    * Override to handle PKCE code verifier from state
    */
-  async exchangeCodeForTokens(code: string): Promise<OAuthTokens> {
+  async exchangeCodeForTokens(_code: string): Promise<OAuthTokens> {
     try {
       // Note: Code verifier should be passed via connectAccount method
       // which retrieves it from the validated state
@@ -339,17 +339,4 @@ export class TwitterOAuthService extends OAuthService {
     }
   }
 
-  /**
-   * Get current code verifier for PKCE flow
-   */
-  getCurrentCodeVerifier(): string {
-    return this.codeVerifier;
-  }
-
-  /**
-   * Get current code challenge for PKCE flow
-   */
-  getCurrentCodeChallenge(): string {
-    return this.codeChallenge;
-  }
 }

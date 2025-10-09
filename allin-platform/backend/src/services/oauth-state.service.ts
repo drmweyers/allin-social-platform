@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { SocialPlatform } from '@prisma/client';
-import { getCacheService, CACHE_TTL } from './redis';
+import { getCacheService } from './redis';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
 

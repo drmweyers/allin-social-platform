@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../services/database';
-import { getCacheService } from '../services/redis';
+import { getCacheService, getRedis } from '../services/redis';
 
 const router = Router();
 
@@ -39,8 +39,8 @@ router.get('/', async (_req, res) => {
     // Check Redis connection
     let redisStatus = 'disconnected';
     try {
-      const redisClient = getCacheService();
-      await redisClient.redis.ping();
+      const redisClient = getRedis();
+      await redisClient.ping();
       redisStatus = 'connected';
     } catch (error) {
       console.error('Redis check failed:', error);
@@ -59,13 +59,13 @@ router.get('/', async (_req, res) => {
     // Cache health status for 30 seconds
     await cacheService.set(cacheKey, healthData, HEALTH_CACHE_TTL);
 
-    res.json({
+    return res.json({
       ...healthData,
       cached: false,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       status: 'unhealthy',
       error: error instanceof Error ? error.message : 'Unknown error',
       timestamp: new Date().toISOString()
@@ -103,13 +103,13 @@ router.get('/database', async (_req, res) => {
     // Cache database health for 60 seconds
     await cacheService.set(cacheKey, dbHealthData, DATABASE_HEALTH_CACHE_TTL);
 
-    res.json({
+    return res.json({
       ...dbHealthData,
       cached: false,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       connected: false,
       error: error instanceof Error ? error.message : 'Database connection failed',
       timestamp: new Date().toISOString()
@@ -136,7 +136,8 @@ router.get('/redis', async (_req, res) => {
     }
 
     const start = Date.now();
-    await cacheService.redis.ping();
+    const redisClient = getRedis();
+    await redisClient.ping();
     const latency = Date.now() - start;
 
     const redisHealthData = {
@@ -147,13 +148,13 @@ router.get('/redis', async (_req, res) => {
     // Cache Redis health for 60 seconds
     await cacheService.set(cacheKey, redisHealthData, REDIS_HEALTH_CACHE_TTL);
 
-    res.json({
+    return res.json({
       ...redisHealthData,
       cached: false,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       connected: false,
       error: error instanceof Error ? error.message : 'Redis connection failed',
       timestamp: new Date().toISOString()

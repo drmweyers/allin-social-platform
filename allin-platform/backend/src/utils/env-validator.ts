@@ -155,7 +155,8 @@ export function validateEnvironment(): ValidationResult {
     }
 
     // Check for common weak/default values (security critical only)
-    if (rule.securityCritical && value) {
+    // EXCEPTION: Skip weak value check for OpenAI keys in development (not used for load testing)
+    if (rule.securityCritical && value && !(process.env.NODE_ENV !== 'production' && rule.key === 'OPENAI_API_KEY')) {
       const weakValues = [
         'secret',
         'password',

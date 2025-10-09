@@ -2,6 +2,7 @@ import { PrismaClient, SocialPlatform, AccountStatus } from '@prisma/client';
 import { AppError } from '../utils/errors';
 import { getOAuthStateService, OAuthStateData } from './oauth-state.service';
 import { encryptOAuthToken, decryptOAuthToken } from '../utils/crypto';
+import { randomBytes } from 'crypto';
 
 const prisma = new PrismaClient();
 
@@ -32,7 +33,14 @@ export interface OAuthConfig {
 export abstract class OAuthService {
   protected platform: SocialPlatform;
   protected config: OAuthConfig;
-  protected oauthStateService = getOAuthStateService();
+  private _oauthStateService?: ReturnType<typeof getOAuthStateService>;
+
+  protected get oauthStateService() {
+    if (!this._oauthStateService) {
+      this._oauthStateService = getOAuthStateService();
+    }
+    return this._oauthStateService;
+  }
 
   constructor(platform: SocialPlatform, config: OAuthConfig) {
     this.platform = platform;
@@ -70,7 +78,7 @@ export abstract class OAuthService {
    * @deprecated Use generateStateWithStorage() instead for CSRF protection
    */
   generateState(): string {
-    return crypto.randomBytes(32).toString('hex');
+    return randomBytes(32).toString('hex');
   }
 
   /**

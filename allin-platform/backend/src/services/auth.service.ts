@@ -412,9 +412,21 @@ class AuthService {
   }
 
   private generateRefreshToken(payload: { userId: string }, rememberMe = false): string {
-    return jwt.sign(payload, this.JWT_REFRESH_SECRET, {
-      expiresIn: rememberMe ? this.REFRESH_EXPIRES_IN_LONG : this.REFRESH_EXPIRES_IN,
-    });
+    // Add unique identifier to prevent race condition when multiple logins happen simultaneously
+    // Using crypto.randomBytes for cryptographic randomness + timestamp for additional uniqueness
+    const uniqueId = crypto.randomBytes(16).toString('hex');
+    const timestamp = Date.now();
+
+    return jwt.sign(
+      {
+        ...payload,
+        jti: `${uniqueId}-${timestamp}` // JWT ID claim for uniqueness
+      },
+      this.JWT_REFRESH_SECRET,
+      {
+        expiresIn: rememberMe ? this.REFRESH_EXPIRES_IN_LONG : this.REFRESH_EXPIRES_IN,
+      }
+    );
   }
 
   verifyAccessToken(token: string): TokenPayload {

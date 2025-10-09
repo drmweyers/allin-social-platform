@@ -9,22 +9,25 @@ import { LinkedInOAuthService } from '../services/oauth/linkedin.oauth';
 import { TikTokOAuthService } from '../services/oauth/tiktok.oauth';
 import { TwitterOAuthService } from '../services/oauth/twitter.oauth';
 import { AppError } from '../utils/errors';
-import { getOAuthStateService } from '../services/oauth-state.service';
 import { logger } from '../utils/logger';
 
 const router = Router();
 
-// OAuth service instances
-const oauthServices: Map<SocialPlatform, OAuthService> = new Map<SocialPlatform, OAuthService>([
-  [SocialPlatform.FACEBOOK, new FacebookOAuthService() as OAuthService],
-  [SocialPlatform.LINKEDIN, new LinkedInOAuthService() as OAuthService],
-  [SocialPlatform.TIKTOK, new TikTokOAuthService() as OAuthService],
-  [SocialPlatform.TWITTER, new TwitterOAuthService() as OAuthService],
-  // Add other platforms as implemented
-]);
+// OAuth service instances - lazy initialization to avoid Redis init errors
+let oauthServices: Map<SocialPlatform, OAuthService> | null = null;
 
-// OAuth state service for CSRF protection
-const oauthStateService = getOAuthStateService();
+function getOAuthServices(): Map<SocialPlatform, OAuthService> {
+  if (!oauthServices) {
+    oauthServices = new Map<SocialPlatform, OAuthService>([
+      [SocialPlatform.FACEBOOK, new FacebookOAuthService() as OAuthService],
+      [SocialPlatform.LINKEDIN, new LinkedInOAuthService() as OAuthService],
+      [SocialPlatform.TIKTOK, new TikTokOAuthService() as OAuthService],
+      [SocialPlatform.TWITTER, new TwitterOAuthService() as OAuthService],
+      // Add other platforms as implemented
+    ]);
+  }
+  return oauthServices;
+}
 
 /**
  * @route   GET /api/social/accounts
@@ -70,7 +73,7 @@ router.post(
       const userId = req.user!.id;
       const { organizationId } = req.body;
 
-      const oauthService = oauthServices.get(platform);
+      const oauthService = getOAuthServices().get(platform);
       if (!oauthService) {
         logger.error('OAuth service not found', { platform });
         throw new AppError(`OAuth service for ${platform} not implemented`, 501);
@@ -159,7 +162,7 @@ router.get(
       }
 
       // Get OAuth service
-      const oauthService = oauthServices.get(platform);
+      const oauthService = getOAuthServices().get(platform);
       if (!oauthService) {
         logger.error('OAuth service not found in callback', { platform });
         return res.redirect(`${frontendUrl}/dashboard/accounts?error=service_unavailable`);
@@ -270,7 +273,7 @@ router.delete(
       }
 
       // Get OAuth service for the platform
-      const oauthService = oauthServices.get(account.platform);
+      const oauthService = getOAuthServices().get(account.platform);
       if (!oauthService) {
         throw new AppError(`OAuth service for ${account.platform} not implemented`, 501);
       }
@@ -317,7 +320,7 @@ router.post(
       }
 
       // Get OAuth service for the platform
-      const oauthService = oauthServices.get(account.platform);
+      const oauthService = getOAuthServices().get(account.platform);
       if (!oauthService) {
         throw new AppError(`OAuth service for ${account.platform} not implemented`, 501);
       }
