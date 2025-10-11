@@ -7,7 +7,7 @@ jest.mock('nodemailer', () => ({
   createTransport: jest.fn(() => mockTransporter),
 }));
 
-jest.mock('../utils/logger', () => ({
+jest.mock('../../../src/utils/logger', () => ({
   logger: {
     info: jest.fn(),
     error: jest.fn(),
@@ -16,8 +16,8 @@ jest.mock('../utils/logger', () => ({
   },
 }));
 
-import { emailService } from './email.service';
-import { logger } from '../utils/logger';
+import { emailService } from '../../../src/services/email.service';
+import { logger } from '../../../src/utils/logger';
 
 const mockLogger = logger as jest.Mocked<typeof logger>;
 

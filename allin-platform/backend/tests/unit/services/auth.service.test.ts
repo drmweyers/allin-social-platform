@@ -2,11 +2,11 @@
 process.env.JWT_SECRET = 'test-jwt-secret';
 process.env.JWT_REFRESH_SECRET = 'test-refresh-secret';
 
-import { authService } from './auth.service';
-import { AppError } from '../utils/errors';
+import { authService } from '../../../src/services/auth.service';
+import { AppError } from '../../../src/utils/errors';
 
 // Mock all dependencies
-jest.mock('./database', () => ({
+jest.mock('../../../src/services/database', () => ({
   prisma: {
     user: {
       findUnique: jest.fn(),
@@ -35,14 +35,14 @@ jest.mock('./database', () => ({
   },
 }));
 
-jest.mock('./email.service', () => ({
+jest.mock('../../../src/services/email.service', () => ({
   emailService: {
     sendVerificationEmail: jest.fn(),
     sendPasswordResetEmail: jest.fn(),
   },
 }));
 
-jest.mock('../utils/logger', () => ({
+jest.mock('../../../src/utils/logger', () => ({
   logger: {
     info: jest.fn(),
     error: jest.fn(),
@@ -69,9 +69,9 @@ jest.mock('crypto', () => ({
 }));
 
 // Import mocked modules
-import { prisma } from './database';
-import { emailService } from './email.service';
-import { logger } from '../utils/logger';
+import { prisma } from '../../../src/services/database';
+import { emailService } from '../../../src/services/email.service';
+import { logger } from '../../../src/utils/logger';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';

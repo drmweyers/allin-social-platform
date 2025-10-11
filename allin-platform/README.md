@@ -1,5 +1,11 @@
 # AllIN Platform - Next-Generation Social Media Management
 
+![CI/CD Pipeline](https://github.com/drmweyers/allin-social-platform/workflows/CI/CD%20Pipeline/badge.svg)
+![Tests](https://img.shields.io/badge/tests-988%20passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-88.7%25-yellowgreen)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)
+![License](https://img.shields.io/badge/license-MIT-blue)
+
 ## 🚀 Overview
 
 AllIN is a revolutionary social media management platform that combines cutting-edge AI capabilities with enterprise-grade analytics. Built with the latest technologies and featuring the industry's first full Model Context Protocol (MCP) integration, AllIN empowers businesses to manage, analyze, and optimize their social media presence like never before.

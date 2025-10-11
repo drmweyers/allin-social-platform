@@ -41,19 +41,23 @@ jobs:
 
       - name: Run backend linting
         working-directory: backend
-        run: npm run lint || true
+        run: npm run lint
+        continue-on-error: false
 
       - name: Run frontend linting
         working-directory: frontend
-        run: npm run lint || true
+        run: npm run lint
+        continue-on-error: false
 
       - name: Run backend type checking
         working-directory: backend
-        run: npm run typecheck || true
+        run: npm run typecheck
+        continue-on-error: false
 
       - name: Run frontend type checking
         working-directory: frontend
-        run: npm run typecheck || true
+        run: npm run typecheck
+        continue-on-error: false
 
   # Security Scanning
   security-scan:
@@ -139,14 +143,23 @@ jobs:
           npx prisma generate
           npx prisma migrate deploy
 
-      - name: Run tests
+      - name: Run tests with coverage
         working-directory: backend
         env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
           REDIS_URL: redis://localhost:6379
-          JWT_SECRET: test_jwt_secret
+          JWT_SECRET: test-jwt-secret-key-for-testing-only-minimum-64-characters-required-by-auth
+          JWT_REFRESH_SECRET: test-jwt-refresh-secret-key-minimum-64-characters-required-for-testing
           NODE_ENV: test
-        run: npm test || true
+        run: npm test -- --coverage --passWithNoTests
+        continue-on-error: false
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./backend/coverage/coverage-final.json
+          flags: backend
+          name: backend-coverage
 
   # Frontend Tests
   test-frontend:
@@ -171,7 +184,8 @@ jobs:
 
       - name: Run tests
         working-directory: frontend
-        run: npm test || true
+        run: npm test -- --passWithNoTests
+        continue-on-error: false
 
       - name: Build frontend
         working-directory: frontend

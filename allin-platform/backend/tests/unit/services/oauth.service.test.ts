@@ -1,9 +1,9 @@
 // Set up environment before importing services
 process.env.ENCRYPTION_KEY = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 
-import { OAuthService } from './oauth.service';
+import { OAuthService } from '../../../src/services/oauth.service';
 import { SocialPlatform } from '@prisma/client';
-import { AppError } from '../utils/errors';
+import { AppError } from '../../../src/utils/errors';
 import crypto from 'crypto';
 
 // Mock crypto module
@@ -14,7 +14,7 @@ jest.mock('crypto', () => ({
 }));
 
 // Mock prisma
-jest.mock('./database', () => ({
+jest.mock('../../../src/services/database', () => ({
   prisma: {
     user: {
       findUnique: jest.fn(),
